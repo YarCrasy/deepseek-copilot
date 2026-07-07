@@ -1,0 +1,29 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { anchorId, isLanguage, languages, pageContent, pageSlugs, type Language, type PageSlug } from "../../i18n";
+
+export function getStaticPaths() {
+  return languages.flatMap((lang) => pageSlugs.map((slug) => ({ params: { lang, slug } })));
+}
+
+const lang = Astro.params.lang;
+const slug = Astro.params.slug;
+if (!isLanguage(lang) || !pageSlugs.includes(slug as PageSlug)) {
+  return Astro.redirect("/en/");
+}
+
+const pageSlug = slug as PageSlug;
+const content = pageContent[lang as Language][pageSlug];
+---
+<DocsLayout title={content.title} description={content.description} lang={lang} currentSlug={pageSlug}>
+  <h1>{content.title}</h1>
+  <p class="lead">{content.lead}</p>
+  {content.sections.map((section) => (
+    <section>
+      <h2 id={anchorId(section.title)}>{section.title}</h2>
+      <ul>
+        {section.items.map((item) => <li>{item}</li>)}
+      </ul>
+    </section>
+  ))}
+</DocsLayout>

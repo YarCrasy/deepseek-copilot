@@ -1,12 +1,17 @@
 ---
 import DocsLayout from "../layouts/DocsLayout.astro";
+import { anchorId, pageContent } from "../i18n";
+
+const lang = "en";
+const content = pageContent[lang].references;
 ---
-<DocsLayout title="Referencias" description="Referencias tecnicas para DeepSeek Copilot.">
-  <h1>Referencias</h1>
-  <p class="lead">Punto de entrada para APIs, modelos y contratos relevantes.</p>
-  <ul>
-    <li>DeepSeek Chat Completions y streaming SSE.</li>
-    <li>VS Code Extension API para webviews, commands, secret storage y filesystem.</li>
-    <li>Contratos de mensajes entre webview y extension host.</li>
-  </ul>
+<DocsLayout title={content.title} description={content.description} lang={lang} currentSlug="references">
+  <h1>{content.title}</h1>
+  <p class="lead">{content.lead}</p>
+  {content.sections.map((section) => (
+    <section>
+      <h2 id={anchorId(section.title)}>{section.title}</h2>
+      <ul>{section.items.map((item) => <li>{item}</li>)}</ul>
+    </section>
+  ))}
 </DocsLayout>

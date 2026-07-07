@@ -1,12 +1,17 @@
 ---
 import DocsLayout from "../layouts/DocsLayout.astro";
+import { anchorId, pageContent } from "../i18n";
+
+const lang = "en";
+const content = pageContent[lang]["technical-decisions"];
 ---
-<DocsLayout title="Decisiones tecnicas" description="Decisiones tecnicas de DeepSeek Copilot.">
-  <h1>Decisiones tecnicas</h1>
-  <p class="lead">Criterios para mantener la extension sin diluir su foco DeepSeek.</p>
-  <ul>
-    <li>`core` no debe importar `vscode`, React ni clientes HTTP concretos.</li>
-    <li>`deepseek-api` concentra el protocolo y los detalles de DeepSeek.</li>
-    <li>La documentacion tecnica concisa vive en la GitHub Wiki.</li>
-  </ul>
+<DocsLayout title={content.title} description={content.description} lang={lang} currentSlug="technical-decisions">
+  <h1>{content.title}</h1>
+  <p class="lead">{content.lead}</p>
+  {content.sections.map((section) => (
+    <section>
+      <h2 id={anchorId(section.title)}>{section.title}</h2>
+      <ul>{section.items.map((item) => <li>{item}</li>)}</ul>
+    </section>
+  ))}
 </DocsLayout>

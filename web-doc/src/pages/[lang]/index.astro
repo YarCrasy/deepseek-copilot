@@ -1,9 +1,17 @@
 ---
-import DocsLayout from "../layouts/DocsLayout.astro";
-import { homeContent, localizedPath, navLabels, pageSlugs } from "../i18n";
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import { homeContent, isLanguage, languages, localizedPath, navLabels, pageSlugs, type Language } from "../../i18n";
 
-const lang = "en";
-const content = homeContent[lang];
+export function getStaticPaths() {
+  return languages.map((lang) => ({ params: { lang } }));
+}
+
+const lang = Astro.params.lang;
+if (!isLanguage(lang)) {
+  return Astro.redirect("/en/");
+}
+
+const content = homeContent[lang as Language];
 ---
 <DocsLayout title={content.title} description={content.description} lang={lang}>
   <h1>DeepSeek Copilot</h1>
@@ -24,12 +32,6 @@ const content = homeContent[lang];
       </tr>
     </tbody>
   </table>
-  <p>
-    Available languages:
-    <a href="/en/">English</a>,
-    <a href="/es/">Español</a>,
-    <a href="/zh/">中文</a>.
-  </p>
   <section class="sectionList" aria-label="Sections">
     {pageSlugs.map((slug) => (
       <a href={localizedPath(lang, slug)}>

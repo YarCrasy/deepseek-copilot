@@ -1,13 +1,17 @@
 ---
 import DocsLayout from "../layouts/DocsLayout.astro";
+import { anchorId, pageContent } from "../i18n";
+
+const lang = "en";
+const content = pageContent[lang].changelog;
 ---
-<DocsLayout title="Changelog" description="Cambios y roadmap de DeepSeek Copilot.">
-  <h1>Changelog</h1>
-  <p class="lead">Registro humano de cambios importantes del proyecto.</p>
-  <h2>Actual</h2>
-  <ul>
-    <li>Migracion a estructura por capas bajo `src`.</li>
-    <li>Eliminacion completa del soporte Ollama.</li>
-    <li>Separacion entre documentacion humana Astro y documentacion tecnica Markdown.</li>
-  </ul>
+<DocsLayout title={content.title} description={content.description} lang={lang} currentSlug="changelog">
+  <h1>{content.title}</h1>
+  <p class="lead">{content.lead}</p>
+  {content.sections.map((section) => (
+    <section>
+      <h2 id={anchorId(section.title)}>{section.title}</h2>
+      <ul>{section.items.map((item) => <li>{item}</li>)}</ul>
+    </section>
+  ))}
 </DocsLayout>

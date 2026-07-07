@@ -12,6 +12,7 @@ pnpm-debug.log*
 dist/
 build/
 out/
+!docs/
 deepseek-copilot.wiki/
 .vscode-test/
 coverage/

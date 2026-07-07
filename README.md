@@ -1,6 +1,6 @@
 # DeepSeek Copilot
 
-DeepSeek Copilot is a VS Code assistant focused entirely on DeepSeek. It adds a sidebar chat with streaming responses, reasoning output, conversation history, file context, drag and drop, and controlled tool execution for workspace tasks.
+DeepSeek Copilot is a VS Code assistant focused entirely on DeepSeek. It adds a sidebar chat with streaming responses, reasoning output, conversation history, path autocomplete for workspace context, and controlled tool execution for workspace tasks.
 
 > Disclaimer: DeepSeek Copilot is an independent third-party extension. It is not affiliated with, endorsed by, sponsored by, or officially maintained by DeepSeek.
 
@@ -12,10 +12,10 @@ The extension is DeepSeek-only by design. There is no provider selector and no O
 - Streaming responses from DeepSeek.
 - Optional thinking mode and reasoning display.
 - Conversation history with load and delete actions.
-- Drag files or folders into the chat as context.
-- Add selected explorer files to the chat.
+- Type `./` or `../` in the chat input to autocomplete workspace paths.
 - Built-in tools for reading files, listing directories, searching content, creating files, and running terminal commands.
 - Safety confirmations for dangerous or destructive tool calls.
+- Stop generation restores the cancelled prompt to the input and does not keep it in conversation context.
 - API key stored in VS Code Secret Storage.
 
 ## Requirements
@@ -37,12 +37,9 @@ https://platform.deepseek.com/api_keys
 5. Choose model and generation settings.
 6. Send a message from the Chat view.
 
-You can also right-click files in the Explorer and use `DeepSeek Copilot: Add to Chat`.
-
 ## Commands
 
 - `DeepSeek Copilot: Open Chat`
-- `DeepSeek Copilot: Add to Chat`
 
 ## Extension Settings
 
@@ -73,7 +70,7 @@ Dangerous operations, such as overwriting files or running risky terminal comman
 
 ## Documentation
 
-- Human documentation: `web-doc`
+- Human documentation: `web-doc` with English, Spanish, and Chinese routes.
 - Technical documentation: https://github.com/YarCrasy/deepseek-copilot/wiki
 - DeepSeek API reference: https://api-docs.deepseek.com/
 
@@ -98,6 +95,7 @@ Useful scripts:
 - DeepSeek is the only supported AI provider.
 - Tool execution depends on workspace permissions and user confirmation.
 - FIM support follows DeepSeek beta API behavior and may require the beta base URL.
+- This is a beta release. Review tool permissions before using it on important workspaces.
 
 ## Release Notes
 
