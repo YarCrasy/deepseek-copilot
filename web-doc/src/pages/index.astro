@@ -1,6 +1,6 @@
 ---
 import DocsLayout from "../layouts/DocsLayout.astro";
-import { homeContent, localizedPath, navLabels, pageSlugs } from "../i18n";
+import { homeContent, navLabels, pageSlugs } from "../i18n";
 
 const lang = "en";
 const content = homeContent[lang];
@@ -26,13 +26,13 @@ const content = homeContent[lang];
   </table>
   <p>
     Available languages:
-    <a href="/en/">English</a>,
-    <a href="/es/">Español</a>,
-    <a href="/zh/">中文</a>.
+    <a href="en/">English</a>,
+    <a href="es/">Español</a>,
+    <a href="zh/">中文</a>.
   </p>
   <section class="sectionList" aria-label="Sections">
     {pageSlugs.map((slug) => (
-      <a href={localizedPath(lang, slug)}>
+      <a href={`${lang}/${slug}/`}>
         <strong>{navLabels[lang][slug]}</strong>
         <span>{content.cards[slug]}</span>
       </a>

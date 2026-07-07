@@ -1,6 +1,6 @@
 ---
 import DocsLayout from "../../layouts/DocsLayout.astro";
-import { homeContent, isLanguage, languages, localizedPath, navLabels, pageSlugs, type Language } from "../../i18n";
+import { homeContent, isLanguage, languages, navLabels, pageSlugs, type Language } from "../../i18n";
 
 export function getStaticPaths() {
   return languages.map((lang) => ({ params: { lang } }));
@@ -34,7 +34,7 @@ const content = homeContent[lang as Language];
   </table>
   <section class="sectionList" aria-label="Sections">
     {pageSlugs.map((slug) => (
-      <a href={localizedPath(lang, slug)}>
+      <a href={`${slug}/`}>
         <strong>{navLabels[lang][slug]}</strong>
         <span>{content.cards[slug]}</span>
       </a>
