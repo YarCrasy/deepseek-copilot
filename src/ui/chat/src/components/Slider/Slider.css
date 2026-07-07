@@ -1,0 +1,15 @@
+.slider{
+  display: flex;
+  flex-direction: column;
+
+  .sliderWithValue {
+    display: flex;
+    align-items: center;
+
+    .sliderValue {
+      width: 40px;
+      text-align: right;
+      color: var(--text-primary);
+    }
+  }
+}

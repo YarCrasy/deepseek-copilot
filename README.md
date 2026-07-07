@@ -1,0 +1,104 @@
+# DeepSeek Copilot
+
+DeepSeek Copilot is a VS Code assistant focused entirely on DeepSeek. It adds a sidebar chat with streaming responses, reasoning output, conversation history, file context, drag and drop, and controlled tool execution for workspace tasks.
+
+> Disclaimer: DeepSeek Copilot is an independent third-party extension. It is not affiliated with, endorsed by, sponsored by, or officially maintained by DeepSeek.
+
+The extension is DeepSeek-only by design. There is no provider selector and no Ollama integration.
+
+## Features
+
+- Sidebar chat inside VS Code.
+- Streaming responses from DeepSeek.
+- Optional thinking mode and reasoning display.
+- Conversation history with load and delete actions.
+- Drag files or folders into the chat as context.
+- Add selected explorer files to the chat.
+- Built-in tools for reading files, listing directories, searching content, creating files, and running terminal commands.
+- Safety confirmations for dangerous or destructive tool calls.
+- API key stored in VS Code Secret Storage.
+
+## Requirements
+
+- VS Code `1.125.0` or newer.
+- A DeepSeek API key.
+- Network access to the configured DeepSeek API base URL.
+
+Get an API key from DeepSeek:
+
+https://platform.deepseek.com/api_keys
+
+## Getting Started
+
+1. Install and open DeepSeek Copilot.
+2. Open the DeepSeek Copilot activity bar item.
+3. Go to Settings inside the chat view.
+4. Paste your DeepSeek API key.
+5. Choose model and generation settings.
+6. Send a message from the Chat view.
+
+You can also right-click files in the Explorer and use `DeepSeek Copilot: Add to Chat`.
+
+## Commands
+
+- `DeepSeek Copilot: Open Chat`
+- `DeepSeek Copilot: Add to Chat`
+
+## Extension Settings
+
+This extension contributes the following settings:
+
+- `deepseek-copilot.model`: DeepSeek model ID to use.
+- `deepseek-copilot.thinkingMode`: Enable DeepSeek thinking mode.
+- `deepseek-copilot.reasoningEffort`: Reasoning effort level, `high` or `max`.
+- `deepseek-copilot.temperature`: Sampling temperature.
+- `deepseek-copilot.topP`: Top P sampling.
+- `deepseek-copilot.maxTokens`: Maximum tokens for responses.
+- `deepseek-copilot.responseFormat`: Response format, `text` or `json_object`.
+- `deepseek-copilot.streamResponse`: Enable streaming responses.
+- `deepseek-copilot.toolExecutionModes`: Per-tool execution modes.
+- `deepseek-copilot.baseUrl`: DeepSeek API base URL.
+
+The API key is not stored in VS Code settings. It is stored with VS Code Secret Storage.
+
+## Tools and Safety
+
+DeepSeek Copilot can execute workspace tools when enabled. Tool execution is controlled per tool:
+
+- `disabled`: never execute the tool.
+- `enabled`: execute with normal safety checks.
+- `auto_approve`: execute without confirmation only when the operation is not considered dangerous.
+
+Dangerous operations, such as overwriting files or running risky terminal commands, require confirmation before execution.
+
+## Documentation
+
+- Human documentation: `web-doc`
+- Technical documentation: https://github.com/YarCrasy/deepseek-copilot/wiki
+- DeepSeek API reference: https://api-docs.deepseek.com/
+
+## Development
+
+```bash
+npm install
+npm run compile
+npm run lint
+npm run build
+npm test
+```
+
+Useful scripts:
+
+- `npm run build:extension`: build the VS Code extension bundle.
+- `npm run build:webview`: build the React webview.
+- `npm run dev:webview`: start the webview dev server.
+
+## Known Limitations
+
+- DeepSeek is the only supported AI provider.
+- Tool execution depends on workspace permissions and user confirmation.
+- FIM support follows DeepSeek beta API behavior and may require the beta base URL.
+
+## Release Notes
+
+See [CHANGELOG.md](CHANGELOG.md).

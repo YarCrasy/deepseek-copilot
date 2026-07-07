@@ -1,0 +1,15 @@
+.vscode/**
+.vscode-test/**
+deepseek-copilot.wiki/**
+web-doc/**
+node_modules/**
+src/**
+.gitignore
+.yarnrc
+vsc-extension-quickstart.md
+*.vsix
+**/tsconfig.json
+**/eslint.config.mjs
+**/*.map
+**/*.ts
+**/.vscode-test.*

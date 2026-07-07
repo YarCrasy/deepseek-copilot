@@ -1,0 +1,26 @@
+.toolsSection {
+  .toolsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .toolSettingRow {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+  }
+
+  .toolSettingName {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}

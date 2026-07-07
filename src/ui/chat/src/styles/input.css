@@ -1,0 +1,14 @@
+input,
+textarea {
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid var(--input-border);
+  font: inherit;
+  background-color: transparent;
+  color: var(--text-primary);
+
+  &:focus {
+    outline: none;
+    border-color: var(--input-focus-border);
+  }
+}

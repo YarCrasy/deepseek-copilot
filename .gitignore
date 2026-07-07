@@ -1,0 +1,67 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+out/
+deepseek-copilot.wiki/
+.vscode-test/
+coverage/
+.nyc_output/
+
+# Vite / frontend
+web-doc/dist/
+web-doc/.astro/
+web-doc/node_modules/
+
+# TypeScript
+*.tsbuildinfo
+
+# VS Code extension
+*.vsix
+.vscode-test/
+test-results/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# IDE / editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+logs/
+*.log
+
+# Cache
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# Temporary files
+tmp/
+temp/
+
+# Local config
+*.local

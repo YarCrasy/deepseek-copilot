@@ -1,0 +1,63 @@
+import type { VsCodeApi } from "@webview/vscodeApi";
+import type { ToolCallState } from "../../ChatViewTypes";
+import { detectDiff, parseStructuredToolResult } from "../../utils/filePreview";
+import {
+  renderDiffPreview,
+  renderFilePreview,
+  renderPlainResult,
+  renderSearchPreview,
+  renderSearchResults,
+  renderStructuredFilePreview,
+  renderWriteSummary,
+} from "./ToolCallResultRenderers";
+
+interface ResultPreviewOptions {
+  toolCall: ToolCallState;
+  vscode: VsCodeApi | null;
+}
+
+export function renderToolCallResultPreview({ toolCall, vscode }: ResultPreviewOptions) {
+  const result = toolCall.result;
+  if (!result) return null;
+
+  const structured = parseStructuredToolResult(result);
+  if (structured?.type === "file") {
+    return renderStructuredFilePreview(structured);
+  }
+
+  if (structured?.type === "searchResults") {
+    return renderSearchResults(structured.results, vscode, structured.truncated);
+  }
+
+  if (structured?.type === "fileWrite") {
+    return structured.diff
+      ? renderDiffPreview(structured.diff, {
+          summary: structured.summary,
+          path: structured.path,
+          stats: structured.diffStats,
+          truncated: structured.diffTruncated,
+          binary: structured.binary,
+          beforeSize: structured.beforeSize,
+          afterSize: structured.afterSize,
+        })
+      : renderWriteSummary(structured.summary, structured.path, {
+          binary: structured.binary,
+          beforeSize: structured.beforeSize,
+          afterSize: structured.afterSize,
+        });
+  }
+
+  if (toolCall.toolName === "read_file") {
+    return renderFilePreview(toolCall.arguments, result);
+  }
+
+  if (toolCall.toolName === "search_content") {
+    return renderSearchPreview(result, toolCall.status, vscode);
+  }
+
+  if (toolCall.toolName === "create_file" && detectDiff(result)) {
+    return renderDiffPreview(result, { summary: "File changed" });
+  }
+
+  return renderPlainResult(result, toolCall.status);
+}

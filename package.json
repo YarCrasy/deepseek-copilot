@@ -1,0 +1,173 @@
+{
+  "name": "deepseek-copilot",
+  "displayName": "DeepSeek Copilot",
+  "description": "A VS Code copilot specialized on DeepSeek.",
+  "version": "0.0.1-beta",
+  "publisher": "YCraSyStudio",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/YarCrasy/deepseek-copilot.git"
+  },
+  "engines": {
+    "vscode": "^1.125.0"
+  },
+  "categories": [
+    "AI",
+    "Chat"
+  ],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "deepseek-copilot.openChat",
+        "title": "DeepSeek Copilot: Open Chat",
+        "category": "DeepSeek Copilot"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "deepseek-copilot-sidebar",
+          "title": "DeepSeek Copilot",
+          "icon": "assets/DeepSeek-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "deepseek-copilot-sidebar": [
+        {
+          "type": "webview",
+          "id": "deepseek-copilot.chatView",
+          "name": "Chat",
+          "icon": "assets/DeepSeek-icon.svg",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "configuration": {
+      "type": "object",
+      "title": "DeepSeek Copilot",
+      "properties": {
+        "deepseek-copilot.model": {
+          "type": "string",
+          "default": "deepseek-v4-flash",
+          "scope": "application",
+          "description": "DeepSeek model ID to use"
+        },
+        "deepseek-copilot.thinkingMode": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "Enable DeepSeek thinking mode for reasoning models"
+        },
+        "deepseek-copilot.reasoningEffort": {
+          "type": "string",
+          "default": "high",
+          "scope": "application",
+          "enum": [
+            "high",
+            "max"
+          ],
+          "description": "DeepSeek reasoning effort level"
+        },
+        "deepseek-copilot.temperature": {
+          "type": "number",
+          "default": 1,
+          "scope": "application",
+          "description": "Sampling temperature"
+        },
+        "deepseek-copilot.topP": {
+          "type": "number",
+          "default": 1,
+          "scope": "application",
+          "description": "Top P sampling"
+        },
+        "deepseek-copilot.maxTokens": {
+          "type": "number",
+          "default": 8192,
+          "scope": "application",
+          "description": "Maximum tokens for responses"
+        },
+        "deepseek-copilot.responseFormat": {
+          "type": "string",
+          "default": "text",
+          "scope": "application",
+          "enum": [
+            "text",
+            "json_object"
+          ],
+          "description": "Response format"
+        },
+        "deepseek-copilot.streamResponse": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "Enable streaming responses"
+        },
+        "deepseek-copilot.toolExecutionModes": {
+          "type": "object",
+          "default": {},
+          "scope": "application",
+          "patternProperties": {
+            "^[a-zA-Z0-9_-]+$": {
+              "type": "string",
+              "enum": [
+                "disabled",
+                "enabled",
+                "auto_approve"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "description": "Per-tool execution modes"
+        },
+        "deepseek-copilot.baseUrl": {
+          "type": "string",
+          "default": "https://api.deepseek.com",
+          "scope": "application",
+          "description": "DeepSeek API base URL"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run build",
+    "compile": "tsc -p ./ --noEmit",
+    "watch": "tsc -watch -p ./ --noEmit",
+    "build": "npm run build:extension && npm run build:webview",
+    "build:extension": "node esbuild.js --production",
+    "build:webview": "vite build --config src/ui/chat/vite.config.ts",
+    "dev:webview": "vite --config src/ui/chat/vite.config.ts --host 0.0.0.0 --port 5175 --strictPort",
+    "pretest": "npm run compile && npm run lint",
+    "lint": "eslint src",
+    "test": "vscode-test"
+  },
+  "dependencies": {
+    "@vscode/codicons": "^0.0.45",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "26.x",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@types/vscode": "^1.125.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
+    "esbuild": "^0.28.1",
+    "eslint": "^10.6.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.7.0",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.63.0",
+    "vite": "^8.1.3"
+  },
+  "allowScripts": {
+    "esbuild@0.28.1": true
+  }
+}

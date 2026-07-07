@@ -1,0 +1,43 @@
+.chatView {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+
+  .newChatBtn {
+    border: 1px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font: inherit;
+    transition: all 0.15s ease;
+  }
+
+  .statusMessage {
+    padding: 5px 10px;
+    line-height: 1.5;
+    margin: 5px;
+    border-radius: 5px;
+    color: var(--text-primary);
+  }
+
+  .statusMessage.error {
+    border: 1px solid color-mix(in srgb, var(--danger-color) 42%, var(--border-color));
+    background: color-mix(in srgb, var(--danger-color) 10%, transparent);
+  }
+
+  .statusMessage.warning {
+    border: 1px solid color-mix(in srgb, var(--warning-color) 36%, var(--border-color));
+    background: color-mix(in srgb, var(--warning-color) 8%, transparent);
+  }
+
+  .inputArea {
+    display: flex;
+    flex-direction: column;
+    flex: 0 0 auto;
+    gap: 8px;
+    padding: 5px;
+    border-top: 1px solid var(--border-color);
+    background: color-mix(in srgb, var(--bg-primary) 94%, black 6%);
+  }
+}

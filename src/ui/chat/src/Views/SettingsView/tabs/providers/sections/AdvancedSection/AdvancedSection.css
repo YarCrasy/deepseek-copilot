@@ -1,0 +1,59 @@
+.advancedSection {
+	.sectionTitle {
+		margin: 0;
+		padding-bottom: 8px;
+		border-bottom: 1px solid var(--border-color);
+
+		.collapsibleHeader {
+			width: 100%;
+			display: flex;
+			align-items: center;
+			justify-content: space-between;
+			padding: 0;
+			color: inherit;
+			font: inherit;
+
+			.chevron {
+				display: inline-flex;
+				transition: transform 0.18s ease;
+
+				&.collapsed {
+					transform: rotate(-90deg);
+				}
+			}
+		}
+	}
+
+	.collapsibleContent {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		transition: max-height 0.22s ease, opacity 0.22s ease, padding-top 0.22s ease;
+		opacity: 1;
+
+		&.collapsed {
+			max-height: 0;
+			opacity: 0;
+			padding: 0;
+			margin: 0;
+		}
+
+		.formatAndTokens{
+			display: flex;
+			flex-direction: row;
+		}
+
+		.numInput{
+			display: flex;
+			flex-direction: column;
+			width: 50%;
+		}
+
+		.formatSelect{
+			display: flex;
+			flex-direction: column;
+			width: 50%;
+		}
+	}
+	
+}

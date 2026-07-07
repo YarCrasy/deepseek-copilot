@@ -1,0 +1,135 @@
+.settingsView {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  color: var(--text-primary);
+  overflow-y: auto;
+  padding: 10px;
+  gap: 10px;
+
+  .settingsSection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
+    box-shadow: 0 12px 30px color-mix(in srgb, black 12%, transparent);
+  }
+
+  .settingsTabs {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
+  }
+
+  .settingsTab {
+    min-height: 32px;
+    border: 0;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font: inherit;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .settingsTab:hover {
+    color: var(--text-primary);
+  }
+
+  .settingsTab.active {
+    background: var(--input-bg);
+    color: var(--text-primary);
+    box-shadow: inset 0 0 0 1px var(--border-color);
+  }
+
+  .settingsTabPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .settingRow {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    label {
+      color: var(--text-secondary);
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 9px 10px;
+      border: 1px solid var(--input-border);
+      border-radius: 10px;
+      background-color: var(--input-bg);
+      color: var(--text-primary);
+      font: inherit;
+      outline: none;
+      transition: border-color 0.16s ease, box-shadow 0.16s ease;
+
+      &:focus {
+        border-color: var(--input-focus-border);
+        box-shadow: 0 0 0 2px color-mix(in srgb, var(--input-focus-border) 22%, transparent);
+      }
+    }
+
+    input[type="password"] {
+      font-family: var(--font-mono);
+      letter-spacing: 0.04em;
+    }
+
+    select {
+      cursor: pointer;
+      padding-right: 34px;
+    }
+  }
+
+  .notification {
+    min-height: 20px;
+    padding: 2px 2px 0;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.hidden {
+      visibility: hidden;
+    }
+
+    &.success {
+      color: var(--success-color);
+    }
+
+    &.error {
+      color: var(--danger-color);
+    }
+
+    &.info {
+      color: var(--text-secondary);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .settingsContainer {
+      padding: 14px;
+    }
+
+    .settingsSection {
+      padding: 14px;
+    }
+
+    .settingsActions button {
+      flex: 1 1 100%;
+    }
+  }
+}
