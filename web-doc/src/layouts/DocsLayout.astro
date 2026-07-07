@@ -1,6 +1,7 @@
 ---
 import {
   anchorId,
+  docsPath,
   languageLabels,
   languages,
   navLabels,
@@ -9,6 +10,7 @@ import {
   type Language,
   type PageSlug,
 } from "../i18n";
+import deepSeekIconUrl from "../../../assets/DeepSeek-icon.svg?url";
 
 const { title, description, lang = "en", currentSlug } = Astro.props as {
   title: string;
@@ -17,54 +19,13 @@ const { title, description, lang = "en", currentSlug } = Astro.props as {
   currentSlug?: PageSlug;
 };
 
-const currentPath = Astro.url.pathname;
-const isRootDocument = currentPath === "/";
-const isLegacyRootDocument = !isRootDocument && !currentPath.startsWith(`/${lang}/`);
-
-function docsHref(targetLang: Language, targetSlug?: PageSlug): string {
-  if (isRootDocument) {
-    return targetSlug ? `${targetLang}/${targetSlug}/` : `${targetLang}/`;
-  }
-
-  if (currentSlug) {
-    if (targetLang === lang) {
-      if (!targetSlug) {
-        return "../";
-      }
-
-      return targetSlug === currentSlug ? "./" : `../${targetSlug}/`;
-    }
-
-    const prefix = isLegacyRootDocument ? "../" : "../../";
-    return targetSlug ? `${prefix}${targetLang}/${targetSlug}/` : `${prefix}${targetLang}/`;
-  }
-
-  if (targetLang === lang) {
-    return targetSlug ? `${targetSlug}/` : "./";
-  }
-
-  return targetSlug ? `../${targetLang}/${targetSlug}/` : `../${targetLang}/`;
-}
-
-function assetHref(filename: string): string {
-  if (isRootDocument) {
-    return filename;
-  }
-
-  if (currentSlug) {
-    return isLegacyRootDocument ? `../${filename}` : `../../${filename}`;
-  }
-
-  return `../${filename}`;
-}
-
 const tocItems = currentSlug
   ? pageContent[lang][currentSlug].sections.map((section) => ({
       href: `#${anchorId(section.title)}`,
       label: section.title,
     }))
   : pageSlugs.map((slug) => ({
-      href: docsHref(lang, slug),
+      href: docsPath(lang, slug),
       label: navLabels[lang][slug],
     }));
 
@@ -78,18 +39,18 @@ const projectSlugs: PageSlug[] = ["changelog", "technical-decisions", "reference
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>{title} | DeepSeek Copilot</title>
     <meta name="description" content={description} />
-    <link rel="icon" href={assetHref("favicon.svg")} />
+    <link rel="icon" href={deepSeekIconUrl} />
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href={docsHref(lang)} aria-label="DeepSeek Copilot home">
-        <img src={assetHref("favicon.svg")} alt="" width="28" height="28" />
+      <a class="brand" href={docsPath(lang)} aria-label="DeepSeek Copilot home">
+        <img src={deepSeekIconUrl} alt="" width="28" height="28" />
         <span>DeepSeek Copilot</span>
       </a>
       <div class="topbarActions">
         <div class="languageSwitcher" aria-label="Language selector">
           {languages.map((item) => (
-            <a class:list={[item === lang && "active"]} href={docsHref(item, currentSlug)} hreflang={item}>
+            <a class:list={[item === lang && "active"]} href={docsPath(item, currentSlug)} hreflang={item}>
               {languageLabels[item]}
             </a>
           ))}
@@ -106,9 +67,9 @@ const projectSlugs: PageSlug[] = ["changelog", "technical-decisions", "reference
         <nav>
           <div class="navGroup">
             <p>Quick Start</p>
-            <a class:list={["navRoot", !currentSlug && "active"]} href={docsHref(lang)}>Overview</a>
+            <a class:list={["navRoot", !currentSlug && "active"]} href={docsPath(lang)}>Overview</a>
             {quickStartSlugs.map((slug) => (
-              <a class:list={[currentSlug === slug && "active"]} href={docsHref(lang, slug)}>
+              <a class:list={[currentSlug === slug && "active"]} href={docsPath(lang, slug)}>
                 {navLabels[lang][slug]}
               </a>
             ))}
@@ -116,7 +77,7 @@ const projectSlugs: PageSlug[] = ["changelog", "technical-decisions", "reference
           <div class="navGroup">
             <p>Project</p>
             {projectSlugs.map((slug) => (
-              <a class:list={[currentSlug === slug && "active"]} href={docsHref(lang, slug)}>
+              <a class:list={[currentSlug === slug && "active"]} href={docsPath(lang, slug)}>
                 {navLabels[lang][slug]}
               </a>
             ))}
