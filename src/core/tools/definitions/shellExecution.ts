@@ -1,7 +1,6 @@
 import { exec } from "child_process";
-import * as path from "path";
 import { promisify } from "util";
-import { getToolWorkspaceHost } from "../toolWorkspace";
+import { getToolWorkspaceHost, resolveWorkspacePath } from "../toolWorkspace";
 
 const execAsync = promisify(exec);
 
@@ -11,7 +10,14 @@ export async function executeWorkspaceCommand(command: string, cwd?: string): Pr
     return "Error: No workspace folder open";
   }
 
-  const workDir = cwd ? path.join(rootPath, cwd) : rootPath;
+  let workDir = rootPath;
+  if (cwd) {
+    try {
+      workDir = resolveWorkspacePath(cwd, rootPath).absolutePath;
+    } catch (err: unknown) {
+      return `Error resolving cwd '${cwd}': ${getErrorMessage(err)}`;
+    }
+  }
 
   try {
     const { stdout, stderr } = await execAsync(command, {

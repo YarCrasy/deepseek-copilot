@@ -16,9 +16,9 @@ export function buildToolCallRequest(options: BuildToolCallRequestOptions): Chat
   const baseRequest: Partial<ChatRequest> = {
     model,
     messages,
-    tools,
     stream,
     ...(stream ? { stream_options: { include_usage: true } } : {}),
+    ...(tools.length > 0 ? { tools } : {}),
     ...(cycleOptions.maxTokens !== undefined ? { max_tokens: cycleOptions.maxTokens } : {}),
     ...(cycleOptions.responseFormat ? { response_format: { type: cycleOptions.responseFormat } } : {}),
     ...(cycleOptions.userId ? { user_id: cycleOptions.userId } : {}),

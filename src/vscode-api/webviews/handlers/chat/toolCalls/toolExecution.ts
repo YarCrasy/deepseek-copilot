@@ -1,5 +1,6 @@
 import type { ToolCall } from "@/adapters";
 import { ToolExecutor } from "@/core/tools/ToolExecutor";
+import { getToolWorkspaceHost } from "@/core/tools/toolWorkspace";
 import type { ExecutionResult } from "@/core/tools/types";
 import type { HandleExecutionResultOptions, StoredExecution, ToolExecutionContext } from "./types";
 
@@ -24,7 +25,7 @@ export async function executeToolCall(toolCall: ToolCall, ctx: ToolExecutionCont
     return TOOL_DISABLED;
   }
 
-  if (mode === "enabled") {
+  if (mode === "enabled" && !ctx.shouldSkipManualConfirmation(toolCall.function.name)) {
     return executeManualToolCall(toolCall, ctx);
   }
 
@@ -34,7 +35,7 @@ export async function executeToolCall(toolCall: ToolCall, ctx: ToolExecutionCont
     result,
     ctx,
     announceStarted: true,
-    round: 0,
+    round: ctx.getCurrentRound(),
   });
 }
 
@@ -44,7 +45,7 @@ function recordInitialToolCall(toolCall: ToolCall, ctx: ToolExecutionContext): v
     toolName: toolCall.function.name,
     arguments: toolCall.function.arguments,
     round: ctx.getCurrentRound(),
-    requiresConfirmation: ctx.getToolMode(toolCall.function.name) === "enabled",
+    requiresConfirmation: ctx.getToolMode(toolCall.function.name) === "enabled" && !ctx.shouldSkipManualConfirmation(toolCall.function.name),
   });
 }
 
@@ -102,6 +103,7 @@ async function handleExecutionResult(options: HandleExecutionResultOptions): Pro
 
   const decision = await ctx.requestDangerConfirmation(toolCall, dangerInfo, { announceStarted, round });
   if (!decision.confirmed) {
+    clearFileDiffPreview();
     postToolCallResult(ctx, {
       toolCallId: toolCall.id,
       toolName: toolCall.function.name,
@@ -122,6 +124,10 @@ async function handleExecutionResult(options: HandleExecutionResultOptions): Pro
   }
 
   return executeForcedAfterTrust(toolCall, ctx);
+}
+
+function clearFileDiffPreview(): void {
+  getToolWorkspaceHost().clearFileDiffPreview?.();
 }
 
 async function executeForcedAfterTrust(toolCall: ToolCall, ctx: ToolExecutionContext): Promise<string> {

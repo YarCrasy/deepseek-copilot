@@ -1,6 +1,3 @@
-// tools/definitions/createFile.ts — Crear archivos en el proyecto
-// ── FASE 4.2: Verificar si el archivo existe antes de sobrescribir ──
-
 import type { ToolDefinition } from "@/adapters";
 import type { RegisteredTool, ToolMetadata } from "../types";
 import { getToolWorkspaceHost } from "../toolWorkspace";
@@ -17,19 +14,14 @@ async function handleCreateFile(args: Record<string, unknown>): Promise<string> 
   try {
     const workspace = getToolWorkspaceHost();
 
-    // ── Verificar si el archivo ya existe ──
     let fileExists = false;
     try {
       await workspace.stat(filePath);
       fileExists = true;
     } catch (err: unknown) {
-      // VS Code FileSystemError tiene códigos específicos:
-      // - EntryNotFound/FileNotFound/ENOENT: archivo no existe → continuar
-      // - PermissionDenied/Unavailable/otros: error real → reportar
       if (isMissingFileError(err)) {
-        // El archivo no existe, es seguro continuar
+        // Missing files are expected when creating a new file.
       } else {
-        // Error real (permisos, ruta inválida, etc.)
         return `Error checking if file "${filePath}" exists: ${getErrorMessage(err)}`;
       }
     }
@@ -43,7 +35,6 @@ async function handleCreateFile(args: Record<string, unknown>): Promise<string> 
       });
     }
 
-    // Crear directorios padre si no existen
     try {
       await workspace.createParentDirectory(filePath);
     } catch (err: unknown) {
@@ -67,8 +58,7 @@ async function handleCreateFile(args: Record<string, unknown>): Promise<string> 
 }
 
 /**
- * Versión forzada que sobrescribe archivos sin preguntar.
- * Se usa cuando el usuario ya confirmó explícitamente.
+ * Forced variant used after explicit user confirmation.
  */
 async function handleCreateFileForced(args: Record<string, unknown>): Promise<string> {
   const filePath = args.path as string;

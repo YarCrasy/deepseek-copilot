@@ -72,7 +72,7 @@ export function isLanguage(value: string | undefined): value is Language {
   return languages.includes(value as Language);
 }
 
-export function sitePath(path = ""): string {
+function sitePath(path = ""): string {
   const base = import.meta.env.BASE_URL.replace(/\/$/, "");
   const normalizedPath = path.replace(/^\//, "");
   return normalizedPath ? `${base}/${normalizedPath}` : `${base}/`;
@@ -80,10 +80,6 @@ export function sitePath(path = ""): string {
 
 export function docsPath(lang: Language, slug?: PageSlug): string {
   return sitePath(slug ? `${lang}/${slug}/` : `${lang}/`);
-}
-
-export function assetPath(filename: string): string {
-  return sitePath(filename);
 }
 
 export function anchorId(value: string): string {

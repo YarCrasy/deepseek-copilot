@@ -1,40 +1,40 @@
-// ── Tipos compartidos de configuración ──
-// Usados tanto por la extensión como por webview.
-
 export type ToolExecutionMode = "disabled" | "enabled" | "auto_approve";
 export type ToolExecutionModes = Record<string, ToolExecutionMode>;
+export type PermissionMode = "chat" | "read-only" | "workspace" | "full-access";
+export type PermissionModeAllowedTools = readonly string[] | null;
+
+export const PERMISSION_MODE_ALLOWED_TOOLS: Record<PermissionMode, PermissionModeAllowedTools> = {
+  chat: [],
+  "read-only": ["read_file", "list_directory", "search_content"],
+  workspace: ["read_file", "list_directory", "search_content", "create_file", "edit_file", "apply_patch"],
+  "full-access": null,
+};
 
 export interface AppConfig {
-  // Generales
   apiKey: string;
   baseUrl: string;
 
-  // Modelo
   model: string;
 
-  // Thinking Mode
   thinkingMode: boolean;
   reasoningEffort?: "high" | "max";
 
-  // Sampling (solo aplican si thinkingMode=false)
   temperature: number;
   topP: number;
 
-  // Output
   maxTokens: number;
   responseFormat: "text" | "json_object";
 
-  // Streaming
   streamResponse: boolean;
 
-  // Tool Calls (FASE 4)
+  permissionMode: PermissionMode;
   toolExecutionModes: ToolExecutionModes;
 
-  // Opcionales
+  autoContext: boolean;
+
   userId?: string;
 }
 
-// ── Fuente ÚNICA de valores por defecto ──
 export const DEFAULT_CONFIG: AppConfig = {
   apiKey: "",
   baseUrl: "https://api.deepseek.com",
@@ -46,5 +46,7 @@ export const DEFAULT_CONFIG: AppConfig = {
   maxTokens: 8192,
   responseFormat: "text",
   streamResponse: true,
+  permissionMode: "read-only",
   toolExecutionModes: {},
+  autoContext: false,
 };

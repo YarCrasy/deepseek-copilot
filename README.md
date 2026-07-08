@@ -40,6 +40,11 @@ https://platform.deepseek.com/api_keys
 ## Commands
 
 - `DeepSeek Copilot: Open Chat`
+- `DeepSeek Copilot: New Chat`
+- `DeepSeek Copilot: Add File to Chat`
+- `DeepSeek Copilot: Add Folder to Chat`
+- `DeepSeek Copilot: Add Selection to Chat`
+- `DeepSeek Copilot: Review Changes`
 
 ## Extension Settings
 
@@ -53,14 +58,23 @@ This extension contributes the following settings:
 - `deepseek-copilot.maxTokens`: Maximum tokens for responses.
 - `deepseek-copilot.responseFormat`: Response format, `text` or `json_object`.
 - `deepseek-copilot.streamResponse`: Enable streaming responses.
+- `deepseek-copilot.permissionMode`: Global tool permission mode, from chat-only to full access.
 - `deepseek-copilot.toolExecutionModes`: Per-tool execution modes.
 - `deepseek-copilot.baseUrl`: DeepSeek API base URL.
+- `deepseek-copilot.projectInstructions.includeHomeAgents`: Allow reading `~/.deepseek-copilot/AGENTS.md`.
 
 The API key is not stored in VS Code settings. It is stored with VS Code Secret Storage.
 
 ## Tools and Safety
 
-DeepSeek Copilot can execute workspace tools when enabled. Tool execution is controlled per tool:
+DeepSeek Copilot can execute workspace tools when enabled. Tool access is controlled first by permission mode:
+
+- `chat`: no tools.
+- `read-only`: read, list, and search workspace files.
+- `workspace`: read-only tools plus workspace file creation.
+- `full-access`: all tools. Dangerous commands still require confirmation.
+
+Tool execution is then controlled per tool:
 
 - `disabled`: never execute the tool.
 - `enabled`: execute with normal safety checks.

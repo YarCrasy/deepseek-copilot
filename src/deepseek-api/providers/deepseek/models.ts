@@ -1,6 +1,6 @@
-import { deepseekFetch, buildModelsUrl } from "./utils";
+import { deepseekFetch } from "@/deepseek-api/client/deepseekFetch";
+import { buildModelsUrl } from "@/deepseek-api/endpoints/deepseekEndpoints";
 
-// ── Interfaz de modelo desde la API ──
 export interface DeepSeekModel {
   id: string;
   object: string;
@@ -8,7 +8,6 @@ export interface DeepSeekModel {
   owned_by: string;
 }
 
-// ── Listar modelos disponibles ──
 export async function listModels(apiKey: string, baseUrl: string): Promise<DeepSeekModel[]> {
   const url = buildModelsUrl(baseUrl);
   const response = await deepseekFetch({ pathOrUrl: url, apiKey, baseUrl });
@@ -16,7 +15,6 @@ export async function listModels(apiKey: string, baseUrl: string): Promise<DeepS
   return data.data || [];
 }
 
-// ── Obtener información de un modelo específico ──
 export async function getModel(modelId: string, apiKey: string, baseUrl: string): Promise<DeepSeekModel | null> {
   const url = `${buildModelsUrl(baseUrl)}/${modelId}`;
   try {

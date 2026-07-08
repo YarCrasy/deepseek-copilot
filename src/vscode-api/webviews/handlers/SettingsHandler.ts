@@ -1,9 +1,9 @@
 import * as vscode from "vscode";
-import { SettingsManager, SecretsManager } from "@/infrastructure/storage";
+import { SettingsManager, SecretsManager } from "@/vscode-api/storage";
 import { logWarning } from "@/shared/logging/logger";
 import type { AppConfig, WebviewToHandlerMessage } from "@/adapters";
 
-type SettingsMessage = Extract<WebviewToHandlerMessage, { type: "getConfig" | "saveConfig" | "resetConfig" | "testConnection" | "getProviders" }>;
+type SettingsMessage = Extract<WebviewToHandlerMessage, { type: "getConfig" | "saveConfig" | "resetConfig" | "testConnection" }>;
 type TestConnectionMessage = Extract<WebviewToHandlerMessage, { type: "testConnection" }>;
 
 export class SettingsHandler {
@@ -22,9 +22,6 @@ export class SettingsHandler {
         break;
       case "testConnection":
         this._testConnection(message, webviewView);
-        break;
-      case "getProviders":
-        this._getProviders(webviewView);
         break;
       default:
         logWarning("[SettingsHandler] Unknown message");
@@ -46,7 +43,6 @@ export class SettingsHandler {
       keyPreview: apiKey ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : undefined,
     });
 
-    // También notificar al ChatView (que escucha 'apiKeyStatus')
     webviewView.webview.postMessage({
       type: "apiKeyStatus",
       status: apiKey ? "configured" : "missing",
@@ -55,7 +51,7 @@ export class SettingsHandler {
   }
 
   private async _saveConfig(config: Partial<AppConfig>, webviewView: vscode.WebviewView): Promise<void> {
-    // apiKey se guarda solo en SecretStorage, nunca en settings sincronizables.
+    // apiKey is stored only in SecretStorage, never in synchronized settings.
     if (Object.prototype.hasOwnProperty.call(config, "apiKey")) {
       if (config.apiKey) {
         await SecretsManager.setApiKey(this.context, config.apiKey);
@@ -63,15 +59,12 @@ export class SettingsHandler {
         await SecretsManager.deleteApiKey(this.context);
       }
     }
-    // El resto va a settings.json (sincronizable via Settings Sync)
     await SettingsManager.save(config);
 
-    // Recargar desde disco para obtener valores frescos
     const freshConfig = SettingsManager.load();
     const apiKey = await SecretsManager.getApiKey(this.context);
     const apiKeyStatus = apiKey ? ("configured" as const) : ("missing" as const);
 
-    // Notificar a TODAS las vistas con la config completa
     webviewView.webview.postMessage({
       type: "configLoaded",
       config: { ...freshConfig, apiKey: apiKey || "" },
@@ -128,12 +121,6 @@ export class SettingsHandler {
     }
   }
 
-  private _getProviders(webviewView: vscode.WebviewView): void {
-    webviewView.webview.postMessage({
-      type: "providers",
-      providers: [{ id: "deepseek", name: "DeepSeek" }],
-    });
-  }
 }
 
 function getErrorMessage(err: unknown): string {

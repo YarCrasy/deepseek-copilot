@@ -1,5 +1,3 @@
-// tools/definitions/searchContent.ts — Buscar texto en el proyecto
-
 import { exec } from "child_process";
 import { promisify } from "util";
 import type { ToolDefinition } from "@/adapters";
@@ -27,7 +25,6 @@ async function handleSearchContent(args: Record<string, unknown>): Promise<strin
 
     rootPath = workspaceRoot;
 
-    // Construir comando ripgrep (rg viene incluido con VS Code)
     let cmd = `rg --no-heading --line-number --max-count 50 -i`;
     if (filePattern) {
       cmd += ` --glob '${filePattern.replace(/'/g, "'\\''")}'`;

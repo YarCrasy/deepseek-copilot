@@ -1,4 +1,4 @@
-import { createSystemMessage, ensureSingleSystemPrompt } from "@/adapters/chat";
+import { createSystemMessage, ensureSingleSystemPrompt } from "@/adapters/deepseek/chat";
 import { chatCompletion } from "../chat";
 import { createToolResultMessage, hasToolResultMessages, validateToolCall } from "./toolCallMessages";
 import { buildToolCallRequest } from "./toolCallRequest";
@@ -12,6 +12,7 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
   const availableTools = new Map(tools.map((tool) => [tool.function.name, tool]));
   const messages = ensureSingleSystemPrompt(initialMessages, createSystemMessage);
   let toolCallsExecuted = 0;
+  let forceFinalResponse = false;
 
   for (let round = 0; round < maxRounds; round++) {
     if (cycleOptions.signal?.aborted) {
@@ -19,14 +20,15 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
     }
 
     const isFinalResponseAfterTools = hasToolResultMessages(messages);
+    const roundTools = forceFinalResponse ? [] : tools;
     const shouldStream = cycleOptions.streamFinalResponse === true && (cycleOptions.streamToolCallRounds === true || isFinalResponseAfterTools);
     const response = shouldStream
-      ? await streamToolCallRound({ messages, tools, model, apiKey, baseUrl, cycleOptions, emitStreamEvents: isFinalResponseAfterTools })
+      ? await streamToolCallRound({ messages, tools: roundTools, model, apiKey, baseUrl, cycleOptions, emitStreamEvents: isFinalResponseAfterTools })
       : await chatCompletion(
           buildToolCallRequest({
             model,
             messages,
-            tools,
+            tools: roundTools,
             stream: false,
             cycleOptions,
           }),
@@ -62,6 +64,9 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
       toolCallsExecuted++;
       cycleOptions.onToolResult?.(toolCall.id, result);
       messages.push(createToolResultMessage(toolCall.id, toolCall.function.name, result));
+      if (isSuccessfulWriteToolResult(toolCall.function.name, result)) {
+        forceFinalResponse = true;
+      }
     }
 
     if (round === maxRounds - 1) {
@@ -75,4 +80,24 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
   }
 
   throw new Error(`Tool call cycle exceeded maximum rounds (${maxRounds})`);
+}
+
+function isSuccessfulWriteToolResult(toolName: string, result: string): boolean {
+  if (!isWriteTool(toolName)) {
+    return false;
+  }
+  try {
+    const parsed: unknown = JSON.parse(result);
+    if (!parsed || typeof parsed !== "object") {
+      return false;
+    }
+    const type = (parsed as { type?: unknown }).type;
+    return type === "fileWrite" || type === "fileEdit" || type === "filePatch";
+  } catch {
+    return false;
+  }
+}
+
+function isWriteTool(toolName: string): boolean {
+  return toolName === "create_file" || toolName === "edit_file" || toolName === "apply_patch";
 }

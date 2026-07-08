@@ -39,7 +39,7 @@ export class ToolCallSession {
         baseUrl: options.providerConfig.baseUrl,
         executeToolCall: (toolCall) => executeToolCall(toolCall, this.createExecutionContext(options, executedToolCalls)),
         cycleOptions: {
-          maxRounds: 10,
+          maxRounds: 6,
           signal: options.signal,
           streamFinalResponse: true,
           streamToolCallRounds: hasAutoApprovedTools(options, enabledTools),
@@ -55,7 +55,9 @@ export class ToolCallSession {
           },
           onStreamReasoning: (reasoning) => {
             streamedReasoning += reasoning;
-            options.webviewView.webview.postMessage({ type: "streamReasoning", content: reasoning });
+            if (options.exposeReasoning) {
+              options.webviewView.webview.postMessage({ type: "streamReasoning", content: reasoning });
+            }
           },
         },
       });
@@ -113,6 +115,7 @@ export class ToolCallSession {
       webviewView: options.webviewView,
       executedToolCalls,
       getToolMode: (toolName: string) => getToolMode(options, toolName),
+      shouldSkipManualConfirmation: (toolName: string) => shouldSkipManualConfirmation(toolName),
       getCurrentRound: () => this.currentRound,
       getPendingCycle: () => this.pendingToolCallCycle,
       isDangerTrusted: (toolCall: ToolCall, confirmationResult: ConfirmationRequiredResult) => this.isDangerTrusted(toolCall, confirmationResult),
@@ -146,7 +149,7 @@ export class ToolCallSession {
     this.currentRound = round;
     options.webviewView.webview.postMessage({ type: "toolCallStarted", toolCalls, round });
 
-    const manualToolCalls = toolCalls.filter((toolCall) => getToolMode(options, toolCall.function.name) === "enabled");
+    const manualToolCalls = toolCalls.filter((toolCall) => getToolMode(options, toolCall.function.name) === "enabled" && !shouldSkipManualConfirmation(toolCall.function.name));
     if (manualToolCalls.length === 0) {
       return;
     }
@@ -256,4 +259,8 @@ function getRunnableTools(options: ToolCallRunOptions): ToolDefinition[] {
 
 function getToolMode(options: ToolCallRunOptions, toolName: string): ToolExecutionMode {
   return options.toolExecutionModes[toolName] ?? "enabled";
+}
+
+function shouldSkipManualConfirmation(toolName: string): boolean {
+  return toolName === "edit_file" || toolName === "apply_patch";
 }

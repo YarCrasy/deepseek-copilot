@@ -1,5 +1,3 @@
-// tools/definitions/listDir.ts — Listar directorios del proyecto
-
 import type { ToolDefinition } from "@/adapters";
 import type { RegisteredTool, ToolMetadata } from "../types";
 import { getToolWorkspaceHost } from "../toolWorkspace";

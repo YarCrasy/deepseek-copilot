@@ -1,11 +1,6 @@
-// ── FIM Completion (Fill-in-the-Middle) - DeepSeek API ──
-// Implementación base. Se completará en fases posteriores.
-
-import { deepseekFetch, readSSEStream, buildFimUrl } from "../utils";
-
-// ════════════════════════════════════════════════════════════════════
-// Tipos
-// ════════════════════════════════════════════════════════════════════
+import { deepseekFetch } from "@/deepseek-api/client/deepseekFetch";
+import { buildFimUrl } from "@/deepseek-api/endpoints/deepseekEndpoints";
+import { readSSEStream } from "@/deepseek-api/streaming/readSSEStream";
 
 export interface FimRequest {
   model: "deepseek-v4-pro";
@@ -36,10 +31,6 @@ export interface FimResponse {
   };
 }
 
-// ════════════════════════════════════════════════════════════════════
-// FIM Completion (sin streaming)
-// ════════════════════════════════════════════════════════════════════
-
 export async function fimCompletion(request: FimRequest, apiKey: string, baseUrl: string): Promise<FimResponse> {
   const url = buildFimUrl(getFimBaseUrl(baseUrl));
   const response = await deepseekFetch({
@@ -53,10 +44,6 @@ export async function fimCompletion(request: FimRequest, apiKey: string, baseUrl
   });
   return response.json();
 }
-
-// ════════════════════════════════════════════════════════════════════
-// FIM Completion (con streaming)
-// ════════════════════════════════════════════════════════════════════
 
 interface FimCompletionStreamOptions {
   request: FimRequest;
@@ -93,9 +80,7 @@ export async function fimCompletionStream(options: FimCompletionStreamOptions): 
         onChunk(text);
       }
     },
-    onDone: () => {
-      // Stream completed
-    },
+    onDone: () => {},
     signal,
   });
 }

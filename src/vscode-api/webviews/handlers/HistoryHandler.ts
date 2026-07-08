@@ -1,6 +1,6 @@
 import * as vscode from "vscode";
 import type { Conversation, WebviewToHandlerMessage } from "@/adapters";
-import { HistoryManager } from "@/infrastructure/storage";
+import { HistoryManager } from "@/vscode-api/storage";
 import { logWarning } from "@/shared/logging/logger";
 
 export class HistoryHandler {

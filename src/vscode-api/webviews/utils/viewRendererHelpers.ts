@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 
-export function getCodiconFontFace(codiconFontUri: vscode.Uri): string {
-  return `<style>
+export function getCodiconFontFace(codiconFontUri: vscode.Uri, nonce?: string): string {
+  const nonceAttribute = nonce ? ` nonce="${nonce}"` : "";
+  return `<style${nonceAttribute}>
 @font-face {
   font-family: "codicon";
   font-display: block;

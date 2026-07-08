@@ -13,7 +13,7 @@ export function getHtmlContent(webview: vscode.Webview, webviewDistUri: vscode.U
     const uri = webview.asWebviewUri(vscode.Uri.joinPath(webviewDistUri, cleanPath));
     return `${attr}="${uri}"`;
   });
-  html = html.replace("</head>", `${getCodiconFontFace(codiconFontUri)}</head>`);
+  html = html.replace("</head>", `${getCodiconFontFace(codiconFontUri, nonce)}</head>`);
   html = html.replace(/<script/g, `<script nonce="${nonce}"`);
   html = html.replace(/{{CSP_SOURCE}}/g, webview.cspSource);
   html = html.replace(/{{NONCE}}/g, nonce);

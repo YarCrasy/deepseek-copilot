@@ -4,19 +4,24 @@ import { SettingsHandler } from "./handlers/SettingsHandler";
 import { HistoryHandler } from "./handlers/HistoryHandler";
 import { getDevViewContent } from "./utils/devViewRenderer";
 import { getHtmlContent } from "./utils/htmlRenderer";
-import { HistoryManager } from "@/infrastructure/storage";
-import { logError, logWarning } from "@/shared/logging/logger";
-import type { PathCompletionItem, WebviewToHandlerMessage } from "@/adapters";
+import { HistoryManager } from "@/vscode-api/storage";
+import { getPathCompletionItems, insertCodeIntoActiveEditor, openWorkspaceFile } from "@/vscode-api/editor/editorActions";
+import { CHAT_VIEW_TYPE, CONFIG_SECTION, SIDEBAR_VIEW_ID } from "@/shared/constants";
+import { logWarning } from "@/shared/logging/logger";
+import type { WebviewToHandlerMessage } from "@/adapters";
+import type { ReferencedFilePayload } from "@/vscode-api/commands/chatCommands";
+
+type ChatCommandMessage = { type: "addReferencedFiles"; files: ReferencedFilePayload[] } | { type: "setDraft"; text: string };
 
 export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Disposable {
-  public static readonly viewType = "deepseek-copilot.chatView";
+  public static readonly viewType = CHAT_VIEW_TYPE;
 
   private readonly chatHandler: ChatHandler;
   private readonly settingsHandler: SettingsHandler;
   private readonly historyHandler: HistoryHandler;
   private readonly disposables: vscode.Disposable[] = [];
+  private readonly pendingMessages: ChatCommandMessage[] = [];
   private webviewView?: vscode.WebviewView;
-  private pendingDroppedUris: vscode.Uri[] = [];
 
   constructor(
     private readonly _extensionUri: vscode.Uri,
@@ -33,7 +38,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
     this.disposables.push(
       vscode.workspace.onDidChangeConfiguration((event) => {
-        if (event.affectsConfiguration("deepseek-copilot")) {
+        if (event.affectsConfiguration(CONFIG_SECTION)) {
           void this.refreshSettings();
         }
       }),
@@ -72,7 +77,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
       }
     });
 
-    await this.flushPendingDroppedUris();
+    await this.flushPendingMessages();
   }
 
   public dispose(): void {
@@ -80,22 +85,26 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
       this.disposables.pop()?.dispose();
     }
     this.webviewView = undefined;
-    this.pendingDroppedUris = [];
   }
 
-  public async addUrisToChat(uris: vscode.Uri[]): Promise<void> {
-    if (uris.length === 0) {
+  public async addReferencedFiles(files: ReferencedFilePayload[]): Promise<void> {
+    if (files.length === 0) {
       return;
     }
 
-    await vscode.commands.executeCommand("workbench.view.extension.deepseek-copilot-sidebar");
+    await this.postToChat({ type: "addReferencedFiles", files });
+  }
 
-    if (!this.webviewView) {
-      this.pendingDroppedUris.push(...uris);
-      return;
+  public async setDraft(text: string): Promise<void> {
+    await this.postToChat({ type: "setDraft", text });
+  }
+
+  public async startNewChat(): Promise<void> {
+    await this.revealChat();
+    if (this.webviewView) {
+      this.chatHandler.handle({ type: "newConversation" }, this.webviewView);
+      await this.webviewView.webview.postMessage({ type: "setDraft", text: "" });
     }
-
-    await Promise.all(uris.map((uri) => this.handleFileDrop(uri.toString(), this.webviewView!)));
   }
 
   private async refreshSettings(): Promise<void> {
@@ -106,14 +115,30 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
     await this.settingsHandler.postCurrentConfig(this.webviewView);
   }
 
-  private async flushPendingDroppedUris(): Promise<void> {
-    if (!this.webviewView || this.pendingDroppedUris.length === 0) {
+  private async postToChat(message: ChatCommandMessage): Promise<void> {
+    await this.revealChat();
+
+    if (!this.webviewView) {
+      this.pendingMessages.push(message);
       return;
     }
 
-    const uris = this.pendingDroppedUris;
-    this.pendingDroppedUris = [];
-    await Promise.all(uris.map((uri) => this.handleFileDrop(uri.toString(), this.webviewView!)));
+    await this.webviewView.webview.postMessage(message);
+  }
+
+  private async revealChat(): Promise<void> {
+    await vscode.commands.executeCommand(SIDEBAR_VIEW_ID);
+  }
+
+  private async flushPendingMessages(): Promise<void> {
+    if (!this.webviewView || this.pendingMessages.length === 0) {
+      return;
+    }
+
+    const messages = this.pendingMessages.splice(0);
+    for (const message of messages) {
+      await this.webviewView.webview.postMessage(message);
+    }
   }
 
   private async isDevServerAvailable(devServerUrl: string): Promise<boolean> {
@@ -134,198 +159,55 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
   private _routeMessage(message: WebviewToHandlerMessage, webviewView: vscode.WebviewView): void {
     switch (message.type) {
-      // ── Chat ──
       case "sendMessage":
       case "cancelGeneration":
-      case "streamResponse":
       case "getAvailableTools":
       case "executeToolCall":
       case "newConversation":
         this.chatHandler.handle(message, webviewView);
         break;
 
-      // ── Drag & Drop (FASE 4.3) ──
-      case "processFileDrop":
-        this.handleFileDrop(message.uri, webviewView);
-        break;
-
       case "getPathCompletions":
         void this.handlePathCompletions(message.requestId, message.query, webviewView);
         break;
 
-      // ── Configuración ──
+      case "copyCode":
+        void vscode.env.clipboard.writeText(message.code);
+        break;
+
+      case "insertCode":
+        void insertCodeIntoActiveEditor(message.code);
+        break;
+
+      case "selectModel":
+        void webviewView.webview.postMessage({ type: "modelChanged", modelId: message.modelId });
+        break;
+
       case "getConfig":
       case "saveConfig":
       case "resetConfig":
       case "testConnection":
-      case "getProviders":
         this.settingsHandler.handle(message, webviewView);
         break;
 
-      // ── Historial ──
       case "getHistory":
       case "deleteConversation":
       case "loadConversation":
         this.historyHandler.handle(message, webviewView);
         break;
 
-      // ── File Preview (FASE 4.3) ──
       case "openFile":
-        this.handleOpenFile(message.path, message.line);
+        void openWorkspaceFile(message.path, message.line);
         break;
 
       default:
-        logWarning(`[WebviewProvider] Unknown message type: ${message.type}`);
-    }
-  }
-
-  /**
-   * Abre un archivo en el editor, opcionalmente en una línea específica.
-   */
-  private async handleOpenFile(filePath: string, line?: number): Promise<void> {
-    try {
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      if (!workspaceFolders || workspaceFolders.length === 0) {
-        return;
-      }
-      const rootPath = workspaceFolders[0].uri;
-      const fileUri = vscode.Uri.joinPath(rootPath, filePath);
-
-      const document = await vscode.workspace.openTextDocument(fileUri);
-      const editor = await vscode.window.showTextDocument(document);
-
-      if (line !== undefined) {
-        const targetLine = Math.max(0, line - 1); // VS Code usa 0-based
-        const position = new vscode.Position(targetLine, 0);
-        editor.selection = new vscode.Selection(position, position);
-        editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
-      }
-    } catch (err) {
-      logError(`[WebviewProvider] Error opening file '${filePath}'`, err);
+        logWarning("[WebviewProvider] Unknown message type");
     }
   }
 
   private async handlePathCompletions(requestId: number, query: string, webviewView: vscode.WebviewView): Promise<void> {
     const items = await getPathCompletionItems(query);
     await webviewView.webview.postMessage({ type: "pathCompletions", requestId, query, items });
-  }
-
-  /**
-   * Procesa un archivo/carpeta soltado desde el VS Code Explorer.
-   * Lee el contenido si es archivo < 1MB, o devuelve solo metadatos.
-   *
-   * Maneja diferentes formatos de URI que puede enviar la webview:
-   * - file:///ruta/absoluta
-   * - vscode-file://vscode-app/ruta/absoluta (arrastrado desde el explorer)
-   * - /ruta/absoluta (Unix)
-   * - C:\\ruta\\absoluta (Windows)
-   */
-  private async handleFileDrop(uriStr: string, webviewView: vscode.WebviewView): Promise<void> {
-    try {
-      // Normalizar URI: convertir a vscode.Uri válido
-      const uri = this.normalizeDropUri(uriStr);
-
-      const stat = await vscode.workspace.fs.stat(uri);
-      const isDir = stat.type === vscode.FileType.Directory;
-
-      // Obtener ruta relativa al workspace, o absoluta si no hay workspace
-      let relativePath: string;
-      const workspaceFolders = vscode.workspace.workspaceFolders;
-      if (workspaceFolders && workspaceFolders.length > 0) {
-        relativePath = vscode.workspace.asRelativePath(uri);
-      } else {
-        relativePath = uri.fsPath;
-      }
-
-      const name = uri.path.split("/").pop() || uri.fsPath.split(/[/\\]/).pop() || "unknown";
-
-      if (isDir) {
-        webviewView.webview.postMessage({
-          type: "fileDropResult",
-          files: [
-            {
-              path: relativePath,
-              name,
-              content: "",
-              language: "",
-              type: "directory" as const,
-              size: stat.size,
-            },
-          ],
-        });
-        return;
-      }
-
-      let content = "";
-      const MAX_SIZE = 1024 * 1024; // 1 MB
-      if (stat.size < MAX_SIZE) {
-        const buf = await vscode.workspace.fs.readFile(uri);
-        content = Buffer.from(buf).toString("utf-8");
-      }
-
-      const ext = uri.path.split(".").pop() || "";
-
-      webviewView.webview.postMessage({
-        type: "fileDropResult",
-        files: [
-          {
-            path: relativePath,
-            name,
-            content,
-            language: ext,
-            type: "file" as const,
-            size: stat.size,
-          },
-        ],
-      });
-    } catch (err) {
-      logError("[WebviewProvider] Error handling file drop", err);
-    }
-  }
-
-  /**
-   * Convierte una cadena URI en un vscode.Uri válido,
-   * soportando formatos que envía la webview al arrastrar desde el explorador.
-   */
-  private normalizeDropUri(uriStr: string): vscode.Uri {
-    const trimmedUri = uriStr.trim();
-
-    // 1. Esquema interno de VS Code al arrastrar desde el Explorer.
-    if (trimmedUri.startsWith("vscode-file://")) {
-      const parsed = vscode.Uri.parse(trimmedUri);
-      return vscode.Uri.file(this.normalizeFilePath(parsed.path));
-    }
-
-    // 2. Esquema file:// estándar
-    if (trimmedUri.startsWith("file://")) {
-      return vscode.Uri.parse(trimmedUri);
-    }
-
-    // 3. Workspaces remotos de VS Code.
-    if (trimmedUri.startsWith("vscode-remote://")) {
-      return vscode.Uri.parse(trimmedUri);
-    }
-
-    // 4. Ruta absoluta Unix (empieza con /)
-    if (trimmedUri.startsWith("/")) {
-      return vscode.Uri.file(trimmedUri);
-    }
-
-    // 5. Ruta absoluta Windows (ej: C:\\users\\...)
-    if (/^[a-zA-Z]:[\\/]/.test(trimmedUri)) {
-      return vscode.Uri.file(trimmedUri);
-    }
-
-    // 6. Fallback: parseo directo
-    return vscode.Uri.parse(trimmedUri);
-  }
-
-  private normalizeFilePath(path: string): string {
-    const decodedPath = decodeURIComponent(path);
-    if (/^\/[a-zA-Z]:[\\/]/.test(decodedPath)) {
-      return decodedPath.slice(1);
-    }
-    return decodedPath;
   }
 }
 
@@ -334,10 +216,8 @@ const WEBVIEW_MESSAGE_TYPES = new Set<WebviewToHandlerMessage["type"]>([
   "saveConfig",
   "resetConfig",
   "testConnection",
-  "getProviders",
   "sendMessage",
   "cancelGeneration",
-  "streamResponse",
   "copyCode",
   "insertCode",
   "selectModel",
@@ -346,7 +226,6 @@ const WEBVIEW_MESSAGE_TYPES = new Set<WebviewToHandlerMessage["type"]>([
   "loadConversation",
   "deleteConversation",
   "executeToolCall",
-  "processFileDrop",
   "getPathCompletions",
   "getAvailableTools",
   "openFile",
@@ -358,60 +237,4 @@ function isWebviewToHandlerMessage(message: unknown): message is WebviewToHandle
   }
   const type = (message as { type?: unknown }).type;
   return typeof type === "string" && WEBVIEW_MESSAGE_TYPES.has(type as WebviewToHandlerMessage["type"]);
-}
-
-async function getPathCompletionItems(query: string): Promise<PathCompletionItem[]> {
-  const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
-  if (!workspaceFolder || !isRelativePathQuery(query)) {
-    return [];
-  }
-
-  const normalizedQuery = query.replace(/\\/g, "/");
-  const slashIndex = normalizedQuery.lastIndexOf("/");
-  const directoryQuery = slashIndex >= 0 ? normalizedQuery.slice(0, slashIndex + 1) : "./";
-  const namePrefix = slashIndex >= 0 ? normalizedQuery.slice(slashIndex + 1).toLowerCase() : normalizedQuery.toLowerCase();
-  const directoryUri = resolveWorkspacePath(workspaceFolder.uri, directoryQuery);
-
-  try {
-    const entries = await vscode.workspace.fs.readDirectory(directoryUri);
-    return entries
-      .filter(([name]) => !name.startsWith(".") && name.toLowerCase().startsWith(namePrefix))
-      .map(([name, type]) => {
-        const isDirectory = type === vscode.FileType.Directory;
-        return {
-          label: isDirectory ? `${name}/` : name,
-          path: `${directoryQuery}${name}${isDirectory ? "/" : ""}`,
-          type: isDirectory ? "directory" : "file",
-        } satisfies PathCompletionItem;
-      })
-      .sort((a, b) => {
-        if (a.type !== b.type) {
-          return a.type === "directory" ? -1 : 1;
-        }
-        return a.label.localeCompare(b.label);
-      })
-      .slice(0, 50);
-  } catch {
-    return [];
-  }
-}
-
-function isRelativePathQuery(query: string): boolean {
-  return query.startsWith("./") || query.startsWith("../");
-}
-
-function resolveWorkspacePath(root: vscode.Uri, query: string): vscode.Uri {
-  const segments: string[] = [];
-  for (const segment of query.split("/")) {
-    if (!segment || segment === ".") {
-      continue;
-    }
-    if (segment === "..") {
-      segments.pop();
-      continue;
-    }
-    segments.push(segment);
-  }
-
-  return vscode.Uri.joinPath(root, ...segments);
 }

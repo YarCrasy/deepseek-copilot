@@ -7,17 +7,20 @@ interface DangerousPattern {
 }
 
 const DANGEROUS_PATTERNS: DangerousPattern[] = [
-  { pattern: /\brm\s+-rf\b/, level: "destructive", message: "This will RECURSIVELY DELETE files without confirmation." },
+  { pattern: /\brm\s+-[^\s-]*r[^\s-]*f[^\s-]*\b|\brm\s+-[^\s-]*f[^\s-]*r[^\s-]*\b/, level: "destructive", message: "This will RECURSIVELY DELETE files without confirmation." },
   { pattern: /\brm\s+--recursive\b/, level: "destructive", message: "This will RECURSIVELY DELETE files without confirmation." },
   { pattern: /\bgit\s+clean\s+-(fd|df)\b/, level: "destructive", message: "This will DELETE untracked files and directories permanently." },
   { pattern: /\bgit\s+reset\s+--hard\b/, level: "destructive", message: "This will DISCARD all local changes permanently." },
-  { pattern: /\bgit\s+push\s+--force\b/, level: "destructive", message: "This will FORCE-PUSH overwriting remote history." },
+  { pattern: /\bgit\s+push\b.*\s--force(?:-with-lease)?\b/, level: "destructive", message: "This will FORCE-PUSH overwriting remote history." },
   { pattern: /\bgit\s+push\s+origin\s+--delete\b/, level: "destructive", message: "This will DELETE a remote branch." },
   { pattern: /\bgit\s+rebase\s+--(hard|onto)\b/, level: "destructive", message: "Git rebase rewrites commit history." },
   { pattern: /\bgit\s+update-ref\s+-d\b/, level: "destructive", message: "This will DELETE a git reference." },
   { pattern: /\bdd\b/, level: "destructive", message: "dd can overwrite disks and partitions." },
   { pattern: /\bmkfs|fdisk|parted\b/, level: "destructive", message: "Partition and filesystem operations are destructive." },
   { pattern: /\b(curl|wget)\b.*\|\s*\b(bash|sh|zsh)\b/, level: "destructive", message: "Piping internet content directly to shell is dangerous." },
+  { pattern: /\b(?:npm|pnpm|yarn|bun)\s+publish\b/, level: "dangerous", message: "Publishing packages has external side effects." },
+  { pattern: /\b(?:vsce|ovsx)\s+publish\b/, level: "dangerous", message: "Publishing extensions has external side effects." },
+  { pattern: /\b(?:firebase|vercel|netlify|wrangler)\s+(?:deploy|publish)\b/, level: "dangerous", message: "Publishing or deploying has external side effects." },
   { pattern: />\s+\S+/, level: "dangerous", message: "Redirecting output can overwrite files." },
   { pattern: /\bgit\s+checkout\s+--\b/, level: "dangerous", message: "This will DISCARD local changes in working directory." },
   { pattern: /\bgit\s+branch\s+-D\b/, level: "dangerous", message: "This will FORCE-DELETE a branch." },
@@ -73,18 +76,18 @@ function parseCommand(command: string): ParsedCommand {
 export function analyzeDangerLevel(command: string): { level: DangerLevel; message?: string } {
   const parsed = parseCommand(command);
 
+  for (const { pattern, level, message } of DANGEROUS_PATTERNS) {
+    if (pattern.test(command)) {
+      return { level, message };
+    }
+  }
+
   if (SAFE_COMMANDS.has(parsed.command)) {
     const pipeIndex = parsed.args.indexOf("|");
     if (pipeIndex !== -1) {
       return analyzeDangerLevel(parsed.args.substring(pipeIndex + 1).trim());
     }
     return { level: "safe" };
-  }
-
-  for (const { pattern, level, message } of DANGEROUS_PATTERNS) {
-    if (pattern.test(command)) {
-      return { level, message };
-    }
   }
 
   if (/\b(write|overwrite|delete|remove|mv|cp)\b/i.test(command)) {

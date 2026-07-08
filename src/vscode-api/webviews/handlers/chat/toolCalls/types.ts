@@ -52,6 +52,7 @@ export interface ToolCallRunOptions {
   providerConfig: AppConfig;
   webviewView: vscode.WebviewView;
   toolExecutionModes: ToolExecutionModes;
+  exposeReasoning: boolean;
   signal?: AbortSignal;
   isCancelling: () => boolean;
 }
@@ -68,6 +69,7 @@ export interface ToolExecutionContext {
   webviewView: vscode.WebviewView;
   executedToolCalls: Map<string, StoredExecution>;
   getToolMode: (toolName: string) => ToolExecutionMode;
+  shouldSkipManualConfirmation: (toolName: string) => boolean;
   getCurrentRound: () => number;
   getPendingCycle: () => PendingToolCallCycle | null;
   requestDangerConfirmation: (

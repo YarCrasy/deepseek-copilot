@@ -12,7 +12,7 @@ export const technicalDecisions: PageContent = {
         "core must not import vscode, React, or concrete HTTP clients.",
         "deepseek-api owns DeepSeek protocol details, streaming, models, and tool-call requests.",
         "vscode-api owns activation, commands, webviews, workspace, files, and terminal adapters.",
-        "ui/chat owns the React webview and communicates only through the shared message contract.",
+        "ui owns the React webview and communicates only through the shared message contract.",
         "web-doc uses Astro and must support English, Spanish, and Chinese.",
       ],
     },

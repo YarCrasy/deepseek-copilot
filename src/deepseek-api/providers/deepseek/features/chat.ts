@@ -1,11 +1,8 @@
-// ── Chat Completion - DeepSeek API ──
-import { deepseekFetch, readSSEStream, buildChatUrl } from "../utils";
+import { deepseekFetch } from "@/deepseek-api/client/deepseekFetch";
+import { buildChatUrl } from "@/deepseek-api/endpoints/deepseekEndpoints";
+import { readSSEStream } from "@/deepseek-api/streaming/readSSEStream";
 import type { AppConfig, ChatCompletionRequest, ChatCompletionResponse, StreamChunk, ChatUsage } from "@/adapters";
 import { DEEPSEEK_DEFAULTS } from "../deepseek-config";
-
-// ════════════════════════════════════════════════════════════════════
-// Tipos (aliases para compatibilidad con imports existentes)
-// ════════════════════════════════════════════════════════════════════
 
 interface DeepSeekChatRequest extends ChatCompletionRequest {
   stream_options?: {
@@ -18,10 +15,6 @@ export type ChatRequest = DeepSeekChatRequest;
 export type ChatResponse = ChatCompletionResponse;
 export type ChatStreamChunk = StreamChunk;
 
-// ════════════════════════════════════════════════════════════════════
-// Constructor de request body
-// ════════════════════════════════════════════════════════════════════
-
 export function buildChatBody(request: Partial<ChatRequest>, config: AppConfig): Partial<ChatRequest> {
   const body: Partial<ChatRequest> = {
     model: request.model || config.model || DEEPSEEK_DEFAULTS.model,
@@ -32,20 +25,15 @@ export function buildChatBody(request: Partial<ChatRequest>, config: AppConfig):
     body.stream_options = request.stream_options ?? { include_usage: true };
   }
 
-  // Thinking mode: temperature/top_p no son soportados
   const thinkingEnabled = config.thinkingMode ?? DEEPSEEK_DEFAULTS.thinkingMode;
   if (thinkingEnabled) {
     body.thinking = { type: "enabled" };
-    // reasoning_effort ya viene mapeado desde ChatHandler._sendMessage()
-    // via providerConfig.reasoningEffort → config.reasoningEffort.
-    // mapReasoningEffort() es la única fuente de verdad (definida en types/chat.ts).
     const reasoningEffort = request.reasoning_effort ?? config.reasoningEffort;
     if (reasoningEffort) {
       body.reasoning_effort = reasoningEffort;
     }
   } else {
     body.thinking = { type: "disabled" };
-    // Non-thinking mode: permitir temperature/top_p
     if (request.temperature !== undefined) {
       body.temperature = request.temperature;
     } else {
@@ -58,7 +46,6 @@ export function buildChatBody(request: Partial<ChatRequest>, config: AppConfig):
     }
   }
 
-  // Parseos comunes
   if (request.max_tokens !== undefined) {
     body.max_tokens = request.max_tokens;
   } else {
@@ -87,10 +74,6 @@ export function buildChatBody(request: Partial<ChatRequest>, config: AppConfig):
   return body;
 }
 
-// ════════════════════════════════════════════════════════════════════
-// Chat Completion (sin streaming)
-// ════════════════════════════════════════════════════════════════════
-
 export async function chatCompletion(request: ChatRequest, apiKey: string, baseUrl: string): Promise<ChatResponse> {
   const url = buildChatUrl(baseUrl);
   const response = await deepseekFetch({
@@ -104,10 +87,6 @@ export async function chatCompletion(request: ChatRequest, apiKey: string, baseU
   });
   return response.json();
 }
-
-// ════════════════════════════════════════════════════════════════════
-// Chat Completion (con streaming vía SSE)
-// ════════════════════════════════════════════════════════════════════
 
 interface ChatCompletionStreamOptions {
   request: ChatRequest;
@@ -169,15 +148,12 @@ export async function chatCompletionStream(options: ChatCompletionStreamOptions)
         finishReason = finish_reason;
       }
 
-      // Reasoning content (thinking mode)
       if (typeof delta.reasoning_content === "string") {
         onChunk({ type: "reasoning", reasoning_content: delta.reasoning_content });
       }
-      // Content normal
       if (typeof delta.content === "string") {
         onChunk({ type: "content", content: delta.content });
       }
-      // Tool calls
       if (Array.isArray(delta.tool_calls)) {
         onChunk({ type: "tool_call", tool_calls: delta.tool_calls });
       }

@@ -1,9 +1,8 @@
-// tools/definitions/readFile.ts — Leer archivos del proyecto
-
 import type { ToolDefinition } from "@/adapters";
 import type { RegisteredTool, ToolMetadata } from "../types";
 import { getToolWorkspaceHost } from "../toolWorkspace";
 import { bufferLooksBinary, createStructuredResult, toTextPreview } from "./structuredResult";
+import { createHash } from "crypto";
 
 async function handleReadFile(args: Record<string, unknown>): Promise<string> {
   const filePath = args.path as string;
@@ -29,6 +28,7 @@ async function handleReadFile(args: Record<string, unknown>): Promise<string> {
       size: content.byteLength,
       previewSize: Buffer.byteLength(preview.content, "utf-8"),
       truncated: preview.truncated,
+      sha256: createHash("sha256").update(content).digest("hex"),
       content: preview.content,
     });
   } catch (err: unknown) {

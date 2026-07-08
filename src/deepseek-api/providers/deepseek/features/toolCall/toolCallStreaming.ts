@@ -46,6 +46,15 @@ export async function streamToolCallRound(options: StreamToolCallRoundOptions): 
     signal: cycleOptions.signal,
   });
 
+  if (!hasToolCallsInStream && emitStreamEvents) {
+    if (finalReasoning) {
+      cycleOptions.onStreamReasoning?.(finalReasoning);
+    }
+    if (finalContent) {
+      cycleOptions.onStreamChunk?.(finalContent);
+    }
+  }
+
   const message: ChatMessage = {
     role: "assistant",
     content: finalContent || null,
@@ -81,18 +90,12 @@ interface StreamState {
 }
 
 function applyStreamChunk(options: { chunk: StreamChunk; state: StreamState; cycleOptions: ToolCallCycleOptions; emitStreamEvents: boolean }): StreamState {
-  const { chunk, state, cycleOptions, emitStreamEvents } = options;
+  const { chunk, state } = options;
 
   switch (chunk.type) {
     case "content":
-      if (emitStreamEvents) {
-        cycleOptions.onStreamChunk?.(chunk.content ?? "");
-      }
       return { ...state, finalContent: state.finalContent + (chunk.content ?? "") };
     case "reasoning":
-      if (emitStreamEvents) {
-        cycleOptions.onStreamReasoning?.(chunk.reasoning_content ?? "");
-      }
       return { ...state, finalReasoning: state.finalReasoning + (chunk.reasoning_content ?? "") };
     case "tool_call":
       mergeStreamingToolCalls(state.streamingToolCalls, chunk.tool_calls);

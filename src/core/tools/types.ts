@@ -1,33 +1,29 @@
-// tools/types.ts — Tipos locales del módulo tools
-
 import type { ToolDefinition } from "@/adapters";
 
-// ── Danger Levels ──
-
-/** Nivel de peligrosidad de una herramienta */
+/** Tool danger level. */
 export type DangerLevel = "safe" | "caution" | "dangerous" | "destructive";
 
-/** Metadatos extendidos de una herramienta */
+/** Extended metadata for a registered tool. */
 export interface ToolMetadata {
   dangerLevel: DangerLevel;
   warningMessage?: string;
   requiresConfirmation: boolean;
 }
 
-/** Una herramienta registrada: su definición (schema) + función ejecutora + metadatos */
+/** Registered tool definition, handler, and metadata. */
 export interface RegisteredTool {
   definition: ToolDefinition;
   handler: (args: Record<string, unknown>) => Promise<string>;
   metadata: ToolMetadata;
 }
 
-/** Resultado de la validación de una tool call */
+/** Tool-call validation result. */
 export interface ValidationResult {
   valid: boolean;
   error?: string;
 }
 
-/** Resultado de la ejecución de una tool call (ya sea éxito o error) */
+/** Tool-call execution result. */
 export interface ExecutionResult {
   toolCallId: string;
   toolName: string;
@@ -35,7 +31,7 @@ export interface ExecutionResult {
   isError: boolean;
 }
 
-/** Respuesta especial del handler que requiere confirmación adicional */
+/** Special handler response requiring user confirmation. */
 export interface ConfirmationRequiredResult {
   requiresConfirmation: true;
   dangerLevel: DangerLevel;

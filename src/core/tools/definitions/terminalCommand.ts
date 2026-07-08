@@ -1,5 +1,3 @@
-// tools/definitions/terminalCommand.ts — Ejecutar comandos en terminal
-
 import type { ToolDefinition } from "@/adapters";
 import type { RegisteredTool, ToolMetadata } from "../types";
 import { analyzeDangerLevel } from "./dangerAnalysis";

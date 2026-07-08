@@ -1,7 +1,8 @@
 import * as vscode from "vscode";
 import type { AppConfig, ChatCompletionRequest, ChatMessage, StreamChunk } from "@/adapters";
 import type { BaseProvider } from "@/deepseek-api/BaseProvider";
-import { createSystemMessage, mapReasoningEffort } from "@/adapters/chat";
+import { createSystemMessage, mapReasoningEffort } from "@/adapters/deepseek/chat";
+import { PartialStreamError, type StreamedAssistantResult } from "@/core/errors/PartialStreamError";
 import type { SendMessagePayload } from "./types";
 
 interface SendMessageStreamingOptions {
@@ -11,21 +12,6 @@ interface SendMessageStreamingOptions {
   provider: BaseProvider;
   webviewView: vscode.WebviewView;
   signal: AbortSignal;
-}
-
-export interface StreamedAssistantResult {
-  content: string;
-  reasoning: string;
-}
-
-export class PartialStreamError extends Error {
-  constructor(
-    message: string,
-    readonly partial: StreamedAssistantResult,
-  ) {
-    super(message);
-    this.name = "PartialStreamError";
-  }
 }
 
 export async function sendMessageStreaming({ messages, payload, config, provider, webviewView, signal }: SendMessageStreamingOptions): Promise<StreamedAssistantResult> {
@@ -84,7 +70,7 @@ function postStreamChunk(webviewView: vscode.WebviewView, chunk: StreamChunk): v
     case "error":
       webviewView.webview.postMessage({
         type: "streamError",
-        error: chunk.error ?? "Error desconocido del stream",
+        error: chunk.error ?? "Unknown stream error",
       });
       break;
     case "tool_call":

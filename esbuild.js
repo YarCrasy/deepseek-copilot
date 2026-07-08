@@ -7,23 +7,15 @@ const watch = process.argv.includes("--watch");
 
 const projectRoot = __dirname;
 
-/**
- * Resuelve una ruta probando extensiones comunes.
- */
 function resolveWithExtensions(basePath) {
-  // Si ya existe como archivo, devolverla. Si es directorio, probar index.*
   if (fs.existsSync(basePath) && fs.statSync(basePath).isFile()) return basePath;
-  // Probar con extensiones
   for (const ext of [".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.tsx", "/index.js"]) {
     const withExt = basePath + ext;
     if (fs.existsSync(withExt)) return withExt;
   }
-  return basePath; // fallback: que esbuild reporte el error
+  return basePath;
 }
 
-/**
- * Plugin de alias para esbuild (soporte de prefijos via onResolve)
- */
 const aliasPlugin = {
   name: "alias",
   setup(build) {
@@ -31,7 +23,7 @@ const aliasPlugin = {
       return { path: resolveWithExtensions(path.resolve(projectRoot, "src", args.path.slice(2))) };
     });
     build.onResolve({ filter: /^@webview\// }, (args) => {
-      return { path: resolveWithExtensions(path.resolve(projectRoot, "src", "ui", "chat", "src", args.path.slice(9))) };
+      return { path: resolveWithExtensions(path.resolve(projectRoot, "src", "ui", "src", args.path.slice(9))) };
     });
   },
 };

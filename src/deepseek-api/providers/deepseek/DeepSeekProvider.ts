@@ -1,6 +1,3 @@
-// ── DeepSeekProvider - Orquestador principal ──
-// Implementa BaseProvider y delega en los módulos features/.
-
 import { BaseProvider } from "../../BaseProvider";
 import type { AppConfig, ChatCompletionRequest, ChatCompletionResponse, StreamChunk } from "@/adapters";
 import { chatCompletion, chatCompletionStream, buildChatBody, type ChatRequest } from "./features/chat";
@@ -14,7 +11,6 @@ export class DeepSeekProvider extends BaseProvider {
     super(config);
   }
 
-  // ── Chat Completion (sin streaming) ──
   async chatCompletion(request: ChatCompletionRequest): Promise<ChatCompletionResponse> {
     const chatRequest = this._applyDefaults(request);
     const body = buildChatBody(chatRequest, this.config);
@@ -22,7 +18,6 @@ export class DeepSeekProvider extends BaseProvider {
     return response;
   }
 
-  // ── Chat Completion (con streaming) ──
   async chatCompletionStream(request: ChatCompletionRequest, onChunk: (chunk: StreamChunk) => void, signal?: AbortSignal): Promise<void> {
     const chatRequest = this._applyDefaults(request);
     const body = buildChatBody(chatRequest, this.config);
@@ -38,7 +33,6 @@ export class DeepSeekProvider extends BaseProvider {
     });
   }
 
-  // ── Test de conexión ──
   async testConnection(): Promise<{ success: boolean; error?: string }> {
     try {
       await chatCompletion(
@@ -57,13 +51,10 @@ export class DeepSeekProvider extends BaseProvider {
     }
   }
 
-  // ── Listar modelos ──
   async listModels(): Promise<Array<{ id: string; name: string }>> {
     const models = await listModels(this.config.apiKey, this.config.baseUrl);
     return models.map((m) => ({ id: m.id, name: m.id }));
   }
-
-  // ── Solo aplica defaults, sin casts (tipos ya compatibles) ──
 
   private _applyDefaults(req: ChatCompletionRequest): Partial<ChatRequest> {
     const deepSeekRequest = req as Partial<ChatRequest>;

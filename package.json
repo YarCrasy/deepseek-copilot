@@ -23,14 +23,83 @@
         "command": "deepseek-copilot.openChat",
         "title": "DeepSeek Copilot: Open Chat",
         "category": "DeepSeek Copilot"
+      },
+      {
+        "command": "deepseek-copilot.addFileToChat",
+        "title": "DeepSeek Copilot: Add File to Chat",
+        "category": "DeepSeek Copilot",
+        "icon": "$(add)"
+      },
+      {
+        "command": "deepseek-copilot.addFolderToChat",
+        "title": "DeepSeek Copilot: Add Folder to Chat",
+        "category": "DeepSeek Copilot",
+        "icon": "$(add)"
+      },
+      {
+        "command": "deepseek-copilot.addSelectionToChat",
+        "title": "DeepSeek Copilot: Add Selection to Chat",
+        "category": "DeepSeek Copilot",
+        "icon": "$(add)"
+      },
+      {
+        "command": "deepseek-copilot.newChat",
+        "title": "DeepSeek Copilot: New Chat",
+        "category": "DeepSeek Copilot",
+        "icon": "$(add)"
+      },
+      {
+        "command": "deepseek-copilot.reviewChanges",
+        "title": "DeepSeek Copilot: Review Changes",
+        "category": "DeepSeek Copilot",
+        "icon": "$(git-pull-request)"
       }
     ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "deepseek-copilot.addFileToChat",
+          "when": "resourceScheme == file && !explorerResourceIsFolder",
+          "group": "navigation@50"
+        },
+        {
+          "command": "deepseek-copilot.addFolderToChat",
+          "when": "resourceScheme == file && explorerResourceIsFolder",
+          "group": "navigation@51"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "deepseek-copilot.addSelectionToChat",
+          "when": "editorHasSelection",
+          "group": "navigation@50"
+        },
+        {
+          "command": "deepseek-copilot.reviewChanges",
+          "when": "resourceScheme == file",
+          "group": "navigation@51"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "deepseek-copilot.newChat",
+          "when": "view == deepseek-copilot.chatView",
+          "group": "navigation@1"
+        }
+      ],
+      "scm/title": [
+        {
+          "command": "deepseek-copilot.reviewChanges",
+          "group": "navigation@50"
+        }
+      ]
+    },
     "viewsContainers": {
       "activitybar": [
         {
           "id": "deepseek-copilot-sidebar",
           "title": "DeepSeek Copilot",
-          "icon": "assets/DeepSeek-icon.svg"
+          "icon": "src/assets/DeepSeek-icon.svg"
         }
       ]
     },
@@ -40,7 +109,7 @@
           "type": "webview",
           "id": "deepseek-copilot.chatView",
           "name": "Chat",
-          "icon": "assets/DeepSeek-icon.svg",
+          "icon": "src/assets/DeepSeek-icon.svg",
           "visibility": "visible"
         }
       ]
@@ -105,6 +174,36 @@
           "scope": "application",
           "description": "Enable streaming responses"
         },
+        "deepseek-copilot.permissionMode": {
+          "type": "string",
+          "default": "read-only",
+          "scope": "application",
+          "enum": [
+            "chat",
+            "read-only",
+            "workspace",
+            "full-access"
+          ],
+          "enumDescriptions": [
+            "Chat only; no tools are available.",
+            "Allow read-only workspace tools.",
+            "Allow read-only tools plus workspace file creation, edits, and patches.",
+            "Allow all tools. Dangerous commands still require confirmation."
+          ],
+          "description": "Global permission mode for tool access"
+        },
+        "deepseek-copilot.autoContext": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "Automatically include the active editor and git status/diff context with chat requests."
+        },
+        "deepseek-copilot.projectInstructions.includeHomeAgents": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "Allow DeepSeek Copilot to read ~/.deepseek-copilot/AGENTS.md as a global instruction source."
+        },
         "deepseek-copilot.toolExecutionModes": {
           "type": "object",
           "default": {},
@@ -137,19 +236,23 @@
     "watch": "tsc -watch -p ./ --noEmit",
     "build": "npm run build:extension && npm run build:webview",
     "build:extension": "node esbuild.js --production",
-    "build:webview": "vite build --config src/ui/chat/vite.config.ts",
-    "dev:webview": "vite --config src/ui/chat/vite.config.ts --host 0.0.0.0 --port 5175 --strictPort",
+    "build:webview": "vite build --config src/ui/vite.config.ts",
+    "dev:webview": "vite --config src/ui/vite.config.ts --host 0.0.0.0 --port 5175 --strictPort",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "vscode-test"
+    "test": "npm run test:unit && vscode-test",
+    "test:unit": "node scripts/run-unit-tests.mjs"
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.45",
     "react": "^19.2.7",
-    "react-dom": "^19.2.7"
+    "react-dom": "^19.2.7",
+    "react-markdown": "^10.1.0",
+    "refractor": "^5.0.0",
+    "rehype-sanitize": "^6.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@types/mocha": "^10.0.10",
     "@types/node": "26.x",
     "@types/react": "^19.2.17",
@@ -157,12 +260,9 @@
     "@types/vscode": "^1.125.0",
     "@vitejs/plugin-react": "^6.0.3",
     "@vscode/test-cli": "^0.0.15",
-    "@vscode/test-electron": "^3.0.0",
     "esbuild": "^0.28.1",
     "eslint": "^10.6.0",
-    "eslint-plugin-react-hooks": "^7.1.1",
-    "eslint-plugin-react-refresh": "^0.5.3",
-    "globals": "^17.7.0",
+    "mocha": "^11.7.6",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.63.0",
     "vite": "^8.1.3"
