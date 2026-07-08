@@ -1,11 +1,11 @@
-import type { RegisteredTool } from "../types";
-import { readFileDefinition, readFileHandler, readFileMetadata } from "./readFile";
-import { searchContentDefinition, searchContentHandler, searchContentMetadata } from "./searchContent";
-import { listDirDefinition, listDirHandler, listDirMetadata } from "./listDir";
-import { createFileDefinition, createFileHandler, createFileMetadata, createFileHandlerForced } from "./createFile";
-import { editFileDefinition, editFileHandler, editFileMetadata, editFileHandlerForced } from "./editFile";
-import { applyPatchDefinition, applyPatchHandler, applyPatchMetadata, applyPatchHandlerForced } from "./applyPatch";
-import { terminalCommandDefinition, terminalCommandHandler, terminalCommandMetadata, terminalCommandHandlerForced } from "./terminalCommand";
+import type { RegisteredTool } from "../Types";
+import { readFileDefinition, readFileHandler, readFileMetadata } from "./ReadFile";
+import { searchContentDefinition, searchContentHandler, searchContentMetadata } from "./SearchContent";
+import { listDirDefinition, listDirHandler, listDirMetadata } from "./ListDir";
+import { createFileDefinition, createFileHandler, createFileMetadata, createFileHandlerForced } from "./CreateFile";
+import { editFileDefinition, editFileHandler, editFileMetadata, editFileHandlerForced } from "./EditFile";
+import { applyPatchDefinition, applyPatchHandler, applyPatchMetadata, applyPatchHandlerForced } from "./ApplyPatch";
+import { terminalCommandDefinition, terminalCommandHandler, terminalCommandMetadata, terminalCommandHandlerForced } from "./TerminalCommand";
 
 /** Complete list of built-in tools. */
 export const BUILT_IN_TOOLS: RegisteredTool[] = [

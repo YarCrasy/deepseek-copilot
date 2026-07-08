@@ -6,11 +6,11 @@ import Mocha from "mocha";
 
 const outDir = resolve(".tmp/unit-tests");
 const entryPoints = [
-  "src/test/applyPatch.test.ts",
-  "src/test/dangerAnalysis.test.ts",
-  "src/test/editFile.test.ts",
-  "src/test/toolRegistry.test.ts",
-  "src/test/toolWorkspace.test.ts",
+  "src/test/ApplyPatch.test.ts",
+  "src/test/DangerAnalysis.test.ts",
+  "src/test/EditFile.test.ts",
+  "src/test/ToolRegistry.test.ts",
+  "src/test/ToolWorkspace.test.ts",
 ];
 
 rmSync(outDir, { recursive: true, force: true });

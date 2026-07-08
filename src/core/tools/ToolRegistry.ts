@@ -1,6 +1,6 @@
 import type { ToolDefinition } from "@/adapters";
-import { logWarning } from "@/shared/logging/logger";
-import type { RegisteredTool, ValidationResult } from "./types";
+import { logWarning } from "@/shared/logging/Logger";
+import type { RegisteredTool, ValidationResult } from "./Types";
 
 /**
  * Central tool catalog.

@@ -32,7 +32,7 @@ const content = homeContent[lang as Language];
       </tr>
     </tbody>
   </table>
-  <section class="sectionList" aria-label="Sections">
+  <section class="sectionList" aria-label="sections">
     {pageSlugs.map((slug) => (
       <a href={docsPath(lang, slug)}>
         <strong>{navLabels[lang][slug]}</strong>

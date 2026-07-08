@@ -12,7 +12,7 @@ const productionCsp = [
   "script-src {{CSP_SOURCE}} 'nonce-{{NONCE}}'",
 ].join('; ');
 
-// https://vite.dev/config/
+// https://vite.dev/Config/
 export default defineConfig({
   root: __dirname,
   plugins: [
@@ -40,7 +40,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': srcRoot,
-      '@webview': path.resolve(__dirname, 'src'),
+      '@webview': __dirname,
     },
   },
   build: {

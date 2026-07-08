@@ -1,0 +1,64 @@
+.dangerConfirmation {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 0;
+  background: transparent;
+}
+
+.dangerCommandPreview {
+  min-width: 0;
+  color: var(--text-secondary);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.dangerCommandPreview code {
+  font-family: var(--font-mono);
+}
+
+.toolCallDecisionRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-evenly;
+  gap: 6px;
+  width: fit-content;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.toolCallDecisionRow .toolCallDecisionOption {
+  width: auto;
+  min-height: 26px;
+  flex: 0 1 auto;
+  padding: 4px 9px;
+  white-space: nowrap;
+}
+
+.toolCallDecisionRow .dangerRememberBtn {
+  min-width: 0;
+  flex: 0 1 auto;
+  justify-content: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dangerConfirmBtn,
+.dangerConfirmBtn.primary,
+.dangerRememberBtn {
+  border-color: color-mix(in srgb, var(--warning-color, #d9a441) 55%, var(--border-color));
+  background: color-mix(in srgb, var(--warning-color, #d9a441) 14%, transparent);
+  color: var(--text-primary);
+}
+
+.dangerConfirmBtn:hover,
+.dangerRememberBtn:hover {
+  background: color-mix(in srgb, var(--warning-color, #d9a441) 22%, transparent);
+}
+
+.dangerCancelBtn {
+  border-color: var(--border-color);
+  background: transparent;
+  color: var(--text-secondary);
+}

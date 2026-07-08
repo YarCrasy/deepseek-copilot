@@ -1,0 +1,99 @@
+@import url(./styles/Base.css);
+@import url(./styles/Variables.css);
+@import url(./styles/Buttons.css);
+@import url(./styles/Select.css);
+@import url(./styles/Input.css);
+
+html,
+body,
+#root {
+	height: 100%;
+}
+
+.app {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	min-height: 0;
+	overflow: hidden;
+}
+
+.viewPane {
+	display: flex;
+	flex: 1 1 auto;
+	width: 100%;
+	min-height: 0;
+	min-width: 0;
+}
+
+.viewPane.hidden {
+	display: none;
+}
+
+[data-tooltip] {
+	position: relative;
+}
+
+[data-tooltip]::after {
+	position: absolute;
+	left: 50%;
+	bottom: calc(100% + 8px);
+	z-index: 1000;
+	width: max-content;
+	max-width: min(420px, calc(100vw - 32px));
+	padding: 4px 8px;
+	border: 1px solid var(--vscode-editorHoverWidget-border, #454545);
+	border-radius: 3px;
+	background: var(--vscode-editorHoverWidget-background, #252526);
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+	color: var(--vscode-editorHoverWidget-foreground, var(--text-primary));
+	content: attr(data-tooltip);
+	font-family: var(--vscode-font-family, var(--font-sans));
+	font-size: 12px;
+	font-weight: 400;
+	line-height: 1.4;
+	opacity: 0;
+	pointer-events: none;
+	text-align: left;
+	white-space: normal;
+	transform: translate(-50%, 2px);
+	transition: opacity 80ms ease, transform 80ms ease;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+	opacity: 1;
+	transform: translate(-50%, 0);
+}
+
+[data-tooltip-position="bottom"]::after {
+	top: calc(100% + 8px);
+	bottom: auto;
+	transform: translate(-50%, -2px);
+}
+
+[data-tooltip-position="bottom"]:hover::after,
+[data-tooltip-position="bottom"]:focus-visible::after {
+	transform: translate(-50%, 0);
+}
+
+[data-tooltip-align="start"]::after {
+	left: 0;
+	transform: translateY(2px);
+}
+
+[data-tooltip-align="start"]:hover::after,
+[data-tooltip-align="start"]:focus-visible::after {
+	transform: translateY(0);
+}
+
+[data-tooltip-align="end"]::after {
+	right: 0;
+	left: auto;
+	transform: translateY(2px);
+}
+
+[data-tooltip-align="end"]:hover::after,
+[data-tooltip-align="end"]:focus-visible::after {
+	transform: translateY(0);
+}

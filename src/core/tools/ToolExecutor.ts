@@ -1,7 +1,7 @@
 import type { ToolCall } from "@/adapters";
 import { ToolRegistry } from "./ToolRegistry";
 import { FORCED_HANDLERS } from "./definitions";
-import type { DangerLevel, ExecutionResult, ConfirmationRequiredResult } from "./types";
+import type { DangerLevel, ExecutionResult, ConfirmationRequiredResult } from "./Types";
 
 /**
  * Executes tool calls and propagates handler-level confirmation requests.

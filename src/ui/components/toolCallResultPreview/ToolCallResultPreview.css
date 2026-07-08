@@ -1,0 +1,128 @@
+.filePreview,
+.toolCallResult {
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
+}
+
+.filePreviewHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 7px 9px;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.filePreviewName {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.filePreviewSize,
+.filePreviewLang,
+.filePreviewType {
+  flex: 0 0 auto;
+  color: var(--text-secondary);
+  font-size: 10px;
+}
+
+.filePreviewText,
+.filePreviewCode,
+.toolCallResult pre,
+.diffContent {
+  max-width: 100%;
+  margin: 0;
+  padding: 9px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.filePreviewCode code,
+.filePreviewText code,
+.codeLine {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.codeLine {
+  display: block;
+}
+
+.filePreviewNotice,
+.writeSummary,
+.searchResultMore {
+  padding: 8px 9px;
+  color: var(--text-secondary);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.searchResultsList {
+  display: flex;
+  flex-direction: column;
+}
+
+.searchResultItem {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 4px;
+  width: 100%;
+  padding: 7px 9px;
+  border: 0;
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 55%, transparent);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+}
+
+.searchResultItem:hover {
+  background: color-mix(in srgb, var(--accent-color) 10%, transparent);
+}
+
+.searchResultFile,
+.searchResultText {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.searchResultLine {
+  color: var(--text-secondary);
+}
+
+.syntaxKeyword {
+  color: var(--vscode-symbolIcon-keywordForeground, #c586c0);
+}
+
+.syntaxString {
+  color: var(--vscode-symbolIcon-stringForeground, #ce9178);
+}
+
+.syntaxNumber {
+  color: var(--vscode-symbolIcon-numberForeground, #b5cea8);
+}
+
+.syntaxComment {
+  color: var(--vscode-editorLineNumber-foreground, #6a9955);
+  font-style: italic;
+}

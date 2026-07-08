@@ -1,5 +1,5 @@
-export type { AppConfig, PermissionMode, ToolExecutionMode, ToolExecutionModes } from "./config";
-export { PERMISSION_MODE_ALLOWED_TOOLS } from "./config";
+export type { AppConfig, PermissionMode, ToolExecutionMode, ToolExecutionModes } from "./Config";
+export { PERMISSION_MODE_ALLOWED_TOOLS } from "./Config";
 export type {
   WebviewToHandlerMessage,
   HandlerToWebviewMessage,
@@ -9,7 +9,7 @@ export type {
   AvailableToolInfo,
   AvailableToolParameter,
   PathCompletionItem,
-} from "./messages/webview";
+} from "./messages/Webview";
 export type {
   ChatMessage,
   ToolCall,
@@ -20,5 +20,5 @@ export type {
   StreamChunk,
   ChatUsage,
   MessageRole,
-} from "./deepseek/chat";
-export type { DeepSeekModelId, DeepSeekModelInfo, ReasoningEffort, ResponseFormatType, ModelOption } from "./deepseek/models";
+} from "./deepseek/Chat";
+export type { DeepSeekModelId, DeepSeekModelInfo, ReasoningEffort, ResponseFormatType, ModelOption } from "./deepseek/Models";

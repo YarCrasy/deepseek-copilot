@@ -8,7 +8,7 @@
     "types": ["node", "vscode", "mocha", "vite/client"],
     "paths": {
       "@/*": ["./src/*"],
-      "@webview/*": ["./src/ui/src/*"]
+      "@webview/*": ["./src/ui/*"]
     },
     "sourceMap": true,
     "strict": true,

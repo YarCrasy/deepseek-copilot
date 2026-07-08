@@ -1,0 +1,68 @@
+.historyListItem {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: border-left-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+  border-left: 3px solid transparent;
+  outline: none;
+
+  &:hover {
+    border-left-color: var(--accent-color);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  &:active {
+    border-left-color: var(--accent-color);
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--accent-color);
+    outline-offset: 2px;
+  }
+
+  .historyContent {
+    flex: 1 1 auto;
+    min-width: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .title {
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+  }
+
+  .metadata {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  .deleteConversationBtn {
+    flex: 0 0 auto;
+    width: 28px;
+    height: 28px;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 4px;
+    color: var(--text-secondary);
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .deleteConversationBtn:hover {
+    color: var(--vscode-errorForeground, #f48771);
+    background: var(--vscode-toolbar-hoverBackground, rgba(255, 255, 255, 0.08));
+  }
+}

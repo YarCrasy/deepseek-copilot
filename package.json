@@ -99,7 +99,7 @@
         {
           "id": "deepseek-copilot-sidebar",
           "title": "DeepSeek Copilot",
-          "icon": "src/assets/DeepSeek-icon.svg"
+          "icon": "src/assets/DeepSeekIcon.svg"
         }
       ]
     },
@@ -109,7 +109,7 @@
           "type": "webview",
           "id": "deepseek-copilot.chatView",
           "name": "Chat",
-          "icon": "src/assets/DeepSeek-icon.svg",
+          "icon": "src/assets/DeepSeekIcon.svg",
           "visibility": "visible"
         }
       ]
