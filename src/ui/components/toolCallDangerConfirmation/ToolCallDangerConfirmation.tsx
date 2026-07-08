@@ -24,7 +24,7 @@ function DangerConfirmation({ toolCallId, dangerConfirmation, onConfirm, onCance
 
       <div className="toolCallDecisionRow">
         <button
-          className="toolCallDecisionOption primary dangerConfirmBtn"
+          className="toolCallDecisionOption primary dangerPrimaryAction dangerConfirmBtn"
           onClick={(event) => {
             event.stopPropagation();
             onConfirm(toolCallId, { trustForSession: false });
@@ -34,7 +34,7 @@ function DangerConfirmation({ toolCallId, dangerConfirmation, onConfirm, onCance
         </button>
         {canTrustForSession && (
           <button
-            className="toolCallDecisionOption dangerRememberBtn"
+            className="toolCallDecisionOption dangerPrimaryAction dangerRememberBtn"
             onClick={(event) => {
               event.stopPropagation();
               onConfirm(toolCallId, { trustForSession: true });

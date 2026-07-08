@@ -1,11 +1,9 @@
-/* ========== RESET ========== */
 * {
+  box-sizing: border-box;
   margin: 0;
   padding: 0;
-  box-sizing: border-box;
 }
 
-/* ========== BODY ========== */
 body {
   font-family: var(--font-ui);
   font-size: var(--font-size);
@@ -13,7 +11,6 @@ body {
   background: var(--bg-primary);
 }
 
-/* ========== SCROLLBAR ========== */
 ::-webkit-scrollbar {
   width: 6px;
 }
@@ -24,15 +21,5 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-/* ========== KEYBOARD SHORTCUT ========== */
-kbd {
-  background: var(--bg-secondary);
-  border: 1px solid var(--border-color);
-  border-radius: 3px;
-  padding: 1px 5px;
-  font-family: var(--font-mono);
-  font-size: 10px;
+  background: none;
 }

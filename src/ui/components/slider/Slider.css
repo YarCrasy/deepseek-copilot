@@ -1,14 +1,12 @@
-.slider{
-  display: flex;
+.slider {
   flex-direction: column;
-
+  display: flex;
   .sliderWithValue {
-    display: flex;
     align-items: center;
-
+    display: flex;
     .sliderValue {
-      width: 40px;
       text-align: right;
+      width: 40px;
       color: var(--text-primary);
     }
   }

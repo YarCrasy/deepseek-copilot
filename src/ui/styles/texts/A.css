@@ -1,0 +1,5 @@
+a {
+  color: var(--text-link);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}

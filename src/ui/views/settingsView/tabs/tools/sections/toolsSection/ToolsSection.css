@@ -1,54 +1,45 @@
 .toolsSection {
   .permissionModeRow {
-    display: flex;
+    border-bottom: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
     flex-direction: column;
-    align-items: stretch;
     gap: 6px;
     width: 100%;
     padding-bottom: 10px;
-    border-bottom: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  }
-
-  .permissionModeLabel {
-    color: var(--text-primary);
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .permissionModeSelect {
-    width: 100%;
-  }
-
-  .toolsList {
     display: flex;
+    .permissionModeLabel {
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .permissionModeSelect {
+      width: 100%;
+    }
+  }
+  .toolsList {
     flex-direction: column;
     gap: 8px;
-  }
-
-  .toolSettingRow {
     display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+  }
+  .toolSettingRow {
+    border-bottom: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+    flex-flow: wrap;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    border-bottom: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
-  }
-
-  .toolSettingInfo {
     display: flex;
+  }
+  .toolSettingInfo {
     flex-direction: column;
-    min-width: 0;
     gap: 2px;
+    min-width: 0;
+    display: flex;
+    .toolSettingName {
+      color: var(--text-primary);
+      font-family: var(--font-mono);
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 12px;
+      font-weight: 700;
+    }
   }
-
-  .toolSettingName {
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    font-weight: 700;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
 }

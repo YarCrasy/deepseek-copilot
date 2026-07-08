@@ -1,7 +1,7 @@
 :root {
   --bg-primary: var(--vscode-sideBar-background, #1e1e1e);
   --bg-secondary: var(--vscode-input-background, #3c3c3c);
-  --text-primary: var(--vscode-sideBar-foreground, #cccccc);
+  --text-primary: var(--vscode-sideBar-foreground, #ccc);
   --text-secondary: var(--vscode-descriptionForeground, #9d9d9d);
   --text-link: var(--vscode-textLink-foreground, #3794ff);
   --border-color: var(--vscode-widget-border, #454545);
@@ -14,14 +14,12 @@
   --input-focus-border: var(--vscode-focusBorder, #007acc);
   --button-bg: var(--vscode-button-background, #007acc);
   --button-hover: var(--vscode-button-hoverBackground, #005999);
-  --button-fg: var(--vscode-button-foreground, #ffffff);
+  --button-fg: var(--vscode-button-foreground, #fff);
   --button-secondary-bg: var(--vscode-button-secondaryBackground, #3a3d41);
   --button-secondary-hover: var(--vscode-button-secondaryHoverBackground, #45494e);
-  --font-mono: 'Cascadia Code', 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
-  --font-ui: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif);
+  --font-mono: "Cascadia Code", "JetBrains Mono", "Fira Code", "Consolas", monospace;
+  --font-ui: var(--vscode-font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif);
   --font-size: var(--vscode-font-size, 13px);
-
-  /* Chat-specific (shared for consistency) */
   --bg-chat-user: var(--vscode-textBlockQuote-background, #2d2d2d);
   --code-bg: var(--vscode-textCodeBlock-background, #2d2d2d);
 }

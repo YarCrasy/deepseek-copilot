@@ -1,0 +1,9 @@
+kbd {
+  background: color-mix(in srgb, var(--code-bg) 86%, black 14%);
+  border: 1px solid var(--border-color);
+  font-family: var(--font-mono);
+  border-radius: 4px;
+  padding: 1px 5px 2px;
+  font-size: 11px;
+  line-height: 1.2;
+}

@@ -1,0 +1,9 @@
+th {
+  border: 1px solid var(--border-color);
+  background: color-mix(in srgb, var(--bg-secondary) 88%, black 12%);
+  color: var(--text-primary);
+  text-align: left;
+  vertical-align: top;
+  padding: 7px 9px;
+  font-weight: 650;
+}

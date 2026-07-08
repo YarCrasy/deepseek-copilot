@@ -1,0 +1,6 @@
+td {
+  border: 1px solid var(--border-color);
+  text-align: left;
+  vertical-align: top;
+  padding: 7px 9px;
+}

@@ -1,9 +1,10 @@
 {
-  "name": "deepseek-copilot",
-  "displayName": "DeepSeek Copilot",
+  "name": "yars-dpsk-copilot",
+  "displayName": "Yar's deepseek copilot",
   "description": "A VS Code copilot specialized on DeepSeek.",
-  "version": "0.0.1-beta",
-  "publisher": "YCraSyStudio",
+  "version": "0.1.0",
+  "preview": true,
+  "publisher": "yarcrasy",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -17,6 +18,7 @@
     "Chat"
   ],
   "main": "./dist/extension.js",
+  "activationEvents": [],
   "contributes": {
     "commands": [
       {

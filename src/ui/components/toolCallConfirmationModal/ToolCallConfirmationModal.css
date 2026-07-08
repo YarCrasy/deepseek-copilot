@@ -1,181 +1,153 @@
 .toolCallModalBackdrop {
-  position: fixed;
-  right: 12px;
-  bottom: calc(env(safe-area-inset-bottom, 0px) + 64px);
-  left: 12px;
   z-index: 30;
-  display: flex;
+  background: none;
   justify-content: center;
-  padding: 0;
-  background: transparent;
-  pointer-events: none;
-}
-
-.toolCallModal {
+  flex: none;
+  padding: 0 14px 10px;
   display: flex;
+  position: relative;
+}
+.toolCallModal {
+  border: 1px solid color-mix(in srgb, var(--accent-color) 42%, var(--border-color));
+  background: color-mix(in srgb, var(--bg-primary) 96%, black 4%);
+  border-radius: 10px;
   flex-direction: column;
   gap: 8px;
   width: min(540px, 100%);
-  max-height: min(42vh, 360px);
+  max-height: min(34vh, 300px);
   padding: 12px;
+  display: flex;
   overflow: auto;
-  border: 1px solid color-mix(in srgb, var(--accent-color) 42%, var(--border-color));
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--bg-primary) 96%, black 4%);
-  box-shadow: 0 12px 36px color-mix(in srgb, black 42%, transparent);
-  pointer-events: auto;
+  box-shadow: 0 8px 24px #00000045;
 }
-
 .toolCallModalHeader,
 .toolCallModalBatchActions {
-  display: flex;
   align-items: center;
+  display: flex;
 }
-
 .toolCallModalHeader {
   justify-content: space-between;
   gap: 12px;
+  h3 {
+    margin: 0 0 2px;
+    font-size: 13px;
+  }
+  p {
+    color: var(--text-secondary);
+    margin: 0;
+    font-size: 11px;
+  }
 }
-
-.toolCallModalHeader h3 {
-  margin: 0 0 2px;
-  color: var(--text-primary);
-  font-size: 13px;
-}
-
-.toolCallModalHeader p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 11px;
-}
-
 .toolCallModalArgs {
   max-height: 160px;
 }
-
 .toolCallModalBatchActions {
-  gap: 8px;
-  flex-wrap: wrap;
-  padding-top: 10px;
   border-top: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
+  flex-wrap: wrap;
+  gap: 8px;
+  padding-top: 10px;
 }
-
 .toolCallModalDetails {
   color: var(--text-secondary);
   font-size: 11px;
+  &[open] summary:before {
+    transform: rotate(90deg);
+  }
+  summary {
+    border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
+    background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
+    cursor: pointer;
+    border-radius: 8px;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 28px;
+    padding: 6px 9px;
+    list-style: none;
+    display: flex;
+    &:before {
+      content: "›";
+      color: var(--text-secondary);
+      margin-right: 0;
+      display: inline-block;
+    }
+    span:first-of-type {
+      color: var(--text-primary);
+      flex: auto;
+    }
+    span:not(:first-of-type) {
+      color: var(--text-secondary);
+      font-family: var(--font-mono);
+      flex: none;
+      font-size: 11px;
+    }
+  }
+  .toolCallArgs {
+    margin-top: 7px;
+  }
 }
-
-.toolCallModalDetails summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-  width: 100%;
-  min-height: 28px;
-  padding: 6px 9px;
-  border: 1px solid color-mix(in srgb, var(--border-color) 72%, transparent);
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
-  cursor: pointer;
-  list-style: none;
-}
-
-.toolCallModalDetails summary::before {
-  content: "›";
-  display: inline-block;
-  margin-right: 0;
-  color: var(--text-secondary);
-}
-
-.toolCallModalDetails[open] summary::before {
-  transform: rotate(90deg);
-}
-
-.toolCallModalDetails summary span:first-of-type {
-  flex: 1 1 auto;
-  color: var(--text-primary);
-}
-
-.toolCallModalDetails summary span:not(:first-of-type) {
-  flex: 0 0 auto;
-  color: var(--text-secondary);
-  font-family: var(--font-mono);
-  font-size: 11px;
-}
-
-.toolCallModalDetails .toolCallArgs {
-  margin-top: 7px;
-}
-
 .toolCallDecisionList {
-  display: flex;
   flex-direction: column;
   gap: 5px;
-}
-
-.toolCallDecisionOption {
   display: flex;
-  align-items: center;
-  gap: 8px;
+}
+.toolCallDecisionOption {
   width: 100%;
   min-height: 28px;
-  padding: 5px 8px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: transparent;
   color: var(--text-secondary);
   cursor: pointer;
-  font-size: 12px;
   text-align: left;
-}
-
-.toolCallDecisionOption:hover {
-  background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
-  color: var(--text-primary);
-}
-
-.toolCallDecisionOption.primary {
-  background: color-mix(in srgb, var(--bg-secondary) 74%, transparent);
-  color: var(--text-primary);
-}
-
-.toolCallDecisionOption > span {
-  display: inline-flex;
+  background: none;
+  border: 1px solid #0000;
+  border-radius: 8px;
   align-items: center;
-  justify-content: center;
-  width: 18px;
-  height: 18px;
-  flex: 0 0 18px;
-  border-radius: 999px;
-  background: color-mix(in srgb, var(--text-secondary) 22%, transparent);
-  color: var(--text-primary);
-  font-size: 10px;
-  line-height: 1;
+  gap: 8px;
+  padding: 5px 8px;
+  font-size: 12px;
+  display: flex;
+  &:hover {
+    background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
+    color: var(--text-primary);
+  }
+  &.primary {
+    background: color-mix(in srgb, var(--bg-secondary) 74%, transparent);
+    color: var(--text-primary);
+  }
+  > span {
+    background: color-mix(in srgb, var(--text-secondary) 22%, transparent);
+    width: 18px;
+    height: 18px;
+    color: var(--text-primary);
+    border-radius: 999px;
+    flex: 0 0 18px;
+    justify-content: center;
+    align-items: center;
+    font-size: 10px;
+    line-height: 1;
+    display: inline-flex;
+  }
 }
-
 .toolCallActionBtn {
-  padding: 5px 9px;
   border: 1px solid color-mix(in srgb, var(--accent-color) 55%, var(--border-color));
-  border-radius: 6px;
   background: color-mix(in srgb, var(--accent-color) 18%, transparent);
   color: var(--text-primary);
   cursor: pointer;
   font: inherit;
+  border-radius: 6px;
+  padding: 5px 9px;
   font-size: 11px;
   font-weight: 600;
-}
-
-.toolCallActionBtn:hover {
-  background: color-mix(in srgb, var(--accent-color) 28%, transparent);
-}
-
-.toolCallActionBtn.secondary {
-  border-color: var(--border-color);
-  background: var(--button-secondary-bg);
-  color: var(--text-secondary);
-}
-
-.toolCallActionBtn.secondary:hover {
-  background: var(--button-secondary-hover);
-  color: var(--text-primary);
+  &:hover {
+    background: color-mix(in srgb, var(--accent-color) 28%, transparent);
+  }
+  &.secondary {
+    border-color: var(--border-color);
+    background: var(--button-secondary-bg);
+    color: var(--text-secondary);
+    &:hover {
+      background: var(--button-secondary-hover);
+      color: var(--text-primary);
+    }
+  }
 }

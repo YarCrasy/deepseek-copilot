@@ -1,0 +1,70 @@
+.token {
+  &:is(.comment, .prolog, .cdata) {
+    color: var(--vscode-editorLineNumber-foreground, #6a9955);
+    font-style: italic;
+  }
+
+  &:is(.doctype, .doctype-tag, .atrule, .keyword) {
+    color: var(--vscode-symbolIcon-keywordForeground, #569cd6);
+  }
+
+  &.punctuation {
+    color: var(--vscode-descriptionForeground, gray);
+  }
+
+  &:is(.tag, .name, .selector, .builtin) {
+    color: var(--vscode-symbolIcon-classForeground, #4ec9b0);
+  }
+
+  &:is(.attr-name, .property, .literal-property, .variable, .parameter) {
+    color: var(--vscode-symbolIcon-propertyForeground, #9cdcfe);
+  }
+
+  &:is(.attr-equals, .operator, .entity, .url) {
+    color: var(--vscode-editor-foreground, #d4d4d4);
+  }
+
+  &:is(.attr-value, .string, .char, .inserted) {
+    color: var(--vscode-symbolIcon-stringForeground, #ce9178);
+  }
+
+  &:is(.boolean, .number, .constant, .symbol, .deleted) {
+    color: var(--vscode-symbolIcon-numberForeground, #b5cea8);
+  }
+
+  &:is(.function, .class-name) {
+    color: var(--vscode-symbolIcon-functionForeground, #dcdcaa);
+  }
+
+  &.return-type {
+    color: var(--vscode-symbolIcon-interfaceForeground, #4ec9b0);
+  }
+
+  &.namespace {
+    color: var(--vscode-symbolIcon-namespaceForeground, #c8c8c8);
+  }
+}
+
+.language-css,
+.style {
+  .token.string {
+    color: var(--vscode-editor-foreground, #d4d4d4);
+  }
+}
+
+.syntaxKeyword {
+  color: var(--vscode-symbolIcon-keywordForeground, #569cd6);
+}
+
+.syntaxString {
+  color: var(--vscode-symbolIcon-stringForeground, #ce9178);
+}
+
+.syntaxNumber {
+  color: var(--vscode-symbolIcon-numberForeground, #b5cea8);
+}
+
+.syntaxComment {
+  color: var(--vscode-editorLineNumber-foreground, #6a9955);
+  font-style: italic;
+}

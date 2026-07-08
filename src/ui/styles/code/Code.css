@@ -1,0 +1,63 @@
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+:not(pre) > code,
+.inline-code {
+  background: color-mix(in srgb, var(--code-bg) 85%, black 15%);
+  border-radius: 4px;
+  padding: .12rem .32rem;
+  font-size: 12px;
+}
+
+.code-block {
+  border: 1px solid var(--border-color);
+  background: var(--code-bg);
+  border-radius: 12px;
+  margin: 10px 0;
+  overflow: hidden;
+
+  code {
+    white-space: pre;
+    padding: 12px;
+    font-size: 12px;
+    line-height: 1.6;
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+.toolCallArgs {
+  background: var(--code-bg);
+  color: var(--text-secondary);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  border-radius: 6px;
+  margin: 0;
+  padding: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  overflow: hidden auto;
+}
+
+.filePreviewText,
+.filePreviewCode,
+.toolCallResult pre,
+.diffContent {
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  margin: 0;
+  padding: 9px;
+  font-size: 11px;
+  line-height: 1.45;
+  overflow: hidden auto;
+}
+
+:is(.filePreviewCode, .filePreviewText) code {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}

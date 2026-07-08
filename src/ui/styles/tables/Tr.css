@@ -1,0 +1,3 @@
+tr:nth-child(2n) td {
+  background: color-mix(in srgb, var(--bg-secondary) 44%, transparent);
+}

@@ -58,43 +58,45 @@ function MessagesSection({
   const emptyStateVisible = messages.length === 0 && !isProcessing;
 
   return (
-    <div className="msgList" ref={listRef} onClick={handleCodeAction}>
-      {emptyStateVisible ? (
-        <ChatEmptyState />
-      ) : (
-        <>
-          <ChatMessages
-            messages={messages}
-            renderToolCallGroups={(groups) => (
-              <ToolCallTimeline
-                groups={groups}
-                vscode={vscode}
-              />
-            )}
-          />
-          <ToolCallTimeline
-            groups={tools.activeTimelineGroups}
-            vscode={vscode}
-          />
-          <ToolCallConfirmationModal
-            pendingToolCalls={tools.pendingToolCalls}
-            onExecute={tools.handleExecute}
-            onReject={tools.handleReject}
-            onExecuteAll={tools.handleExecuteAll}
-            onRejectAll={tools.handleRejectAll}
-          />
-        </>
-      )}
+    <>
+      <div className="msgList" ref={listRef} onClick={handleCodeAction}>
+        {emptyStateVisible ? (
+          <ChatEmptyState />
+        ) : (
+          <>
+            <ChatMessages
+              messages={messages}
+              renderToolCallGroups={(groups) => (
+                <ToolCallTimeline
+                  groups={groups}
+                  vscode={vscode}
+                />
+              )}
+            />
+            <ToolCallTimeline
+              groups={tools.activeTimelineGroups}
+              vscode={vscode}
+            />
+          </>
+        )}
 
-      {isProcessing ? (
-        <div className="typingIndicator" aria-live="polite">
-          <div className="typingDots">
-            <span /> <span /> <span />
+        {isProcessing ? (
+          <div className="typingIndicator" aria-live="polite">
+            <div className="typingDots">
+              <span /> <span /> <span />
+            </div>
+            <span className="typingLabel">DeepSeek is thinking...</span>
           </div>
-          <span className="typingLabel">DeepSeek is thinking...</span>
-        </div>
-      ) : null}
-    </div>
+        ) : null}
+      </div>
+      <ToolCallConfirmationModal
+        pendingToolCalls={tools.pendingToolCalls}
+        onExecute={tools.handleExecute}
+        onReject={tools.handleReject}
+        onExecuteAll={tools.handleExecuteAll}
+        onRejectAll={tools.handleRejectAll}
+      />
+    </>
   );
 }
 

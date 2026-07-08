@@ -3,6 +3,7 @@ import rehypeSanitize from "rehype-sanitize";
 import { refractor } from "refractor";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { normalizeAssistantMarkdown } from "@/shared/utils";
 import type { ChatMessage, ToolCallGroup } from "../../views/chatView/ChatViewTypes";
 import "./ChatMessages.css";
 
@@ -79,6 +80,8 @@ function PlainText({ content }: { content: string }) {
 }
 
 function MarkdownMessage({ content, role }: { content: string; role: ChatMessage["role"] }) {
+  const markdown = normalizeAssistantMarkdown(content);
+
   return (
     <ReactMarkdown
       remarkPlugins={[remarkGfm]}
@@ -122,7 +125,7 @@ function MarkdownMessage({ content, role }: { content: string; role: ChatMessage
         },
       }}
     >
-      {content}
+      {markdown}
     </ReactMarkdown>
   );
 }
