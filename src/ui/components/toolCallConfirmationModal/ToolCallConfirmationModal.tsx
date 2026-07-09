@@ -1,5 +1,7 @@
 import type { ToolCallActionOptions, ToolCallState } from "../../views/chatView/ChatViewTypes";
 import DangerConfirmation from "../toolCallDangerConfirmation/ToolCallDangerConfirmation";
+import { renderToolCallArgumentsPreview } from "../toolCallResultPreview/ToolCallResultRenderers";
+import "../toolCallResultPreview/ToolCallResultPreview.css";
 import "./ToolCallConfirmationModal.css";
 
 interface ToolCallConfirmationModalProps {
@@ -19,25 +21,21 @@ function ToolCallConfirmationModal({ pendingToolCalls, onExecute, onReject, onEx
   const manualBatchCount = pendingToolCalls.filter((toolCall) => toolCall.requiresConfirmation && !toolCall.dangerConfirmation).length;
   const filePath = activeToolCall.dangerConfirmation?.filePath ?? getArgumentValue(activeToolCall.arguments, "path");
   const dangerTitle = getDangerTitle(activeToolCall.dangerConfirmation?.dangerLevel);
-  const title = activeToolCall.dangerConfirmation ? `${dangerTitle}: ${activeToolCall.dangerConfirmation.warningMessage}` : "Tool confirmation";
-  const subtitle = activeToolCall.dangerConfirmation
-    ? filePath
-      ? `File: ${filePath}`
-      : "Review before executing."
-    : pendingToolCalls.length === 1
-      ? "Waiting for your decision."
-      : `${pendingToolCalls.length} tools are waiting.`;
+  const title = `${dangerTitle}: ${activeToolCall.dangerConfirmation?.warningMessage}`;
+  const subtitle = filePath ? `File: ${filePath}` : "Review before executing.";
 
   return (
     <div className="toolCallModalBackdrop" role="presentation">
-      <section className="toolCallModal" role="dialog" aria-modal="true" aria-labelledby="tool-call-modal-title">
-        <header className="toolCallModalHeader">
-          <div>
-            <h3 id="tool-call-modal-title">{title}</h3>
-            <p>{subtitle}</p>
-          </div>
-          <span className={`toolCallStatus ${activeToolCall.status}`}>{activeToolCall.status}</span>
-        </header>
+      <section className="toolCallModal" role="dialog" aria-modal="true" aria-labelledby={activeToolCall.dangerConfirmation ? "tool-call-modal-title" : undefined}>
+        {activeToolCall.dangerConfirmation ? (
+          <header className="toolCallModalHeader">
+            <div>
+              <h3 id="tool-call-modal-title">{title}</h3>
+              <p>{subtitle}</p>
+            </div>
+            <span className={`toolCallStatus ${activeToolCall.status}`}>{activeToolCall.status}</span>
+          </header>
+        ) : null}
 
         {activeToolCall.arguments ? (
           <details className="toolCallModalDetails">
@@ -46,9 +44,7 @@ function ToolCallConfirmationModal({ pendingToolCalls, onExecute, onReject, onEx
               <span>{activeToolCall.toolName}</span>
               <span>Round {activeToolCall.round}</span>
             </summary>
-            <pre className="toolCallArgs toolCallModalArgs">
-              <code>{formatArguments(activeToolCall.arguments)}</code>
-            </pre>
+            <div className="toolCallModalArgs">{renderToolCallArgumentsPreview(activeToolCall.toolName, activeToolCall.arguments)}</div>
           </details>
         ) : null}
 
@@ -60,13 +56,11 @@ function ToolCallConfirmationModal({ pendingToolCalls, onExecute, onReject, onEx
             onCancel={onReject}
           />
         ) : (
-          <div className="toolCallDecisionList">
+          <div className="toolCallDecisionRow">
             <button type="button" className="toolCallDecisionOption primary" onClick={() => onExecute(activeToolCall.toolCallId)}>
-              <span>1</span>
               Execute
             </button>
             <button type="button" className="toolCallDecisionOption" onClick={() => onReject(activeToolCall.toolCallId)}>
-              <span>2</span>
               Reject
             </button>
           </div>
@@ -85,14 +79,6 @@ function ToolCallConfirmationModal({ pendingToolCalls, onExecute, onReject, onEx
       </section>
     </div>
   );
-}
-
-function formatArguments(argumentsJson: string): string {
-  try {
-    return JSON.stringify(JSON.parse(argumentsJson), null, 2);
-  } catch {
-    return argumentsJson;
-  }
 }
 
 function getArgumentValue(argumentsJson: string | undefined, key: string): string | undefined {

@@ -27,7 +27,7 @@ export async function openWorkspaceFile(filePath: string, line?: number): Promis
 export async function insertCodeIntoActiveEditor(code: string): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor) {
-    await vscode.window.showInformationMessage("Open an editor to insert code from DeepSeek Copilot.");
+    await vscode.window.showInformationMessage("Open an editor to insert code from Yar's DeepSeek Copilot.");
     return;
   }
 

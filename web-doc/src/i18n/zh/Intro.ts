@@ -3,8 +3,8 @@ import type { PageContent } from "../Types";
 export const intro: PageContent = {
   navTitle: "介绍",
   title: "介绍",
-  description: "DeepSeek Copilot 介绍。",
-  lead: "DeepSeek Copilot 设计上只支持 DeepSeek，在 VS Code 中提供专注的助手体验，不提供多供应商切换。",
+  description: "Yar's DeepSeek Copilot 介绍。",
+  lead: "Yar's DeepSeek Copilot 设计上只支持 DeepSeek，在 VS Code 中提供专注的助手体验，不提供多供应商切换。",
   sections: [
     {
       title: "当前 beta 范围",

@@ -2,8 +2,8 @@ import type { OverviewContent } from "../Types";
 
 export const overview: OverviewContent = {
   title: "Documentación humana",
-  description: "Documentación visual para usuarios y desarrolladores de DeepSeek Copilot.",
-  lead: "DeepSeek Copilot es una extensión de VS Code de tercero centrada en DeepSeek: chat, streaming, tool calls, contexto del workspace y ejecución controlada.",
+  description: "Documentación visual para usuarios y desarrolladores de Yar's DeepSeek Copilot.",
+  lead: "Yar's DeepSeek Copilot es una extensión de VS Code de tercero centrada en DeepSeek: chat, streaming, tool calls, contexto del workspace y ejecución controlada.",
   cards: {
     intro: "Alcance, principios y capacidades principales.",
     changelog: "Estado beta actual y cambios relevantes.",

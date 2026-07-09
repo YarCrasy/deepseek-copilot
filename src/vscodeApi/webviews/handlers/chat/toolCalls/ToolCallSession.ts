@@ -5,6 +5,7 @@ import type { ToolExecutor } from "@/core/tools/ToolExecutor";
 import type { ConfirmationRequiredResult } from "@/core/tools/Types";
 import { requestDangerConfirmation } from "./DangerConfirmation";
 import { cancelPendingToolCallCycle, createPendingToolCallCycle, resolveToolCallAction } from "./PendingCycle";
+import { StreamEventEmitter } from "../StreamEventEmitter";
 import { executeToolCall } from "./ToolExecution";
 import type {
   HandleRunErrorOptions,
@@ -29,6 +30,7 @@ export class ToolCallSession {
     let streamedReasoning = "";
     const executedToolCalls = new Map<string, StoredExecution>();
     const enabledTools = getRunnableTools(options);
+    const stream = new StreamEventEmitter(options.webviewView);
 
     try {
       const result = await runToolCallCycle({
@@ -51,20 +53,20 @@ export class ToolCallSession {
           onRoundStart: (round, toolCalls) => this.handleRoundStart(round, toolCalls, options),
           onStreamChunk: (content) => {
             streamedContent += content;
-            options.webviewView.webview.postMessage({ type: "streamChunk", content });
+            stream.chunk(content);
           },
           onStreamReasoning: (reasoning) => {
             streamedReasoning += reasoning;
             if (options.exposeReasoning) {
-              options.webviewView.webview.postMessage({ type: "streamReasoning", content: reasoning });
+              stream.reasoning(reasoning);
             }
           },
         },
       });
 
-      return this.postFinalMessage({ options, result, executedToolCalls, streamedContent, streamedReasoning });
+      return this.postFinalMessage({ options, stream, result, executedToolCalls, streamedContent, streamedReasoning });
     } catch (err: unknown) {
-      return this.handleRunError({ err, options, executedToolCalls, streamedContent, streamedReasoning });
+      return this.handleRunError({ err, options, stream, executedToolCalls, streamedContent, streamedReasoning });
     } finally {
       this.pendingToolCallCycle = null;
       this.pendingDangerConfirmation = null;
@@ -166,7 +168,7 @@ export class ToolCallSession {
     await pendingCycle.batchPromise;
   }
 
-  private postFinalMessage({ options, result, executedToolCalls, streamedContent, streamedReasoning }: PostFinalMessageOptions): ToolCallRunResult {
+  private postFinalMessage({ options, stream, result, executedToolCalls, streamedContent, streamedReasoning }: PostFinalMessageOptions): ToolCallRunResult {
     const toolCallResults = Array.from(executedToolCalls.values());
     const hasStreamedContent = streamedContent.length > 0 || streamedReasoning.length > 0;
 
@@ -182,8 +184,7 @@ export class ToolCallSession {
       });
     }
 
-    options.webviewView.webview.postMessage({
-      type: "streamDone",
+    stream.done({
       finish_reason: result.response.choices[0]?.finish_reason ?? "stop",
       usage: result.response.usage,
     });
@@ -195,7 +196,7 @@ export class ToolCallSession {
     };
   }
 
-  private handleRunError({ err, options, executedToolCalls, streamedContent, streamedReasoning }: HandleRunErrorOptions): ToolCallRunResult | undefined {
+  private handleRunError({ err, options, stream, executedToolCalls, streamedContent, streamedReasoning }: HandleRunErrorOptions): ToolCallRunResult | undefined {
     if (isCancellationError(err)) {
       const partialToolCalls = Array.from(executedToolCalls.values());
       const hasPartial = streamedContent.length > 0 || streamedReasoning.length > 0 || partialToolCalls.length > 0;
@@ -212,7 +213,7 @@ export class ToolCallSession {
             },
           });
         }
-        options.webviewView.webview.postMessage({ type: "streamDone", cancelled: true });
+        stream.done({ cancelled: true });
       }
 
       return hasPartial
@@ -225,10 +226,7 @@ export class ToolCallSession {
         : undefined;
     }
 
-    options.webviewView.webview.postMessage({
-      type: "streamError",
-      error: `Error en tool calls: ${getErrorMessage(err)}`,
-    });
+    stream.error(`Error en tool calls: ${getErrorMessage(err)}`);
     return undefined;
   }
 }

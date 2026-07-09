@@ -12,6 +12,7 @@ import { buildFileContext } from "@/core/context/FileReferences";
 import { ConversationState } from "@/core/chat/ConversationState";
 import { PartialStreamError } from "@/core/errors/PartialStreamError";
 import { buildAutoContext, buildGitReviewContext } from "./chat/FileContext";
+import { StreamEventEmitter } from "./chat/StreamEventEmitter";
 import { sendMessageStreaming } from "./chat/Streaming";
 import { getAvailableToolMetadata } from "./chat/ToolMetadata";
 import { ToolCallSession } from "./chat/toolCalls/ToolCallSession";
@@ -122,6 +123,7 @@ export class ChatHandler {
 
     const provider = createDeepSeekProvider(providerConfig);
     this.abortController = new AbortController();
+    const stream = new StreamEventEmitter(webviewView);
 
     const userMessage = this.conversationState.createMessage("user", payload.text);
     const messages = await this.buildMessages(payload, config, webviewView);
@@ -130,7 +132,7 @@ export class ChatHandler {
       type: "addMessage",
       message: { role: "user", content: userMessage.content },
     });
-    webviewView.webview.postMessage({ type: "showTyping" });
+    stream.showTyping();
 
     try {
       const allTools = this.toolRegistry.getDefinitionsForAPI();
@@ -185,12 +187,12 @@ export class ChatHandler {
           });
         }
         if (!this.isCancelling) {
-          webviewView.webview.postMessage({ type: "streamDone", cancelled: true });
+          stream.done({ cancelled: true });
         }
         return;
       }
 
-      this.handleSendError(err, webviewView);
+      this.handleSendError(err, stream);
     } finally {
       this.isCancelling = false;
       this.abortController = null;
@@ -399,18 +401,15 @@ ${payload.text}`
     });
   }
 
-  private handleSendError(err: unknown, webviewView: vscode.WebviewView): void {
+  private handleSendError(err: unknown, stream: StreamEventEmitter): void {
     if (isCancellationError(err)) {
       if (!this.isCancelling) {
-        webviewView.webview.postMessage({ type: "streamDone", cancelled: true });
+        stream.done({ cancelled: true });
       }
       return;
     }
 
-    webviewView.webview.postMessage({
-      type: "streamError",
-      error: getErrorMessage(err),
-    });
+    stream.error(getErrorMessage(err));
   }
 
   private cancelGeneration(webviewView: vscode.WebviewView): void {
@@ -418,7 +417,7 @@ ${payload.text}`
     this.toolCallSession.cancel();
     this.abortController?.abort();
     this.abortController = null;
-    webviewView.webview.postMessage({ type: "streamDone", cancelled: true });
+    new StreamEventEmitter(webviewView).done({ cancelled: true });
   }
 
   private handleGetAvailableTools(webviewView: vscode.WebviewView): void {

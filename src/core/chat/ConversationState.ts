@@ -1,4 +1,5 @@
 import type { ChatMessage, Conversation, ConversationMessage, StoredToolCall } from "@/adapters";
+import { createConversationTitle } from "./ConversationTitle";
 
 export interface ConversationStore {
   save(conversation: Conversation): Promise<void>;
@@ -126,44 +127,4 @@ function toApiToolCalls(toolCalls: StoredToolCall[] | undefined): ChatMessage["t
       arguments: toolCall.arguments,
     },
   }));
-}
-
-function createConversationTitle(messages: ConversationMessage[], currentTitle?: string): string {
-  const assistantSummary = messages
-    .filter((message) => message.role === "assistant")
-    .map((message) => summarizeTitleSource(message.content))
-    .find(Boolean);
-
-  if (assistantSummary) {
-    return truncateTitle(assistantSummary);
-  }
-
-  const firstUserSummary = summarizeTitleSource(messages.find((message) => message.role === "user")?.content ?? "");
-  if (firstUserSummary) {
-    return truncateTitle(firstUserSummary);
-  }
-
-  return currentTitle || "New conversation";
-}
-
-function summarizeTitleSource(content: string): string {
-  const normalized = content
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/`([^`]+)`/g, "$1")
-    .replace(/<[^>]*>/g, " ")
-    .replace(/\*\*|__|[#>*_~-]/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-
-  if (!normalized) {
-    return "";
-  }
-
-  const sentence = normalized.match(/^(.+?[.!?])(?:\s|$)/)?.[1] ?? normalized;
-  return sentence.replace(/^(sure|claro|vale|ok)[,.]?\s+/i, "").trim();
-}
-
-function truncateTitle(title: string): string {
-  const maxLength = 88;
-  return title.length > maxLength ? `${title.slice(0, maxLength - 3).trim()}...` : title;
 }

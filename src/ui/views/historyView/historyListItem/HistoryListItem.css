@@ -33,7 +33,9 @@
   }
   .title {
     color: var(--text-primary);
-    overflow-wrap: anywhere;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     font-size: 14px;
     line-height: 1.35;
   }

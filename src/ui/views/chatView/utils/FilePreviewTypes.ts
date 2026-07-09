@@ -36,6 +36,20 @@ export type StructuredToolResult =
     }
   | {
       toolResultVersion: number;
+      type: "fileEdit" | "filePatch";
+      path: string;
+      summary: string;
+      diff: string;
+      diffTruncated?: boolean;
+      diffStats?: {
+        additions: number;
+        deletions: number;
+      };
+      beforeSize?: number;
+      afterSize?: number;
+    }
+  | {
+      toolResultVersion: number;
       type: "SearchResults";
       query: string;
       results: Array<{ file: string; line: number; text: string }>;

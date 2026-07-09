@@ -3,13 +3,13 @@ import type { PageContent } from "../Types";
 export const userManual: PageContent = {
   navTitle: "用户手册",
   title: "用户手册",
-  description: "如何配置和使用 DeepSeek Copilot。",
+  description: "如何配置和使用 Yar's DeepSeek Copilot。",
   lead: "基本流程是配置 API key、选择模型设置，然后从侧边栏提问。",
   sections: [
     {
       title: "日常流程",
       items: [
-        "打开 Activity Bar 中的 DeepSeek Copilot。",
+        "打开 Activity Bar 中的 Yar's DeepSeek Copilot。",
         "在 Settings 中设置 API key。密钥保存在 VS Code Secret Storage。",
         "选择模型、thinking mode、reasoning effort 和工具执行模式。",
         "在输入框输入 ./ 或 ../ 来补全工作区路径。",

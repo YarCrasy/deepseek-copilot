@@ -3,6 +3,7 @@ import type { AppConfig, ChatMessage, ToolCall, ToolDefinition, ToolExecutionMod
 import type { ToolCallCycleResult } from "@/deepseekApi/providers/deepseek/features/toolCall";
 import type { ToolExecutor } from "@/core/tools/ToolExecutor";
 import type { ConfirmationRequiredResult, ExecutionResult } from "@/core/tools/Types";
+import type { StreamEventEmitter } from "../StreamEventEmitter";
 
 export interface PendingToolCallCycle {
   toolCalls: Map<string, ToolCall>;
@@ -91,6 +92,7 @@ export interface HandleExecutionResultOptions {
 
 export interface PostFinalMessageOptions {
   options: ToolCallRunOptions;
+  stream: StreamEventEmitter;
   result: ToolCallCycleResult;
   executedToolCalls: Map<string, StoredExecution>;
   streamedContent: string;
@@ -100,6 +102,7 @@ export interface PostFinalMessageOptions {
 export interface HandleRunErrorOptions {
   err: unknown;
   options: ToolCallRunOptions;
+  stream: StreamEventEmitter;
   executedToolCalls: Map<string, StoredExecution>;
   streamedContent: string;
   streamedReasoning: string;

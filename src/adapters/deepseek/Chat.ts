@@ -2,7 +2,7 @@ import { logWarning } from "@/shared/logging/Logger";
 
 export type MessageRole = "system" | "user" | "assistant" | "tool";
 
-export const SYSTEM_PROMPT_COPILOT = `You are DeepSeek Copilot inside VS Code: a concise coding assistant for code understanding, debugging, refactoring, and generation.
+export const SYSTEM_PROMPT_COPILOT = `You are Yar's DeepSeek Copilot inside VS Code: a concise coding assistant for code understanding, debugging, refactoring, and generation.
 
 Tools use workspace-relative paths:
 - read_file {path}

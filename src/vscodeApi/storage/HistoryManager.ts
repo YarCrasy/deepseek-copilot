@@ -1,5 +1,6 @@
 import * as vscode from "vscode";
 import type { Conversation } from "@/adapters";
+import { createConversationTitle } from "@/core/chat/ConversationTitle";
 import { CONVERSATION_STORAGE_KEY } from "@/shared/constants";
 
 export class HistoryManager {
@@ -36,13 +37,16 @@ export class HistoryManager {
 }
 
 function normalizeConversation(conversation: Conversation): Conversation {
+  const messages = (conversation.messages ?? []).map((message) => ({
+    ...message,
+    content: message.content ?? "",
+    toolCalls: message.toolCalls ?? undefined,
+    reasoning: message.reasoning ?? undefined,
+  }));
+
   return {
     ...conversation,
-    messages: (conversation.messages ?? []).map((message) => ({
-      ...message,
-      content: message.content ?? "",
-      toolCalls: message.toolCalls ?? undefined,
-      reasoning: message.reasoning ?? undefined,
-    })),
+    title: createConversationTitle(messages, conversation.title),
+    messages,
   };
 }

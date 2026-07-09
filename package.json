@@ -1,7 +1,7 @@
 {
-  "name": "yars-dpsk-copilot",
-  "displayName": "Yar's deepseek copilot",
-  "description": "A VS Code copilot specialized on DeepSeek.",
+  "name": "yrs-dpsk-copilot",
+  "displayName": "Yar's Deepseek copilot - A VS Code copilot specialized on Deepseek.",
+  "description": "A deeply integrated VS Code coding assistant specialized in DeepSeek.",
   "version": "0.1.0",
   "preview": true,
   "publisher": "yarcrasy",
@@ -10,6 +10,11 @@
     "type": "git",
     "url": "https://github.com/YarCrasy/deepseek-copilot.git"
   },
+  "homepage": "https://yarcrasy.github.io/deepseek-copilot/",
+  "bugs": {
+    "url": "https://github.com/YarCrasy/deepseek-copilot/issues"
+  },
+  "icon": "src/assets/DeepSeekIcon.png",
   "engines": {
     "vscode": "^1.125.0"
   },
@@ -17,81 +22,87 @@
     "AI",
     "Chat"
   ],
+  "keywords": [
+    "deepseek",
+    "ai",
+    "assistant",
+    "copilot",
+    "chat",
+    "coding",
+    "agent"
+  ],
+  "galleryBanner": {
+    "color": "#0f172a",
+    "theme": "dark"
+  },
   "main": "./dist/extension.js",
   "activationEvents": [],
   "contributes": {
     "commands": [
       {
-        "command": "deepseek-copilot.openChat",
-        "title": "DeepSeek Copilot: Open Chat",
-        "category": "DeepSeek Copilot"
+        "command": "yrs-dpsk-copilot.openChat",
+        "title": "Yar's DeepSeek Copilot: Open Chat",
+        "category": "Yar's DeepSeek Copilot"
       },
       {
-        "command": "deepseek-copilot.addFileToChat",
-        "title": "DeepSeek Copilot: Add File to Chat",
-        "category": "DeepSeek Copilot",
+        "command": "yrs-dpsk-copilot.addFileToChat",
+        "title": "Yar's DeepSeek Copilot: Add File to Chat",
+        "category": "Yar's DeepSeek Copilot",
         "icon": "$(add)"
       },
       {
-        "command": "deepseek-copilot.addFolderToChat",
-        "title": "DeepSeek Copilot: Add Folder to Chat",
-        "category": "DeepSeek Copilot",
+        "command": "yrs-dpsk-copilot.addFolderToChat",
+        "title": "Yar's DeepSeek Copilot: Add Folder to Chat",
+        "category": "Yar's DeepSeek Copilot",
         "icon": "$(add)"
       },
       {
-        "command": "deepseek-copilot.addSelectionToChat",
-        "title": "DeepSeek Copilot: Add Selection to Chat",
-        "category": "DeepSeek Copilot",
+        "command": "yrs-dpsk-copilot.addSelectionToChat",
+        "title": "Yar's DeepSeek Copilot: Add Selection to Chat",
+        "category": "Yar's DeepSeek Copilot",
         "icon": "$(add)"
       },
       {
-        "command": "deepseek-copilot.newChat",
-        "title": "DeepSeek Copilot: New Chat",
-        "category": "DeepSeek Copilot",
+        "command": "yrs-dpsk-copilot.newChat",
+        "title": "Yar's DeepSeek Copilot: New Chat",
+        "category": "Yar's DeepSeek Copilot",
         "icon": "$(add)"
       },
       {
-        "command": "deepseek-copilot.reviewChanges",
-        "title": "DeepSeek Copilot: Review Changes",
-        "category": "DeepSeek Copilot",
+        "command": "yrs-dpsk-copilot.reviewChanges",
+        "title": "Yar's DeepSeek Copilot: Review Changes",
+        "category": "Yar's DeepSeek Copilot",
         "icon": "$(git-pull-request)"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "deepseek-copilot.addFileToChat",
+          "command": "yrs-dpsk-copilot.addFileToChat",
           "when": "resourceScheme == file && !explorerResourceIsFolder",
           "group": "navigation@50"
         },
         {
-          "command": "deepseek-copilot.addFolderToChat",
+          "command": "yrs-dpsk-copilot.addFolderToChat",
           "when": "resourceScheme == file && explorerResourceIsFolder",
           "group": "navigation@51"
         }
       ],
       "editor/context": [
         {
-          "command": "deepseek-copilot.addSelectionToChat",
+          "command": "yrs-dpsk-copilot.addSelectionToChat",
           "when": "editorHasSelection",
           "group": "navigation@50"
         },
         {
-          "command": "deepseek-copilot.reviewChanges",
+          "command": "yrs-dpsk-copilot.reviewChanges",
           "when": "resourceScheme == file",
           "group": "navigation@51"
         }
       ],
-      "view/title": [
-        {
-          "command": "deepseek-copilot.newChat",
-          "when": "view == deepseek-copilot.chatView",
-          "group": "navigation@1"
-        }
-      ],
       "scm/title": [
         {
-          "command": "deepseek-copilot.reviewChanges",
+          "command": "yrs-dpsk-copilot.reviewChanges",
           "group": "navigation@50"
         }
       ]
@@ -99,17 +110,17 @@
     "viewsContainers": {
       "activitybar": [
         {
-          "id": "deepseek-copilot-sidebar",
-          "title": "DeepSeek Copilot",
+          "id": "yrs-dpsk-copilot-sidebar",
+          "title": "Yar's DeepSeek Copilot",
           "icon": "src/assets/DeepSeekIcon.svg"
         }
       ]
     },
     "views": {
-      "deepseek-copilot-sidebar": [
+      "yrs-dpsk-copilot-sidebar": [
         {
           "type": "webview",
-          "id": "deepseek-copilot.chatView",
+          "id": "yrs-dpsk-copilot.chatView",
           "name": "Chat",
           "icon": "src/assets/DeepSeekIcon.svg",
           "visibility": "visible"
@@ -118,21 +129,21 @@
     },
     "configuration": {
       "type": "object",
-      "title": "DeepSeek Copilot",
+      "title": "Yar's DeepSeek Copilot",
       "properties": {
-        "deepseek-copilot.model": {
+        "yrs-dpsk-copilot.model": {
           "type": "string",
           "default": "deepseek-v4-flash",
           "scope": "application",
           "description": "DeepSeek model ID to use"
         },
-        "deepseek-copilot.thinkingMode": {
+        "yrs-dpsk-copilot.thinkingMode": {
           "type": "boolean",
           "default": true,
           "scope": "application",
           "description": "Enable DeepSeek thinking mode for reasoning models"
         },
-        "deepseek-copilot.reasoningEffort": {
+        "yrs-dpsk-copilot.reasoningEffort": {
           "type": "string",
           "default": "high",
           "scope": "application",
@@ -142,25 +153,25 @@
           ],
           "description": "DeepSeek reasoning effort level"
         },
-        "deepseek-copilot.temperature": {
+        "yrs-dpsk-copilot.temperature": {
           "type": "number",
           "default": 1,
           "scope": "application",
           "description": "Sampling temperature"
         },
-        "deepseek-copilot.topP": {
+        "yrs-dpsk-copilot.topP": {
           "type": "number",
           "default": 1,
           "scope": "application",
           "description": "Top P sampling"
         },
-        "deepseek-copilot.maxTokens": {
+        "yrs-dpsk-copilot.maxTokens": {
           "type": "number",
           "default": 8192,
           "scope": "application",
           "description": "Maximum tokens for responses"
         },
-        "deepseek-copilot.responseFormat": {
+        "yrs-dpsk-copilot.responseFormat": {
           "type": "string",
           "default": "text",
           "scope": "application",
@@ -170,13 +181,13 @@
           ],
           "description": "Response format"
         },
-        "deepseek-copilot.streamResponse": {
+        "yrs-dpsk-copilot.streamResponse": {
           "type": "boolean",
           "default": true,
           "scope": "application",
           "description": "Enable streaming responses"
         },
-        "deepseek-copilot.permissionMode": {
+        "yrs-dpsk-copilot.permissionMode": {
           "type": "string",
           "default": "read-only",
           "scope": "application",
@@ -194,19 +205,19 @@
           ],
           "description": "Global permission mode for tool access"
         },
-        "deepseek-copilot.autoContext": {
+        "yrs-dpsk-copilot.autoContext": {
           "type": "boolean",
           "default": false,
           "scope": "application",
           "description": "Automatically include the active editor and git status/diff context with chat requests."
         },
-        "deepseek-copilot.projectInstructions.includeHomeAgents": {
+        "yrs-dpsk-copilot.projectInstructions.includeHomeAgents": {
           "type": "boolean",
           "default": false,
           "scope": "application",
-          "description": "Allow DeepSeek Copilot to read ~/.deepseek-copilot/AGENTS.md as a global instruction source."
+          "description": "Allow Yar's DeepSeek Copilot to read ~/.yrs-dpsk-copilot/AGENTS.md as a global instruction source."
         },
-        "deepseek-copilot.toolExecutionModes": {
+        "yrs-dpsk-copilot.toolExecutionModes": {
           "type": "object",
           "default": {},
           "scope": "application",
@@ -223,7 +234,7 @@
           "additionalProperties": false,
           "description": "Per-tool execution modes"
         },
-        "deepseek-copilot.baseUrl": {
+        "yrs-dpsk-copilot.baseUrl": {
           "type": "string",
           "default": "https://api.deepseek.com",
           "scope": "application",
@@ -242,8 +253,9 @@
     "dev:webview": "vite --config src/ui/vite.config.ts --host 0.0.0.0 --port 5175 --strictPort",
     "pretest": "npm run compile && npm run lint",
     "lint": "eslint src",
-    "test": "npm run test:unit && vscode-test",
-    "test:unit": "node scripts/run-unit-tests.mjs"
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "node scripts/run-unit-tests.mjs",
+    "test:integration": "npm run build && esbuild src/test/Extension.test.ts --bundle --platform=node --format=cjs --external:vscode --outfile=out/test/Extension.test.js && vscode-test"
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.45",
@@ -262,6 +274,7 @@
     "@types/vscode": "^1.125.0",
     "@vitejs/plugin-react": "^6.0.3",
     "@vscode/test-cli": "^0.0.15",
+    "@vscode/test-electron": "^3.0.0",
     "esbuild": "^0.28.1",
     "eslint": "^10.6.0",
     "mocha": "^11.7.6",
@@ -271,5 +284,9 @@
   },
   "allowScripts": {
     "esbuild@0.28.1": true
+  },
+  "overrides": {
+    "diff": "9.0.0",
+    "serialize-javascript": "7.0.7"
   }
 }

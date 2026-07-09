@@ -50,24 +50,7 @@
 }
 
 .reasoning-block {
-  border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
-  border-radius: 12px;
   margin: 0 0 12px;
-  overflow: hidden;
-}
-
-.reasoning-toggle {
-  color: var(--text-secondary);
-  cursor: pointer;
-  padding: 10px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  list-style: none;
-
-  &::-webkit-details-marker {
-    display: none;
-  }
 }
 
 .reasoning-content {

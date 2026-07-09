@@ -3,8 +3,8 @@ import type { PageContent } from "../Types";
 export const intro: PageContent = {
   navTitle: "Introducción",
   title: "Introducción",
-  description: "Introducción a DeepSeek Copilot.",
-  lead: "DeepSeek Copilot es DeepSeek-only por diseño. Ofrece un asistente enfocado dentro de VS Code sin selector de proveedores.",
+  description: "Introducción a Yar's DeepSeek Copilot.",
+  lead: "Yar's DeepSeek Copilot es DeepSeek-only por diseño. Ofrece un asistente enfocado dentro de VS Code sin selector de proveedores.",
   sections: [
     {
       title: "Alcance beta actual",

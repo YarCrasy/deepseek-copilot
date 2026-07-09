@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { normalizeAssistantMarkdown } from "@/shared/utils";
 import type { ChatMessage, ToolCallGroup } from "../../views/chatView/ChatViewTypes";
+import CollapsiblePanel from "../collapsiblePanel/CollapsiblePanel";
 import "./ChatMessages.css";
 
 interface ChatMessagesProps {
@@ -56,10 +57,9 @@ function MessageBody({ message }: { message: ChatMessage }) {
   return (
     <>
       {message.reasoning?.trim() ? (
-        <details className="reasoning-block" open>
-          <summary className="reasoning-toggle">Thinking...</summary>
-          <div className="reasoning-content">{message.reasoning}</div>
-        </details>
+        <CollapsiblePanel title="Think process" className="reasoning-block" bodyClassName="reasoning-content">
+          {message.reasoning}
+        </CollapsiblePanel>
       ) : null}
       {message.role === "user" ? <PlainText content={message.content} /> : <MarkdownMessage content={message.content} role={message.role} />}
     </>

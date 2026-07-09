@@ -4,8 +4,26 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "npm: build",
+			"type": "shell",
+			"command": "npm run build",
+			"options": {
+				"env": {
+					"PATH": "/home/lingc/.nvm/versions/node/v24.18.0/bin:${env:PATH}",
+					"NVM_BIN": "/home/lingc/.nvm/versions/node/v24.18.0/bin"
+				}
+			},
+			"problemMatcher": "$tsc"
+		},
+		{
 			"type": "npm",
 			"script": "watch",
+			"options": {
+				"env": {
+					"PATH": "/home/lingc/.nvm/versions/node/v24.18.0/bin:${env:PATH}",
+					"NVM_BIN": "/home/lingc/.nvm/versions/node/v24.18.0/bin"
+				}
+			},
 			"problemMatcher": "$tsc-watch",
 			"isBackground": true,
 			"presentation": {

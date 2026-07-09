@@ -3,7 +3,7 @@ import type { PageContent } from "../Types";
 export const technicalDecisions: PageContent = {
   navTitle: "技术决策",
   title: "技术决策",
-  description: "DeepSeek Copilot 架构决策。",
+  description: "Yar's DeepSeek Copilot 架构决策。",
   lead: "扩展将 VS Code API、DeepSeek API、核心工具逻辑和 React UI 分离。",
   sections: [
     {

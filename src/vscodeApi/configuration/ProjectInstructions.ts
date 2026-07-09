@@ -31,7 +31,7 @@ export async function loadProjectInstructions(): Promise<ProjectInstructionsResu
 
   if (homeAgentsAllowed) {
     candidates.push({
-      uri: vscode.Uri.joinPath(vscode.Uri.file(os.homedir()), ".deepseek-copilot", AGENTS_FILE_NAME),
+      uri: vscode.Uri.joinPath(vscode.Uri.file(os.homedir()), ".yrs-dpsk-copilot", AGENTS_FILE_NAME),
       scope: "home",
       precedence: 0,
     });
@@ -45,7 +45,7 @@ export async function loadProjectInstructions(): Promise<ProjectInstructionsResu
         precedence: 10,
       },
       {
-        uri: vscode.Uri.joinPath(workspaceFolder.uri, ".deepseek-copilot", AGENTS_FILE_NAME),
+        uri: vscode.Uri.joinPath(workspaceFolder.uri, ".yrs-dpsk-copilot", AGENTS_FILE_NAME),
         scope: "workspace-local",
         precedence: 20,
       },

@@ -82,6 +82,33 @@ export function renderStructuredFilePreview(result: StructuredFileResult) {
   return renderCodePreview({ filename, language, size: result.size, previewSize: result.previewSize, content: result.content, truncated: result.truncated });
 }
 
+export function renderToolCallArgumentsPreview(toolName: string, argumentsJson: string) {
+  const parsed = parseArguments(argumentsJson);
+  if (!parsed) {
+    return renderCodePreview({ filename: "arguments.txt", language: "text", size: argumentsJson.length, content: truncate(argumentsJson, 4000) });
+  }
+
+  const path = typeof parsed.path === "string" ? parsed.path : undefined;
+  const filename = path ? formatRelativePath(path) : `${toolName}.json`;
+  const content = getPreviewContent(toolName, parsed);
+
+  if (toolName === "read_file") {
+    return renderToolCallSummaryPreview(`reading: ${formatRelativePath(path || "file")}`);
+  }
+
+  if (toolName === "list_directory") {
+    return renderToolCallSummaryPreview(`listed: ${formatRelativePath(path || ".")}`);
+  }
+
+  if (content) {
+    const language = detectLanguage(filename);
+    return renderCodePreview({ filename, language, size: content.length, content: truncate(content, 8000), showMetadata: false });
+  }
+
+  const formatted = JSON.stringify(parsed, null, 2);
+  return renderCodePreview({ filename, language: "json", size: formatted.length, content: truncate(formatted, 4000), showMetadata: false });
+}
+
 export function renderWriteSummary(summary: string, path: string, metadata: WriteMetadata = {}) {
   return (
     <div className="filePreview writePreview">
@@ -95,6 +122,10 @@ export function renderWriteSummary(summary: string, path: string, metadata: Writ
       {metadata.binary && <div className="filePreviewNotice">Previous file was binary, so no text diff is available.</div>}
     </div>
   );
+}
+
+function renderToolCallSummaryPreview(summary: string) {
+  return <div className="toolCallSummaryPreview">{summary}</div>;
 }
 
 export function renderDiffPreview(result: string, options: DiffPreviewOptions | string = {}) {
@@ -137,6 +168,47 @@ function extractPreviewFilename(argsStr: string): string {
   }
 }
 
+function formatRelativePath(path: string): string {
+  const normalized = path.replace(/\\/g, "/").replace(/^\/+/, "");
+  if (!normalized || normalized === ".") {
+    return "./";
+  }
+  return normalized.startsWith("./") || normalized.startsWith("../") ? normalized : `./${normalized}`;
+}
+
+function parseArguments(argumentsJson: string): Record<string, unknown> | null {
+  try {
+    const parsed = JSON.parse(argumentsJson) as unknown;
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? (parsed as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+function getPreviewContent(toolName: string, args: Record<string, unknown>): string | undefined {
+  const content = args.content;
+  if (typeof content === "string") {
+    return content;
+  }
+
+  const replace = args.replace;
+  if (toolName === "edit_file" && typeof replace === "string") {
+    return replace;
+  }
+
+  const command = args.command;
+  if (typeof command === "string") {
+    return command;
+  }
+
+  const query = args.query;
+  if (typeof query === "string") {
+    return query;
+  }
+
+  return undefined;
+}
+
 function renderBinaryHeader(filename: string, size: number, message: string) {
   return (
     <div className="filePreview binaryPreview">
@@ -150,14 +222,14 @@ function renderBinaryHeader(filename: string, size: number, message: string) {
   );
 }
 
-function renderCodePreview(options: { filename: string; language?: string; size: number; previewSize?: number; content: string; truncated?: boolean }) {
-  const { filename, language, size, previewSize, content, truncated } = options;
+function renderCodePreview(options: { filename: string; language?: string; size: number; previewSize?: number; content: string; truncated?: boolean; showMetadata?: boolean }) {
+  const { filename, language, size, previewSize, content, truncated, showMetadata = true } = options;
   return (
     <div className="filePreview codePreview">
       <div className="filePreviewHeader">
         <span className="filePreviewName">{filename}</span>
-        {language && <span className="filePreviewLang">{language}</span>}
-        <span className="filePreviewSize">{formatSize(size)}</span>
+        {showMetadata && language && <span className="filePreviewLang">{language}</span>}
+        {showMetadata && <span className="filePreviewSize">{formatSize(size)}</span>}
         {truncated && <span className="filePreviewType">preview {formatSize(previewSize || content.length)}</span>}
         {truncated && <span className="filePreviewType">truncated</span>}
       </div>

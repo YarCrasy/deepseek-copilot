@@ -1,6 +1,9 @@
 import type { VsCodeApi } from "@webview/VsCodeApi";
 import type { ToolCallGroup, ToolCallState } from "../../views/chatView/ChatViewTypes";
+import CollapsiblePanel from "../collapsiblePanel/CollapsiblePanel";
 import { renderToolCallResultPreview } from "../toolCallResultPreview/ToolCallResultPreview";
+import { renderToolCallArgumentsPreview } from "../toolCallResultPreview/ToolCallResultRenderers";
+import "../toolCallResultPreview/ToolCallResultPreview.css";
 import "./ToolCallTimeline.css";
 
 interface ToolCallTimelineProps {
@@ -17,7 +20,6 @@ function ToolCallTimeline({ groups, vscode }: ToolCallTimelineProps) {
     <div className="toolCallTimeline" aria-label="Tool calls">
       {groups.map((group) => (
         <div className="toolCallGroup" key={group.id}>
-          <div className="toolCallRound">Round {group.round}</div>
           {group.toolCalls.map((toolCall) => (
             <ToolCallItem key={toolCall.toolCallId} toolCall={toolCall} vscode={vscode} />
           ))}
@@ -34,29 +36,16 @@ interface ToolCallItemProps {
 
 function ToolCallItem({ toolCall, vscode }: ToolCallItemProps) {
   return (
-    <details className={`toolCallItem ${toolCall.status}`} open={shouldOpenToolCall(toolCall)}>
-      <summary className="toolCallItemSummary">
-        <div className="toolCallNameBlock">
-          <span className="toolCallName">{toolCall.toolName}</span>
-          <span className={`toolCallStatus ${toolCall.status}`}>{formatStatus(toolCall.status)}</span>
-        </div>
-      </summary>
-
-      <div className="toolCallItemBody">
-        {toolCall.arguments ? (
-          <pre className="toolCallArgs">
-            <code>{formatArguments(toolCall.arguments)}</code>
-          </pre>
-        ) : null}
-
-        {renderToolCallResultPreview({ toolCall, vscode })}
-      </div>
-    </details>
+    <CollapsiblePanel
+      title={<span className="toolCallName">{toolCall.toolName}</span>}
+      meta={<span className={`toolCallStatus ${toolCall.status}`}>{formatStatus(toolCall.status)}</span>}
+      className={`toolCallItem ${toolCall.status}`}
+      bodyClassName="toolCallItemBody"
+    >
+      {toolCall.arguments ? <div className="toolCallArgs">{renderToolCallArgumentsPreview(toolCall.toolName, toolCall.arguments)}</div> : null}
+      {renderToolCallResultPreview({ toolCall, vscode })}
+    </CollapsiblePanel>
   );
-}
-
-function shouldOpenToolCall(toolCall: ToolCallState): boolean {
-  return toolCall.status === "running" || toolCall.status === "error";
 }
 
 function formatStatus(status: ToolCallState["status"]): string {
@@ -71,14 +60,6 @@ function formatStatus(status: ToolCallState["status"]): string {
       return "Error";
     case "rejected":
       return "Rejected";
-  }
-}
-
-function formatArguments(argumentsJson: string): string {
-  try {
-    return JSON.stringify(JSON.parse(argumentsJson), null, 2);
-  } catch {
-    return argumentsJson;
   }
 }
 

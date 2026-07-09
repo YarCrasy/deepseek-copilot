@@ -19,41 +19,12 @@
 .toolCallGroup {
   gap: 6px;
 }
-.toolCallRound {
-  color: var(--text-secondary);
-  font-size: 11px;
-  font-weight: 600;
-}
 .toolCallItem {
   border: 1px solid var(--border-color);
   background: color-mix(in srgb, var(--bg-primary) 78%, transparent);
   box-sizing: border-box;
   border-radius: 8px;
   overflow: hidden;
-
-  &[open] > .toolCallItemSummary:before {
-    transform: rotate(90deg);
-  }
-}
-.toolCallItemSummary {
-  cursor: pointer;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
-  list-style: none;
-  display: flex;
-  &::-webkit-details-marker {
-    display: none;
-  }
-  &:before {
-    content: "▶";
-    color: var(--text-secondary);
-    flex: none;
-    margin-right: 7px;
-    font-size: 10px;
-    transition: transform .15s;
-  }
 }
 .toolCallItemBody {
   gap: 8px;
@@ -70,11 +41,11 @@
 }
 .toolCallName {
   color: var(--text-primary);
-  font-family: var(--font-mono);
+  font-family: inherit;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 12px;
-  font-weight: 700;
+  font-size: inherit;
+  font-weight: inherit;
   overflow: hidden;
 }
 .toolCallStatus {

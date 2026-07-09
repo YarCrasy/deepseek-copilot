@@ -10,7 +10,7 @@ export function registerExtensionApi(context: vscode.ExtensionContext, provider:
   );
 
   context.subscriptions.push(
-    vscode.commands.registerCommand("deepseek-copilot.openChat", () =>
+    vscode.commands.registerCommand("yrs-dpsk-copilot.openChat", () =>
       vscode.commands.executeCommand(SIDEBAR_VIEW_ID),
     ),
   );

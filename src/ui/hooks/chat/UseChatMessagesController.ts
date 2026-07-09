@@ -31,7 +31,7 @@ export function useChatMessagesController({
   const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([]);
   const [internalIsProcessing, setInternalIsProcessing] = useState(false);
   const internalListRef = useRef<HTMLDivElement | null>(null);
-  const { nextMessageId, reasoningRef, streamingMessageIdRef, updateStreamingMessage, resetStreaming } = useStreamHandler();
+  const { nextMessageId, reasoningRef, streamingMessageIdRef, enqueueStreamingText, resetStreaming } = useStreamHandler();
 
   const messages = externalMessages ?? internalMessages;
   const setMessages = externalSetMessages ?? setInternalMessages;
@@ -76,25 +76,25 @@ export function useChatMessagesController({
 
     onStreamChunk: useCallback(
       (content: string) => {
-        updateStreamingMessage((message) => ({ ...message, content: `${message.content}${content}` }), setMessages);
+        enqueueStreamingText("content", content, setMessages);
       },
-      [setMessages, updateStreamingMessage],
+      [enqueueStreamingText, setMessages],
     ),
 
     onStreamReasoning: useCallback(
       (content: string) => {
         reasoningRef.current = `${reasoningRef.current}${content}`;
-        updateStreamingMessage((message) => ({ ...message, reasoning: `${message.reasoning ?? ""}${content}` }), setMessages);
+        enqueueStreamingText("reasoning", content, setMessages);
       },
-      [reasoningRef, setMessages, updateStreamingMessage],
+      [enqueueStreamingText, reasoningRef, setMessages],
     ),
 
     onStreamDone: useCallback(
       (info) => {
         setProcessing(false);
-        resetStreaming();
 
         if (info.cancelled) {
+          resetStreaming();
           setMessages(removeCancelledTurn);
           onGenerationCancelled?.();
           focusInput();

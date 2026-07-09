@@ -3,6 +3,7 @@ import type { AppConfig, ChatCompletionRequest, ChatMessage, StreamChunk } from 
 import type { BaseProvider } from "@/deepseekApi/BaseProvider";
 import { createSystemMessage, mapReasoningEffort } from "@/adapters/deepseek/Chat";
 import { PartialStreamError, type StreamedAssistantResult } from "@/core/errors/PartialStreamError";
+import { StreamEventEmitter } from "./StreamEventEmitter";
 import type { SendMessagePayload } from "./Types";
 
 interface SendMessageStreamingOptions {
@@ -25,6 +26,7 @@ export async function sendMessageStreaming({ messages, payload, config, provider
   };
 
   const result: StreamedAssistantResult = { content: "", reasoning: "" };
+  const stream = new StreamEventEmitter(webviewView);
 
   try {
     await provider.chatCompletionStream(
@@ -35,7 +37,7 @@ export async function sendMessageStreaming({ messages, payload, config, provider
         } else if (chunk.type === "reasoning") {
           result.reasoning += chunk.reasoning_content ?? "";
         }
-        postStreamChunk(webviewView, chunk);
+        stream.fromChunk(chunk);
       },
       signal,
     );
@@ -47,35 +49,6 @@ export async function sendMessageStreaming({ messages, payload, config, provider
   }
 
   return result;
-}
-
-function postStreamChunk(webviewView: vscode.WebviewView, chunk: StreamChunk): void {
-  switch (chunk.type) {
-    case "content":
-      webviewView.webview.postMessage({ type: "streamChunk", content: chunk.content ?? "" });
-      break;
-    case "reasoning":
-      webviewView.webview.postMessage({
-        type: "streamReasoning",
-        content: chunk.reasoning_content ?? "",
-      });
-      break;
-    case "done":
-      webviewView.webview.postMessage({
-        type: "streamDone",
-        finish_reason: chunk.finish_reason,
-        usage: chunk.usage,
-      });
-      break;
-    case "error":
-      webviewView.webview.postMessage({
-        type: "streamError",
-        error: chunk.error ?? "Unknown stream error",
-      });
-      break;
-    case "tool_call":
-      break;
-  }
 }
 
 function isCancellationError(err: unknown): boolean {

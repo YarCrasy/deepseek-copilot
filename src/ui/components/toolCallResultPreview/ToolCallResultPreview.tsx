@@ -31,6 +31,10 @@ export function renderToolCallResultPreview({ toolCall, vscode }: ResultPreviewO
   }
 
   if (structured?.type === "fileWrite") {
+    if (toolCall.toolName === "create_file") {
+      return null;
+    }
+
     return structured.diff
       ? renderDiffPreview(structured.diff, {
           summary: structured.summary,
@@ -46,6 +50,17 @@ export function renderToolCallResultPreview({ toolCall, vscode }: ResultPreviewO
           beforeSize: structured.beforeSize,
           afterSize: structured.afterSize,
         });
+  }
+
+  if (structured?.type === "fileEdit" || structured?.type === "filePatch") {
+    return renderDiffPreview(structured.diff, {
+      summary: structured.summary,
+      path: structured.path,
+      stats: structured.diffStats,
+      truncated: structured.diffTruncated,
+      beforeSize: structured.beforeSize,
+      afterSize: structured.afterSize,
+    });
   }
 
   if (toolCall.toolName === "read_file") {

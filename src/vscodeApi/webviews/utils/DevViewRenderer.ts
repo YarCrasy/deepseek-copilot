@@ -21,7 +21,7 @@ export function getDevViewContent(options: DevViewRendererOptions): string {
       content="default-src 'none'; img-src ${webview.cspSource} ${devServerUrl} data:; font-src ${webview.cspSource} ${devServerUrl}; style-src ${webview.cspSource} ${devServerUrl} 'unsafe-inline'; script-src 'nonce-${nonce}' ${devServerUrl} 'unsafe-eval'; connect-src ${devServerUrl} ws://localhost:5175;"
     />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>DeepSeek Copilot</title>
+    <title>Yar's DeepSeek Copilot</title>
     ${codiconFontFace}
     <style>
       body {

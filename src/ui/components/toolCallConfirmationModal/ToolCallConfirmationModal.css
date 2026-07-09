@@ -40,6 +40,8 @@
 }
 .toolCallModalArgs {
   max-height: 160px;
+  margin-top: 7px;
+  overflow: auto;
 }
 .toolCallModalBatchActions {
   border-top: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);
@@ -83,13 +85,12 @@
       font-size: 11px;
     }
   }
-  .toolCallArgs {
-    margin-top: 7px;
-  }
 }
-.toolCallDecisionList {
-  flex-direction: column;
-  gap: 5px;
+.toolCallDecisionRow {
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
   display: flex;
 }
 .toolCallDecisionOption {
@@ -98,37 +99,34 @@
   color: var(--text-secondary);
   cursor: pointer;
   text-align: left;
-  background: none;
-  border: 1px solid #0000;
+  background: color-mix(in srgb, var(--bg-secondary) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border-color) 90%, var(--text-secondary) 10%);
   border-radius: 8px;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   padding: 5px 8px;
   font-size: 12px;
+  font-weight: 600;
   display: flex;
+  transition: background .15s, border-color .15s, color .15s;
   &:hover {
-    background: color-mix(in srgb, var(--bg-secondary) 82%, transparent);
+    background: color-mix(in srgb, var(--bg-secondary) 82%, var(--accent-color) 8%);
+    border-color: color-mix(in srgb, var(--accent-color) 55%, var(--border-color));
     color: var(--text-primary);
+  }
+  &:focus-visible {
+    outline: 1px solid var(--accent-color);
+    outline-offset: 2px;
   }
   &.primary {
-    background: color-mix(in srgb, var(--bg-secondary) 74%, transparent);
+    border-color: color-mix(in srgb, var(--accent-color) 52%, var(--border-color));
+    background: color-mix(in srgb, var(--accent-color) 12%, var(--bg-secondary));
     color: var(--text-primary);
-  }
-  > span {
-    background: color-mix(in srgb, var(--text-secondary) 22%, transparent);
-    width: 18px;
-    height: 18px;
-    color: var(--text-primary);
-    border-radius: 999px;
-    flex: 0 0 18px;
-    justify-content: center;
-    align-items: center;
-    font-size: 10px;
-    line-height: 1;
-    display: inline-flex;
   }
 }
 .toolCallActionBtn {
+  width: 100%;
   border: 1px solid color-mix(in srgb, var(--accent-color) 55%, var(--border-color));
   background: color-mix(in srgb, var(--accent-color) 18%, transparent);
   color: var(--text-primary);

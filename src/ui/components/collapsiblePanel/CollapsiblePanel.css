@@ -1,0 +1,63 @@
+.collapsiblePanel {
+  border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
+  background: color-mix(in srgb, var(--bg-secondary) 72%, transparent);
+  border-radius: 12px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.collapsiblePanelSummary {
+  color: var(--text-secondary);
+  cursor: pointer;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 10px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  list-style: none;
+  display: flex;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+}
+
+.collapsiblePanelTitle {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-primary);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+  overflow: hidden;
+}
+
+.collapsiblePanelMeta {
+  color: var(--text-secondary);
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+  min-width: 0;
+  display: inline-flex;
+}
+
+.collapsiblePanelChevron {
+  border-top: 4px solid currentColor;
+  border-right: 4px solid transparent;
+  border-left: 4px solid transparent;
+  flex: 0 0 auto;
+  margin-left: 0;
+  transition: transform .16s ease;
+}
+
+.collapsiblePanel[open] > .collapsiblePanelSummary .collapsiblePanelChevron {
+  transform: rotate(180deg);
+}
+
+.collapsiblePanelBody {
+  min-width: 0;
+  padding: 0 12px 12px;
+}

@@ -18,20 +18,20 @@ const MAX_REFERENCE_BYTES = 1024 * 1024;
 
 export function registerChatCommands(context: vscode.ExtensionContext, provider: WebviewProvider): void {
   context.subscriptions.push(
-    vscode.commands.registerCommand("deepseek-copilot.addFileToChat", async (uri?: vscode.Uri, selectedUris?: vscode.Uri[]) => {
+    vscode.commands.registerCommand("yrs-dpsk-copilot.addFileToChat", async (uri?: vscode.Uri, selectedUris?: vscode.Uri[]) => {
       const fallbackUri = vscode.window.activeTextEditor?.document.uri;
       await addUrisToChat(provider, collectCommandUris(uri ?? fallbackUri, selectedUris), "file");
     }),
-    vscode.commands.registerCommand("deepseek-copilot.addFolderToChat", async (uri?: vscode.Uri, selectedUris?: vscode.Uri[]) => {
+    vscode.commands.registerCommand("yrs-dpsk-copilot.addFolderToChat", async (uri?: vscode.Uri, selectedUris?: vscode.Uri[]) => {
       await addUrisToChat(provider, collectCommandUris(uri, selectedUris), "directory");
     }),
-    vscode.commands.registerCommand("deepseek-copilot.addSelectionToChat", async () => {
+    vscode.commands.registerCommand("yrs-dpsk-copilot.addSelectionToChat", async () => {
       await addActiveSelectionToChat(provider);
     }),
-    vscode.commands.registerCommand("deepseek-copilot.newChat", async () => {
+    vscode.commands.registerCommand("yrs-dpsk-copilot.newChat", async () => {
       await provider.startNewChat();
     }),
-    vscode.commands.registerCommand("deepseek-copilot.reviewChanges", async () => {
+    vscode.commands.registerCommand("yrs-dpsk-copilot.reviewChanges", async () => {
       await reviewWorkspaceChanges(provider);
     }),
   );
@@ -48,7 +48,7 @@ async function addUrisToChat(provider: WebviewProvider, uris: vscode.Uri[], expe
   }
 
   if (references.length === 0) {
-    vscode.window.showInformationMessage(expectedType === "file" ? "Select a file to add to DeepSeek Copilot chat." : "Select a folder to add to DeepSeek Copilot chat.");
+    vscode.window.showInformationMessage(expectedType === "file" ? "Select a file to add to Yar's DeepSeek Copilot chat." : "Select a folder to add to Yar's DeepSeek Copilot chat.");
     return;
   }
 
@@ -58,13 +58,13 @@ async function addUrisToChat(provider: WebviewProvider, uris: vscode.Uri[], expe
 async function addActiveSelectionToChat(provider: WebviewProvider): Promise<void> {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.selection.isEmpty) {
-    vscode.window.showInformationMessage("Select code in an editor to add it to DeepSeek Copilot chat.");
+    vscode.window.showInformationMessage("Select code in an editor to add it to Yar's DeepSeek Copilot chat.");
     return;
   }
 
   const text = editor.document.getText(editor.selection);
   if (!text.trim()) {
-    vscode.window.showInformationMessage("Select code in an editor to add it to DeepSeek Copilot chat.");
+    vscode.window.showInformationMessage("Select code in an editor to add it to Yar's DeepSeek Copilot chat.");
     return;
   }
 
@@ -87,7 +87,7 @@ async function addActiveSelectionToChat(provider: WebviewProvider): Promise<void
 async function reviewWorkspaceChanges(provider: WebviewProvider): Promise<void> {
   const workspaceFolder = vscode.workspace.workspaceFolders?.[0];
   if (!workspaceFolder) {
-    vscode.window.showInformationMessage("Open a workspace to review changes with DeepSeek Copilot.");
+    vscode.window.showInformationMessage("Open a workspace to review changes with Yar's DeepSeek Copilot.");
     return;
   }
 
@@ -116,7 +116,7 @@ async function reviewWorkspaceChanges(provider: WebviewProvider): Promise<void> 
     ]);
   } catch (err) {
     logError("[ChatCommands] Error collecting Git changes", err);
-    vscode.window.showErrorMessage("DeepSeek Copilot could not collect Git changes for review.");
+    vscode.window.showErrorMessage("Yar's DeepSeek Copilot could not collect Git changes for review.");
   }
 }
 

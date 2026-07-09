@@ -6,13 +6,15 @@ web-doc/**
 docs/**
 node_modules/**
 src/**
-!src/
 !src/assets/
 !src/assets/**
 scripts/**
+.tmp/**
+out/**
 .gitignore
 .yarnrc
 package-lock.json
+esbuild.js
 vsc-extension-quickstart.md
 *.vsix
 **/tsconfig.json

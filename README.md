@@ -1,8 +1,8 @@
-# DeepSeek Copilot
+# Yar's DeepSeek Copilot
 
-DeepSeek Copilot is a VS Code assistant focused entirely on DeepSeek. It adds a sidebar chat with streaming responses, reasoning output, conversation history, path autocomplete for workspace context, and controlled tool execution for workspace tasks.
+Yar's DeepSeek Copilot is a VS Code assistant focused entirely on DeepSeek. It adds a sidebar chat with streaming responses, reasoning output, conversation history, path autocomplete for workspace context, and controlled tool execution for workspace tasks.
 
-> Disclaimer: DeepSeek Copilot is an independent third-party extension. It is not affiliated with, endorsed by, sponsored by, or officially maintained by DeepSeek.
+> Preview disclaimer: Yar's DeepSeek Copilot is an independent third-party extension. It is not affiliated with, endorsed by, sponsored by, or officially maintained by DeepSeek. Preview releases may contain bugs; review tool calls and keep important work under version control.
 
 The extension is DeepSeek-only by design. There is no provider selector and no Ollama integration.
 
@@ -30,8 +30,8 @@ https://platform.deepseek.com/api_keys
 
 ## Getting Started
 
-1. Install and open DeepSeek Copilot.
-2. Open the DeepSeek Copilot activity bar item.
+1. Install and open Yar's DeepSeek Copilot.
+2. Open the Yar's DeepSeek Copilot activity bar item.
 3. Go to Settings inside the chat view.
 4. Paste your DeepSeek API key.
 5. Choose model and generation settings.
@@ -39,35 +39,36 @@ https://platform.deepseek.com/api_keys
 
 ## Commands
 
-- `DeepSeek Copilot: Open Chat`
-- `DeepSeek Copilot: New Chat`
-- `DeepSeek Copilot: Add File to Chat`
-- `DeepSeek Copilot: Add Folder to Chat`
-- `DeepSeek Copilot: Add Selection to Chat`
-- `DeepSeek Copilot: Review Changes`
+- `Yar's DeepSeek Copilot: Open Chat`
+- `Yar's DeepSeek Copilot: New Chat`
+- `Yar's DeepSeek Copilot: Add File to Chat`
+- `Yar's DeepSeek Copilot: Add Folder to Chat`
+- `Yar's DeepSeek Copilot: Add Selection to Chat`
+- `Yar's DeepSeek Copilot: Review Changes`
 
 ## Extension Settings
 
 This extension contributes the following settings:
 
-- `deepseek-copilot.model`: DeepSeek model ID to use.
-- `deepseek-copilot.thinkingMode`: Enable DeepSeek thinking mode.
-- `deepseek-copilot.reasoningEffort`: Reasoning effort level, `high` or `max`.
-- `deepseek-copilot.temperature`: Sampling temperature.
-- `deepseek-copilot.topP`: Top P sampling.
-- `deepseek-copilot.maxTokens`: Maximum tokens for responses.
-- `deepseek-copilot.responseFormat`: Response format, `text` or `json_object`.
-- `deepseek-copilot.streamResponse`: Enable streaming responses.
-- `deepseek-copilot.permissionMode`: Global tool permission mode, from chat-only to full access.
-- `deepseek-copilot.toolExecutionModes`: Per-tool execution modes.
-- `deepseek-copilot.baseUrl`: DeepSeek API base URL.
-- `deepseek-copilot.projectInstructions.includeHomeAgents`: Allow reading `~/.deepseek-copilot/AGENTS.md`.
+- `yrs-dpsk-copilot.model`: DeepSeek model ID to use.
+- `yrs-dpsk-copilot.thinkingMode`: Enable DeepSeek thinking mode.
+- `yrs-dpsk-copilot.reasoningEffort`: Reasoning effort level, `high` or `max`.
+- `yrs-dpsk-copilot.temperature`: Sampling temperature.
+- `yrs-dpsk-copilot.topP`: Top P sampling.
+- `yrs-dpsk-copilot.maxTokens`: Maximum tokens for responses.
+- `yrs-dpsk-copilot.responseFormat`: Response format, `text` or `json_object`.
+- `yrs-dpsk-copilot.streamResponse`: Enable streaming responses.
+- `yrs-dpsk-copilot.permissionMode`: Global tool permission mode, from chat-only to full access.
+- `yrs-dpsk-copilot.autoContext`: Automatically include active-editor and Git context.
+- `yrs-dpsk-copilot.toolExecutionModes`: Per-tool execution modes.
+- `yrs-dpsk-copilot.baseUrl`: DeepSeek API base URL.
+- `yrs-dpsk-copilot.projectInstructions.includeHomeAgents`: Allow reading `~/.yrs-dpsk-copilot/AGENTS.md`.
 
 The API key is not stored in VS Code settings. It is stored with VS Code Secret Storage.
 
 ## Tools and Safety
 
-DeepSeek Copilot can execute workspace tools when enabled. Tool access is controlled first by permission mode:
+Yar's DeepSeek Copilot can execute workspace tools when enabled. Tool access is controlled first by permission mode:
 
 - `chat`: no tools.
 - `read-only`: read, list, and search workspace files.

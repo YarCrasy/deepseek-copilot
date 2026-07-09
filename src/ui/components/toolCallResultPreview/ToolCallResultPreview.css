@@ -1,14 +1,15 @@
 .filePreview,
 .toolCallResult {
-  border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
-  background: color-mix(in srgb, var(--bg-secondary) 70%, transparent);
-  border-radius: 8px;
+  border: 0;
+  background: transparent;
+  border-radius: 0;
+  width: 100%;
   min-width: 0;
   max-width: 100%;
   overflow: hidden;
 }
 .filePreviewHeader {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
   min-width: 0;
   color: var(--text-secondary);
   align-items: center;
@@ -39,11 +40,17 @@
 }
 .filePreviewNotice,
 .writeSummary,
+.toolCallSummaryPreview,
 .searchResultMore {
   color: var(--text-secondary);
   overflow-wrap: anywhere;
   padding: 8px 9px;
   font-size: 11px;
+}
+
+.toolCallSummaryPreview {
+  color: var(--text-primary);
+  font-family: var(--font-mono);
 }
 .searchResultsList {
   flex-direction: column;
