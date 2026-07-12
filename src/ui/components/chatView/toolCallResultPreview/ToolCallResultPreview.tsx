@@ -1,6 +1,6 @@
 import type { VsCodeApi } from "@webview/VsCodeApi";
-import type { ToolCallState } from "../../views/chatView/ChatViewTypes";
-import { detectDiff, parseStructuredToolResult } from "../../views/chatView/utils/FilePreview";
+import type { ToolCallState } from "@webview/views/chatView/ChatViewTypes";
+import { detectDiff, parseStructuredToolResult } from "@webview/views/chatView/utils/FilePreview";
 import {
   renderDiffPreview,
   renderFilePreview,

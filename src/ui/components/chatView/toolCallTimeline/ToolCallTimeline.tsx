@@ -1,6 +1,6 @@
 import type { VsCodeApi } from "@webview/VsCodeApi";
-import type { ToolCallGroup, ToolCallState } from "../../views/chatView/ChatViewTypes";
-import CollapsiblePanel from "../collapsiblePanel/CollapsiblePanel";
+import type { ToolCallGroup, ToolCallState } from "@webview/views/chatView/ChatViewTypes";
+import CollapsiblePanel from "../../shared/collapsiblePanel/CollapsiblePanel";
 import { renderToolCallResultPreview } from "../toolCallResultPreview/ToolCallResultPreview";
 import { renderToolCallArgumentsPreview } from "../toolCallResultPreview/ToolCallResultRenderers";
 import "../toolCallResultPreview/ToolCallResultPreview.css";

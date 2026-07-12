@@ -1,4 +1,4 @@
-import type { DangerConfirmationData } from "../../views/chatView/ChatViewTypes";
+import type { DangerConfirmationData } from "@webview/views/chatView/ChatViewTypes";
 import "./ToolCallDangerConfirmation.css";
 
 interface DangerConfirmationProps {

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { Conversation, HandlerToWebviewMessage } from "@/adapters";
+import { HistoryListItem } from "@webview/components/historyView";
 import { useVsCode } from "../chatView/contexts";
-import HistoryListItem from "./historyListItem/HistoryListItem";
 import "./HistoryView.css";
 
 function HistoryView() {

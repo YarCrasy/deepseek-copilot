@@ -3,7 +3,7 @@ import "./MessagesSection.css";
 import { useVsCode } from "../../contexts";
 import type { MessagesSectionProps } from "../../ChatViewTypes";
 import { useMessageHandler } from "../../hooks";
-import { ChatEmptyState, ChatMessages, ToolCallConfirmationModal, ToolCallTimeline } from "../../../../components";
+import { ChatEmptyState, ChatMessages, ToolCallConfirmationModal, ToolCallTimeline } from "@webview/components/chatView";
 import { useChatMessagesController, useCodeActionHandler, useToolCallController } from "../../../../hooks/chat";
 
 function MessagesSection({

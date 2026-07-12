@@ -1,7 +1,7 @@
 import { useState } from "react";
 import "./AdvancedSection.css";
 import type { AdvancedSectionProps } from "../index";
-import { Slider, Toggle } from "@webview/components";
+import { Slider, Toggle } from "@webview/components/settingsView";
 
 function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionProps) {
   const [collapsed, setCollapsed] = useState(false);

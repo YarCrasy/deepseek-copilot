@@ -1,8 +1,8 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HandlerToWebviewMessage, PathCompletionItem } from "@/adapters";
 import "./InputCtrl.css";
+import { FileSelector, getPathToken, isFileSelectorNavigationKey, type PathToken } from "@webview/components/chatView";
 import { useVsCode } from "@webview/views/chatView/contexts";
-import { FileSelector, getPathToken, isFileSelectorNavigationKey, type PathToken } from "../fileSelector";
 
 interface ReferencedFile {
   path: string;

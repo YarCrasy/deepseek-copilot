@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "./App.css";
-import Header from "./components/header/Header";
+import { Header } from "@webview/components/shared";
 import { ChatView, SettingsView, HistoryView } from "./views";
 import { VsCodeProvider } from "./views/chatView/contexts";
 import type { Conversation, HandlerToWebviewMessage } from "@/adapters";

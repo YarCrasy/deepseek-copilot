@@ -1,4 +1,4 @@
-import type { ToolCallActionOptions, ToolCallState } from "../../views/chatView/ChatViewTypes";
+import type { ToolCallActionOptions, ToolCallState } from "@webview/views/chatView/ChatViewTypes";
 import DangerConfirmation from "../toolCallDangerConfirmation/ToolCallDangerConfirmation";
 import { renderToolCallArgumentsPreview } from "../toolCallResultPreview/ToolCallResultRenderers";
 import "../toolCallResultPreview/ToolCallResultPreview.css";

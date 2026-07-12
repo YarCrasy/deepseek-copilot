@@ -1,6 +1,6 @@
 import type { VsCodeApi } from "@webview/VsCodeApi";
-import type { StructuredToolResult } from "../../views/chatView/utils/FilePreview";
-import { detectFileType, detectLanguage, extractFilename, formatSize, looksBinary, parseSearchResults } from "../../views/chatView/utils/FilePreview";
+import type { StructuredToolResult } from "@webview/views/chatView/utils/FilePreview";
+import { detectFileType, detectLanguage, extractFilename, formatSize, looksBinary, parseSearchResults } from "@webview/views/chatView/utils/FilePreview";
 
 type StructuredFileResult = Extract<StructuredToolResult, { type: "file" }>;
 type SearchResult = { file: string; line: number; text: string };

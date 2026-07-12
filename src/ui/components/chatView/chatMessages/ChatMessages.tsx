@@ -4,8 +4,8 @@ import { refractor } from "refractor";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { normalizeAssistantMarkdown } from "@/shared/utils";
-import type { ChatMessage, ToolCallGroup } from "../../views/chatView/ChatViewTypes";
-import CollapsiblePanel from "../collapsiblePanel/CollapsiblePanel";
+import type { ChatMessage, ToolCallGroup } from "@webview/views/chatView/ChatViewTypes";
+import CollapsiblePanel from "../../shared/collapsiblePanel/CollapsiblePanel";
 import "./ChatMessages.css";
 
 interface ChatMessagesProps {

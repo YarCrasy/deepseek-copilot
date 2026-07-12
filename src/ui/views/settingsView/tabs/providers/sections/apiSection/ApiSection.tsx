@@ -1,6 +1,6 @@
 import "./ApiSection.css";
 import type { ApiSectionProps } from "../index";
-import { Toggle } from "@webview/components";
+import { Toggle } from "@webview/components/settingsView";
 import { useApiConnectionState } from "./UseApiConnectionState";
 
 function ApiSection({ config, updateConfig, saveOnBlur, modelOptions, reasoningEffortOptions }: ApiSectionProps) {
