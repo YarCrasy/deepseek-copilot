@@ -25,12 +25,11 @@ export interface AppConfig {
   maxTokens: number;
   responseFormat: "text" | "json_object";
 
-  streamResponse: boolean;
-
   permissionMode: PermissionMode;
   toolExecutionModes: ToolExecutionModes;
 
   autoContext: boolean;
+  enableBetaFeatures: boolean;
 
   userId?: string;
 }
@@ -45,8 +44,8 @@ export const DEFAULT_CONFIG: AppConfig = {
   topP: 1.0,
   maxTokens: 8192,
   responseFormat: "text",
-  streamResponse: true,
   permissionMode: "read-only",
   toolExecutionModes: {},
   autoContext: false,
+  enableBetaFeatures: false,
 };

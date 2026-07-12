@@ -57,7 +57,6 @@ This extension contributes the following settings:
 - `yrs-dpsk-copilot.topP`: Top P sampling.
 - `yrs-dpsk-copilot.maxTokens`: Maximum tokens for responses.
 - `yrs-dpsk-copilot.responseFormat`: Response format, `text` or `json_object`.
-- `yrs-dpsk-copilot.streamResponse`: Enable streaming responses.
 - `yrs-dpsk-copilot.permissionMode`: Global tool permission mode, from chat-only to full access.
 - `yrs-dpsk-copilot.autoContext`: Automatically include active-editor and Git context.
 - `yrs-dpsk-copilot.toolExecutionModes`: Per-tool execution modes.
@@ -85,7 +84,7 @@ Dangerous operations, such as overwriting files or running risky terminal comman
 
 ## Documentation
 
-- Human documentation: `web-doc` with English, Spanish, and Chinese routes.
+- Visual documentation: `web-doc` with English, Spanish, and Chinese routes.
 - Technical documentation: https://github.com/YarCrasy/deepseek-copilot/wiki
 - DeepSeek API reference: https://api-docs.deepseek.com/
 

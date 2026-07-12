@@ -181,12 +181,6 @@
           ],
           "description": "Response format"
         },
-        "yrs-dpsk-copilot.streamResponse": {
-          "type": "boolean",
-          "default": true,
-          "scope": "application",
-          "description": "Enable streaming responses"
-        },
         "yrs-dpsk-copilot.permissionMode": {
           "type": "string",
           "default": "read-only",
@@ -204,6 +198,12 @@
             "Allow all tools. Dangerous commands still require confirmation."
           ],
           "description": "Global permission mode for tool access"
+        },
+        "yrs-dpsk-copilot.enableBetaFeatures": {
+          "type": "boolean",
+          "default": false,
+          "scope": "application",
+          "description": "Enable DeepSeek beta features, including strict tool-call schemas."
         },
         "yrs-dpsk-copilot.autoContext": {
           "type": "boolean",

@@ -29,7 +29,9 @@ export class ToolCallSession {
     let streamedContent = "";
     let streamedReasoning = "";
     const executedToolCalls = new Map<string, StoredExecution>();
-    const enabledTools = getRunnableTools(options);
+    const enabledTools = getRunnableTools(options).map((tool) =>
+      options.providerConfig.enableBetaFeatures ? { ...tool, function: { ...tool.function, strict: true } } : tool,
+    );
     const stream = new StreamEventEmitter(options.webviewView);
 
     try {

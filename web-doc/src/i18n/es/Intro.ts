@@ -9,7 +9,7 @@ export const intro: PageContent = {
     {
       title: "Alcance beta actual",
       items: [
-        "Chat lateral con respuestas en streaming.",
+        "Chat lateral con respuestas que siempre se transmiten y se muestran progresivamente.",
         "Thinking mode puede activarse o desactivarse sin desactivar tools.",
         "Las tools pueden leer archivos, listar directorios, buscar contenido, crear archivos y ejecutar comandos de terminal.",
         "El autocompletado de rutas aparece en el input al escribir ./ o ../.",

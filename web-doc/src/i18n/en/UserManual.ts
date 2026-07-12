@@ -14,6 +14,7 @@ export const userManual: PageContent = {
         "Choose model, thinking mode, reasoning effort, and tool execution modes.",
         "Type ./ or ../ in the input to autocomplete workspace paths.",
         "Review pending tool calls before execution unless a tool is configured for safe auto approval.",
+        "Responses always appear progressively as they are generated.",
         "Use Stop generation to cancel. The cancelled prompt returns to the input and is not kept in history.",
       ],
     },

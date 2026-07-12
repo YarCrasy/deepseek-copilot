@@ -13,10 +13,10 @@ const SYNCED_SETTING_KEYS = new Set<SyncedSettingKey>([
   "topP",
   "maxTokens",
   "responseFormat",
-  "streamResponse",
   "permissionMode",
   "toolExecutionModes",
   "autoContext",
+  "enableBetaFeatures",
 ]);
 
 export class SettingsManager {
@@ -32,10 +32,10 @@ export class SettingsManager {
       topP: config.get("topP") ?? DEEPSEEK_DEFAULTS.topP,
       maxTokens: config.get("maxTokens") ?? DEEPSEEK_DEFAULTS.maxTokens,
       responseFormat: config.get("responseFormat") ?? DEEPSEEK_DEFAULTS.responseFormat,
-      streamResponse: config.get("streamResponse") ?? DEEPSEEK_DEFAULTS.streamResponse,
       permissionMode: normalizePermissionMode(config.get("permissionMode")),
       toolExecutionModes: normalizeToolExecutionModes(config.get("toolExecutionModes")),
       autoContext: config.get("autoContext") ?? DEEPSEEK_DEFAULTS.autoContext,
+      enableBetaFeatures: config.get("enableBetaFeatures") ?? DEEPSEEK_DEFAULTS.enableBetaFeatures,
     };
   }
 

@@ -30,9 +30,9 @@ function SettingsView() {
       maxTokens: nextConfig.maxTokens ?? current.maxTokens ?? DEFAULT_CONFIG.maxTokens,
       baseUrl: nextConfig.baseUrl ?? current.baseUrl ?? DEFAULT_CONFIG.baseUrl,
       responseFormat: nextConfig.responseFormat ?? current.responseFormat ?? DEFAULT_CONFIG.responseFormat,
-      streamResponse: nextConfig.streamResponse ?? current.streamResponse ?? DEFAULT_CONFIG.streamResponse,
       permissionMode: nextConfig.permissionMode ?? current.permissionMode ?? DEFAULT_CONFIG.permissionMode,
       toolExecutionModes: nextConfig.toolExecutionModes ?? current.toolExecutionModes ?? DEFAULT_CONFIG.toolExecutionModes,
+      enableBetaFeatures: nextConfig.enableBetaFeatures ?? current.enableBetaFeatures ?? DEFAULT_CONFIG.enableBetaFeatures,
     }));
   }, []);
 

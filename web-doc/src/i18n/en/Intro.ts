@@ -9,7 +9,7 @@ export const intro: PageContent = {
     {
       title: "Current beta scope",
       items: [
-        "Sidebar chat with streaming responses.",
+        "Sidebar chat with responses that always stream and render progressively.",
         "Thinking mode can be enabled or disabled without disabling tools.",
         "Workspace tools can read files, list directories, search content, create files, and run terminal commands.",
         "Path autocomplete appears in the input after typing ./ or ../.",

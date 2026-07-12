@@ -92,14 +92,13 @@ function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionPr
           </div>
         </div>
 
-        {/* Stream Toggle */}
         <Toggle
-          label="Stream Response"
-          id="streamResponse"
-          checked={config.streamResponse}
+          label="Enable Beta Features"
+          id="enableBetaFeatures"
+          checked={config.enableBetaFeatures}
           onToggle={(checked) => {
-            updateConfig("streamResponse", checked);
-            saveOnBlur("streamResponse", checked);
+            updateConfig("enableBetaFeatures", checked);
+            saveOnBlur("enableBetaFeatures", checked);
           }}
         />
       </div>

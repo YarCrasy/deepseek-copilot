@@ -18,7 +18,7 @@ export type ChatStreamChunk = StreamChunk;
 export function buildChatBody(request: Partial<ChatRequest>, config: AppConfig): Partial<ChatRequest> {
   const body: Partial<ChatRequest> = {
     model: request.model || config.model || DEEPSEEK_DEFAULTS.model,
-    stream: request.stream ?? DEEPSEEK_DEFAULTS.streamResponse,
+    stream: request.stream ?? true,
   };
 
   if (body.stream) {

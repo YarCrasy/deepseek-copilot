@@ -5,14 +5,50 @@
   gap: 5px;
   display: flex;
   position: relative;
-  .input {
+  .Input {
     background: var(--input-bg);
     width: 100%;
     height: 3rem;
     min-height: 30px;
     max-height: 10rem;
     color: var(--text-primary);
-    overflow-y: auto;
+    overflow-y: hidden;
+    resize: vertical;
+    scrollbar-color: color-mix(in srgb, var(--text-secondary) 60%, transparent) transparent;
+    scrollbar-width: thin;
+    padding-right: 14px;
+
+    &::-webkit-scrollbar {
+      width: 10px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+      margin: 7px 0;
+    }
+    &::-webkit-scrollbar-thumb {
+      background: color-mix(in srgb, var(--text-secondary) 48%, transparent);
+      background-clip: padding-box;
+      border: 3px solid transparent;
+      border-radius: 999px;
+      min-height: 24px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: color-mix(in srgb, var(--text-secondary) 75%, transparent);
+      background-clip: padding-box;
+    }
+    &::-webkit-scrollbar-thumb:active {
+      background: var(--input-focus-border);
+      background-clip: padding-box;
+    }
+    &.hasOverflow {
+      overflow-y: auto;
+    }
+    &::-webkit-resizer {
+      background:
+        linear-gradient(135deg, transparent 45%, var(--text-secondary) 46% 54%, transparent 55%) 5px 5px / 7px 7px no-repeat,
+        linear-gradient(135deg, transparent 45%, var(--input-focus-border) 46% 54%, transparent 55%) 8px 8px / 7px 7px no-repeat;
+      cursor: ns-resize;
+    }
     &:disabled {
       opacity: .65;
       cursor: default;

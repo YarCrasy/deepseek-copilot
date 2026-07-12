@@ -54,6 +54,7 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
       if (!ta) return;
       ta.style.height = "auto";
       ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
+      ta.classList.toggle("hasOverflow", ta.scrollHeight > ta.clientHeight + 1);
     }, [input]);
 
     useEffect(() => {
