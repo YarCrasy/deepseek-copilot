@@ -50,14 +50,6 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
     useImperativeHandle(ref, () => taRef.current!, [taRef]);
 
     useEffect(() => {
-      const ta = taRef.current;
-      if (!ta) return;
-      ta.style.height = "auto";
-      ta.style.height = `${Math.min(ta.scrollHeight, 160)}px`;
-      ta.classList.toggle("hasOverflow", ta.scrollHeight > ta.clientHeight + 1);
-    }, [input]);
-
-    useEffect(() => {
       const handleMessage = (event: MessageEvent<HandlerToWebviewMessage>) => {
         const message = event.data;
         if (message.type !== "pathCompletions" || message.requestId !== activeRequestIdRef.current) {
