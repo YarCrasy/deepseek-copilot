@@ -1,7 +1,7 @@
 import type { ToolCall } from "@/adapters";
 import { ToolRegistry } from "./ToolRegistry";
 import { FORCED_HANDLERS } from "./definitions";
-import type { DangerLevel, ExecutionResult, ConfirmationRequiredResult } from "./Types";
+import type { DangerLevel, ExecutionResult, ConfirmationRequiredResult, ToolHandlerContext } from "./Types";
 
 /**
  * Executes tool calls and propagates handler-level confirmation requests.
@@ -12,7 +12,7 @@ export class ToolExecutor {
   /**
    * Validate and execute a tool call.
    */
-  async execute(toolCall: ToolCall): Promise<ExecutionResult> {
+  async execute(toolCall: ToolCall, context: ToolHandlerContext = {}): Promise<ExecutionResult> {
     const validation = this.registry.validate(toolCall);
 
     if (!validation.valid) {
@@ -27,7 +27,7 @@ export class ToolExecutor {
     try {
       const args = JSON.parse(toolCall.function.arguments);
       const registeredTool = this.registry.get(toolCall.function.name)!;
-      const result = await registeredTool.handler(args);
+      const result = await registeredTool.handler(args, context);
 
       let parsedResult: unknown;
       try {
@@ -60,6 +60,9 @@ export class ToolExecutor {
         isError: false,
       };
     } catch (err: unknown) {
+      if (isCancellationError(err)) {
+        throw err;
+      }
       return {
         toolCallId: toolCall.id,
         toolName: toolCall.function.name,
@@ -72,7 +75,7 @@ export class ToolExecutor {
   /**
    * Execute a tool call after explicit user confirmation.
    */
-  async executeForced(toolCall: ToolCall): Promise<ExecutionResult> {
+  async executeForced(toolCall: ToolCall, context: ToolHandlerContext = {}): Promise<ExecutionResult> {
     const validation = this.registry.validate(toolCall);
 
     if (!validation.valid) {
@@ -89,7 +92,7 @@ export class ToolExecutor {
       const registeredTool = this.registry.get(toolCall.function.name)!;
 
       const handler = FORCED_HANDLERS[toolCall.function.name] || registeredTool.handler;
-      const result = await handler(args);
+      const result = await handler(args, context);
 
       return {
         toolCallId: toolCall.id,
@@ -98,6 +101,9 @@ export class ToolExecutor {
         isError: false,
       };
     } catch (err: unknown) {
+      if (isCancellationError(err)) {
+        throw err;
+      }
       return {
         toolCallId: toolCall.id,
         toolName: toolCall.function.name,
@@ -126,6 +132,10 @@ export class ToolExecutor {
       return null;
     }
   }
+}
+
+function isCancellationError(err: unknown): boolean {
+  return err instanceof Error && (err.name === "AbortError" || err.name === "Canceled");
 }
 
 function isConfirmationRequiredResult(value: unknown): value is ConfirmationRequiredResult {

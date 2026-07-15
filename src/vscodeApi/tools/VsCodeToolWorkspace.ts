@@ -1,4 +1,5 @@
 import * as path from "path";
+import { realpath } from "fs/promises";
 import * as vscode from "vscode";
 import type { ToolWorkspaceEntryType, ToolWorkspaceHost, ToolWorkspaceStat } from "@/core/tools/ToolWorkspace";
 
@@ -8,6 +9,10 @@ export function createVsCodeToolWorkspace(): ToolWorkspaceHost {
   return {
     getRootPath(): string | undefined {
       return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+    },
+
+    realPath(absolutePath: string): Promise<string> {
+      return realpath(absolutePath);
     },
 
     async readFile(relativePath: string): Promise<Uint8Array> {

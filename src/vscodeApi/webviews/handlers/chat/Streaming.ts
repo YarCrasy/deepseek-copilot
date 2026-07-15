@@ -25,7 +25,7 @@ export async function sendMessageStreaming({ messages, payload, config, provider
     reasoning_effort: mapReasoningEffort(payload.reasoning),
   };
 
-  const result: StreamedAssistantResult = { content: "", reasoning: "" };
+  const result: StreamedAssistantResult = { content: "", reasoning: "", timeline: [] };
   const stream = new StreamEventEmitter(webviewView);
 
   try {
@@ -42,12 +42,14 @@ export async function sendMessageStreaming({ messages, payload, config, provider
       signal,
     );
   } catch (err: unknown) {
+    result.timeline = stream.getTimeline();
     if (isCancellationError(err) && (result.content || result.reasoning)) {
       throw new PartialStreamError("Stream cancelled with partial content", result);
     }
     throw err;
   }
 
+  result.timeline = stream.getTimeline();
   return result;
 }
 

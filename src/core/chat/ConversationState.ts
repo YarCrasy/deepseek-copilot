@@ -1,4 +1,4 @@
-import type { ChatMessage, Conversation, ConversationMessage, StoredToolCall } from "@/adapters";
+import type { AssistantTimelineEvent, ChatMessage, Conversation, ConversationMessage, StoredToolCall } from "@/adapters";
 import { createConversationTitle } from "./ConversationTitle";
 
 export interface ConversationStore {
@@ -39,7 +39,7 @@ export class ConversationState {
     return toApiMessages(this.activeConversation?.messages ?? []);
   }
 
-  createMessage(role: ConversationMessage["role"], content: string, extra: Pick<ConversationMessage, "reasoning" | "toolCalls"> = {}): ConversationMessage {
+  createMessage(role: ConversationMessage["role"], content: string, extra: Pick<ConversationMessage, "timeline" | "toolCalls"> = {}): ConversationMessage {
     return {
       id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       role,
@@ -101,7 +101,7 @@ function toApiMessages(messages: ConversationMessage[]): ChatMessage[] {
     };
 
     if (message.role === "assistant") {
-      apiMessage.reasoning_content = message.reasoning ?? null;
+      apiMessage.reasoning_content = collectTimelineText(message.timeline, "reasoning") || null;
       apiMessage.tool_calls = toApiToolCalls(message.toolCalls);
     }
 
@@ -116,6 +116,13 @@ function toApiMessages(messages: ConversationMessage[]): ChatMessage[] {
 
     return [apiMessage, ...toolResults];
   });
+}
+
+function collectTimelineText(timeline: AssistantTimelineEvent[] | undefined, type: "reasoning" | "content"): string {
+  return (timeline ?? [])
+    .filter((event): event is Extract<AssistantTimelineEvent, { type: "reasoning" | "content" }> => event.type === type)
+    .map((event) => event.content)
+    .join("");
 }
 
 function toApiToolCalls(toolCalls: StoredToolCall[] | undefined): ChatMessage["tool_calls"] {

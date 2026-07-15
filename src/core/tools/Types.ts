@@ -13,8 +13,12 @@ export interface ToolMetadata {
 /** Registered tool definition, handler, and metadata. */
 export interface RegisteredTool {
   definition: ToolDefinition;
-  handler: (args: Record<string, unknown>) => Promise<string>;
+  handler: (args: Record<string, unknown>, context?: ToolHandlerContext) => Promise<string>;
   metadata: ToolMetadata;
+}
+
+export interface ToolHandlerContext {
+  signal?: AbortSignal;
 }
 
 /** Tool-call validation result. */

@@ -1,6 +1,6 @@
 import { createSystemMessage, ensureSingleSystemPrompt } from "@/adapters/deepseek/Chat";
 import { chatCompletion } from "../Chat";
-import { createToolResultMessage, hasToolResultMessages, validateToolCall } from "./ToolCallMessages";
+import { createToolResultMessage, validateToolCall } from "./ToolCallMessages";
 import { buildToolCallRequest } from "./ToolCallRequest";
 import { streamToolCallRound } from "./ToolCallStreaming";
 import type { RunToolCallCycleOptions, ToolCallCycleResult } from "./ToolCallTypes";
@@ -12,23 +12,20 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
   const availableTools = new Map(tools.map((tool) => [tool.function.name, tool]));
   const messages = ensureSingleSystemPrompt(initialMessages, createSystemMessage);
   let toolCallsExecuted = 0;
-  let forceFinalResponse = false;
 
   for (let round = 0; round < maxRounds; round++) {
     if (cycleOptions.signal?.aborted) {
-      throw new Error("Tool call cycle aborted");
+      throw createAbortError();
     }
 
-    const isFinalResponseAfterTools = hasToolResultMessages(messages);
-    const roundTools = forceFinalResponse ? [] : tools;
-    const shouldStream = cycleOptions.streamFinalResponse === true && (cycleOptions.streamToolCallRounds === true || isFinalResponseAfterTools);
+    const shouldStream = cycleOptions.streamFinalResponse === true;
     const response = shouldStream
-      ? await streamToolCallRound({ messages, tools: roundTools, model, apiKey, baseUrl, cycleOptions, emitStreamEvents: isFinalResponseAfterTools })
+      ? await streamToolCallRound({ messages, tools, model, apiKey, baseUrl, cycleOptions, emitStreamEvents: true })
       : await chatCompletion(
           buildToolCallRequest({
             model,
             messages,
-            tools: roundTools,
+            tools,
             stream: false,
             cycleOptions,
           }),
@@ -46,12 +43,15 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
       };
     }
 
-    await cycleOptions.onRoundStart?.(round + 1, message.tool_calls);
+    const executableToolCalls = message.tool_calls.filter((toolCall) => validateToolCall(toolCall, availableTools).valid);
+    if (executableToolCalls.length > 0) {
+      await cycleOptions.onRoundStart?.(round + 1, executableToolCalls);
+    }
     messages.push(message);
 
     for (const toolCall of message.tool_calls) {
       if (cycleOptions.signal?.aborted) {
-        break;
+        throw createAbortError();
       }
 
       const validation = validateToolCall(toolCall, availableTools);
@@ -64,9 +64,6 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
       toolCallsExecuted++;
       cycleOptions.onToolResult?.(toolCall.id, result);
       messages.push(createToolResultMessage(toolCall.id, toolCall.function.name, result));
-      if (isSuccessfulWriteToolResult(toolCall.function.name, result)) {
-        forceFinalResponse = true;
-      }
     }
 
     if (round === maxRounds - 1) {
@@ -82,22 +79,8 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
   throw new Error(`Tool call cycle exceeded maximum rounds (${maxRounds})`);
 }
 
-function isSuccessfulWriteToolResult(toolName: string, result: string): boolean {
-  if (!isWriteTool(toolName)) {
-    return false;
-  }
-  try {
-    const parsed: unknown = JSON.parse(result);
-    if (!parsed || typeof parsed !== "object") {
-      return false;
-    }
-    const type = (parsed as { type?: unknown }).type;
-    return type === "fileWrite" || type === "fileEdit" || type === "filePatch";
-  } catch {
-    return false;
-  }
-}
-
-function isWriteTool(toolName: string): boolean {
-  return toolName === "create_file" || toolName === "edit_file" || toolName === "apply_patch";
+function createAbortError(): Error {
+  const error = new Error("Tool call cycle aborted");
+  error.name = "AbortError";
+  return error;
 }

@@ -1,13 +1,11 @@
 import { deepseekFetch } from "@/deepseekApi/client/DeepSeekFetch";
 import { buildChatUrl } from "@/deepseekApi/endpoints/DeepSeekEndpoints";
 import { readSSEStream } from "@/deepseekApi/streaming/ReadSSEStream";
-import type { AppConfig, ChatCompletionRequest, ChatCompletionResponse, StreamChunk, ChatUsage } from "@/adapters";
+import type { AppConfig, ChatCompletionRequest, ChatCompletionResponse, StreamChunk } from "@/adapters";
 import { DEEPSEEK_DEFAULTS } from "../DeepSeekConfig";
+import { parseChatCompletionResponse, parseStreamToolCalls } from "./ChatResponseValidation";
 
 interface DeepSeekChatRequest extends ChatCompletionRequest {
-  stream_options?: {
-    include_usage?: boolean;
-  };
   user_id?: string;
 }
 
@@ -20,10 +18,6 @@ export function buildChatBody(request: Partial<ChatRequest>, config: AppConfig):
     model: request.model || config.model || DEEPSEEK_DEFAULTS.model,
     stream: request.stream ?? true,
   };
-
-  if (body.stream) {
-    body.stream_options = request.stream_options ?? { include_usage: true };
-  }
 
   const thinkingEnabled = config.thinkingMode ?? DEEPSEEK_DEFAULTS.thinkingMode;
   if (thinkingEnabled) {
@@ -85,7 +79,7 @@ export async function chatCompletion(request: ChatRequest, apiKey: string, baseU
       body: JSON.stringify({ ...request, stream: false }),
     },
   });
-  return response.json();
+  return parseChatCompletionResponse(await response.json());
 }
 
 interface ChatCompletionStreamOptions {
@@ -99,7 +93,6 @@ interface ChatCompletionStreamOptions {
 export async function chatCompletionStream(options: ChatCompletionStreamOptions): Promise<void> {
   const { request, apiKey, baseUrl, onChunk, signal } = options;
   const url = buildChatUrl(baseUrl);
-  let usage: ChatUsage | undefined;
   let finishReason = "stop";
   let emittedDone = false;
 
@@ -108,7 +101,7 @@ export async function chatCompletionStream(options: ChatCompletionStreamOptions)
       return;
     }
     emittedDone = true;
-    onChunk({ type: "done", finish_reason: finishReason, usage });
+    onChunk({ type: "done", finish_reason: finishReason });
   };
 
   const response = await deepseekFetch({
@@ -131,8 +124,6 @@ export async function chatCompletionStream(options: ChatCompletionStreamOptions)
   await readSSEStream({
     reader,
     onChunk: (data: unknown) => {
-      usage = getUsage(data) ?? usage;
-
       const chunk = getDeepSeekStreamChoice(data);
       const delta = chunk?.delta;
       const finish_reason = chunk?.finish_reason;
@@ -155,7 +146,7 @@ export async function chatCompletionStream(options: ChatCompletionStreamOptions)
         onChunk({ type: "content", content: delta.content });
       }
       if (Array.isArray(delta.tool_calls)) {
-        onChunk({ type: "tool_call", tool_calls: delta.tool_calls });
+        onChunk({ type: "tool_call", tool_calls: parseStreamToolCalls(delta.tool_calls) });
       }
     },
     onDone: emitDone,
@@ -184,12 +175,4 @@ function getDeepSeekStreamChoice(data: unknown): DeepSeekStreamChoice | undefine
   }
   const choice = choices[0];
   return choice && typeof choice === "object" ? (choice as DeepSeekStreamChoice) : undefined;
-}
-
-function getUsage(data: unknown): ChatUsage | undefined {
-  if (!data || typeof data !== "object") {
-    return undefined;
-  }
-  const usage = (data as { usage?: unknown }).usage;
-  return usage && typeof usage === "object" ? (usage as ChatUsage) : undefined;
 }

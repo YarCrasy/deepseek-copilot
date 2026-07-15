@@ -15,6 +15,24 @@ export interface StoredToolCall {
   dangerConfirmed?: boolean;
 }
 
+export type AssistantTimelineEvent =
+  | {
+      id: string;
+      type: "reasoning";
+      content: string;
+    }
+  | {
+      id: string;
+      type: "content";
+      content: string;
+    }
+  | {
+      id: string;
+      type: "tool-group";
+      round: number;
+      toolCallIds: string[];
+    };
+
 /** Additional confirmation data for dangerous tool calls. */
 export interface DangerConfirmationData {
   requiresConfirmation: true;
@@ -31,7 +49,7 @@ export interface ConversationMessage {
   id: string;
   role: ConversationMessageRole;
   content: string;
-  reasoning?: string;
+  timeline?: AssistantTimelineEvent[];
   toolCalls?: StoredToolCall[];
   toolCallId?: string;
   toolName?: string;
@@ -106,22 +124,12 @@ export type HandlerToWebviewMessage =
   | { type: "apiKeyStatusSettings"; status: "configured" | "missing"; keyPreview?: string }
   | { type: "apiKeyStatus"; status: "configured" | "missing"; keyPreview?: string }
   | { type: "showTyping" }
-  | { type: "streamChunk"; content: string }
-  | { type: "streamReasoning"; content: string }
+  | { type: "streamTimelineDelta"; eventId: string; eventType: "reasoning" | "content"; content: string }
+  | { type: "streamTimelineToolGroup"; event: Extract<AssistantTimelineEvent, { type: "tool-group" }> }
   | {
       type: "streamDone";
       cancelled?: boolean;
       finish_reason?: string;
-      usage?: {
-        prompt_tokens: number;
-        completion_tokens: number;
-        total_tokens: number;
-        prompt_cache_hit_tokens?: number;
-        prompt_cache_miss_tokens?: number;
-        completion_tokens_details?: {
-          reasoning_tokens?: number;
-        };
-      };
     }
   | { type: "streamError"; error: string }
   | {
@@ -131,6 +139,7 @@ export type HandlerToWebviewMessage =
         content: string;
         wasStreamed?: boolean;
         toolCalls?: StoredToolCall[];
+        timeline?: AssistantTimelineEvent[];
         toolCallId?: string;
         toolName?: string;
       };
@@ -154,6 +163,7 @@ export type HandlerToWebviewMessage =
       toolName: string;
       result: string;
       isError?: boolean;
+      rejected?: boolean;
     }
   | {
       type: "toolCallConfirmationRequired";

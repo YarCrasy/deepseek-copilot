@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import type { VsCodeApi } from "@webview/VsCodeApi";
-import type { HandlerToWebviewMessage, AppConfig, ToolCall } from "@/adapters";
+import type { AssistantTimelineEvent, HandlerToWebviewMessage, AppConfig, StoredToolCall, ToolCall } from "@/adapters";
 import type { ApiKeyStatus, DangerConfirmationData } from "../ChatViewTypes";
 
 /**
@@ -9,16 +9,6 @@ import type { ApiKeyStatus, DangerConfirmationData } from "../ChatViewTypes";
 export type StreamDoneInfo = {
   cancelled?: boolean;
   finish_reason?: string;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-    prompt_cache_hit_tokens?: number;
-    prompt_cache_miss_tokens?: number;
-    completion_tokens_details?: {
-      reasoning_tokens?: number;
-    };
-  };
 };
 
 /**
@@ -29,19 +19,14 @@ export type MessageDispatcher = {
     role: string;
     content: string;
     wasStreamed?: boolean;
-    toolCalls?: Array<{
-      toolCallId: string;
-      toolName: string;
-      arguments: string;
-      result?: string;
-      isError?: boolean;
-    }>;
+    toolCalls?: StoredToolCall[];
+    timeline?: AssistantTimelineEvent[];
     toolCallId?: string;
     toolName?: string;
   }) => void;
   onShowTyping?: () => void;
-  onStreamChunk?: (content: string) => void;
-  onStreamReasoning?: (content: string) => void;
+  onStreamTimelineDelta?: (data: { eventId: string; eventType: "reasoning" | "content"; content: string }) => void;
+  onStreamTimelineToolGroup?: (event: Extract<AssistantTimelineEvent, { type: "tool-group" }>) => void;
   onStreamDone?: (info: StreamDoneInfo) => void;
   onStreamError?: (error: string) => void;
   onClearChat?: () => void;
@@ -49,7 +34,7 @@ export type MessageDispatcher = {
   onApiKeyStatus?: (status: ApiKeyStatus) => void;
   onConfigLoaded?: (config: Partial<AppConfig>) => void;
   onToolCallStarted?: (data: { toolCalls: ToolCall[]; round: number }) => void;
-  onToolCallResult?: (data: { toolCallId: string; toolName: string; result: string; isError?: boolean }) => void;
+  onToolCallResult?: (data: { toolCallId: string; toolName: string; result: string; isError?: boolean; rejected?: boolean }) => void;
   onToolCallConfirmationRequired?: (data: { toolCalls: ToolCall[]; round: number; autoExecute: boolean; dangerConfirmation?: DangerConfirmationData }) => void;
 };
 
@@ -60,8 +45,8 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
   const {
     onAddMessage,
     onShowTyping,
-    onStreamChunk,
-    onStreamReasoning,
+    onStreamTimelineDelta,
+    onStreamTimelineToolGroup,
     onStreamDone,
     onStreamError,
     onClearChat,
@@ -90,19 +75,18 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
           onShowTyping?.();
           break;
 
-        case "streamChunk":
-          onStreamChunk?.(message.content);
+        case "streamTimelineDelta":
+          onStreamTimelineDelta?.({ eventId: message.eventId, eventType: message.eventType, content: message.content });
           break;
 
-        case "streamReasoning":
-          onStreamReasoning?.(message.content);
+        case "streamTimelineToolGroup":
+          onStreamTimelineToolGroup?.(message.event);
           break;
 
         case "streamDone":
           onStreamDone?.({
             cancelled: message.cancelled,
             finish_reason: message.finish_reason,
-            usage: message.usage,
           });
           break;
 
@@ -139,6 +123,7 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
             toolName: message.toolName,
             result: message.result,
             isError: message.isError,
+            rejected: message.rejected,
           });
           break;
 
@@ -161,8 +146,8 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
     vscode,
     onAddMessage,
     onShowTyping,
-    onStreamChunk,
-    onStreamReasoning,
+    onStreamTimelineDelta,
+    onStreamTimelineToolGroup,
     onStreamDone,
     onStreamError,
     onClearChat,

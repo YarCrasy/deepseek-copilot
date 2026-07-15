@@ -1,14 +1,18 @@
 import * as vscode from "vscode";
 import type { Conversation } from "@/adapters";
 import { createConversationTitle } from "@/core/chat/ConversationTitle";
+import { isConversation } from "@/core/chat/ConversationValidation";
 import { CONVERSATION_STORAGE_KEY } from "@/shared/constants";
 
 export class HistoryManager {
   constructor(private context: vscode.ExtensionContext) {}
 
   async getAll(): Promise<Conversation[]> {
-    const stored = this.context.globalState.get<Conversation[]>(CONVERSATION_STORAGE_KEY) || [];
-    return stored.map(normalizeConversation).sort((a, b) => b.updatedAt - a.updatedAt);
+    const stored = this.context.globalState.get<unknown>(CONVERSATION_STORAGE_KEY);
+    if (!Array.isArray(stored)) {
+      return [];
+    }
+    return stored.filter(isConversation).map(normalizeConversation).sort((a, b) => b.updatedAt - a.updatedAt);
   }
 
   async save(conversation: Conversation): Promise<void> {
@@ -41,7 +45,7 @@ function normalizeConversation(conversation: Conversation): Conversation {
     ...message,
     content: message.content ?? "",
     toolCalls: message.toolCalls ?? undefined,
-    reasoning: message.reasoning ?? undefined,
+    timeline: message.timeline ?? undefined,
   }));
 
   return {

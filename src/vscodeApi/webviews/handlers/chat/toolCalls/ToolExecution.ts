@@ -29,7 +29,7 @@ export async function executeToolCall(toolCall: ToolCall, ctx: ToolExecutionCont
     return executeManualToolCall(toolCall, ctx);
   }
 
-  const result = await ctx.toolExecutor.execute(toolCall);
+  const result = await ctx.toolExecutor.execute(toolCall, { signal: ctx.signal });
   return handleExecutionResult({
     toolCall,
     result,
@@ -64,6 +64,7 @@ async function executeManualToolCall(toolCall: ToolCall, ctx: ToolExecutionConte
       toolName: toolCall.function.name,
       result: USER_REJECTED,
       isError: true,
+      rejected: true,
     });
     updateStoredToolCall(ctx, toolCall.id, {
       result: USER_REJECTED,
@@ -73,7 +74,7 @@ async function executeManualToolCall(toolCall: ToolCall, ctx: ToolExecutionConte
     return USER_REJECTED;
   }
 
-  const result = await ctx.toolExecutor.execute(toolCall);
+  const result = await ctx.toolExecutor.execute(toolCall, { signal: ctx.signal });
   return handleExecutionResult({
     toolCall,
     result,
@@ -109,6 +110,7 @@ async function handleExecutionResult(options: HandleExecutionResultOptions): Pro
       toolName: toolCall.function.name,
       result: DANGER_CANCELLED,
       isError: true,
+      rejected: true,
     });
     updateStoredToolCall(ctx, toolCall.id, {
       result: DANGER_CANCELLED,
@@ -131,7 +133,7 @@ function clearFileDiffPreview(): void {
 }
 
 async function executeForcedAfterTrust(toolCall: ToolCall, ctx: ToolExecutionContext): Promise<string> {
-  const forcedResult = await ctx.toolExecutor.executeForced(toolCall);
+  const forcedResult = await ctx.toolExecutor.executeForced(toolCall, { signal: ctx.signal });
   postToolCallResult(ctx, forcedResult);
   updateStoredToolCall(ctx, toolCall.id, {
     result: forcedResult.result,
@@ -141,13 +143,14 @@ async function executeForcedAfterTrust(toolCall: ToolCall, ctx: ToolExecutionCon
   return forcedResult.result;
 }
 
-function postToolCallResult(ctx: ToolExecutionContext, result: ExecutionResult): void {
+function postToolCallResult(ctx: ToolExecutionContext, result: ExecutionResult & { rejected?: boolean }): void {
   ctx.webviewView.webview.postMessage({
     type: "toolCallResult",
     toolCallId: result.toolCallId,
     toolName: result.toolName,
     result: result.result,
     isError: result.isError,
+    rejected: result.rejected,
   });
 }
 

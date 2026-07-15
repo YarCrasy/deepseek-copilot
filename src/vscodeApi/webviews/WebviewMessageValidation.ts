@@ -1,0 +1,190 @@
+import type { AppConfig, WebviewToHandlerMessage } from "@/adapters";
+
+const MAX_CHAT_TEXT = 1024 * 1024;
+const MAX_CODE_TEXT = 2 * 1024 * 1024;
+const MAX_REFERENCE_CONTENT = 1024 * 1024;
+const MAX_TOTAL_REFERENCE_CONTENT = 5 * 1024 * 1024;
+const MAX_REFERENCES = 50;
+
+export function isWebviewToHandlerMessage(value: unknown): value is WebviewToHandlerMessage {
+  if (!isRecord(value) || typeof value.type !== "string") {
+    return false;
+  }
+
+  switch (value.type) {
+    case "getConfig":
+    case "resetConfig":
+    case "cancelGeneration":
+    case "newConversation":
+    case "getHistory":
+    case "getAvailableTools":
+      return hasOnlyKeys(value, ["type"]);
+    case "saveConfig":
+      return hasOnlyKeys(value, ["type", "config"]) && isAppConfigPatch(value.config);
+    case "testConnection":
+      return (
+        hasOnlyKeys(value, ["type", "apiKey", "baseUrl", "model"]) &&
+        isNonEmptyBoundedString(value.apiKey, 16_384) &&
+        isHttpUrl(value.baseUrl) &&
+        isNonEmptyBoundedString(value.model, 256)
+      );
+    case "sendMessage":
+      return validateSendMessage(value);
+    case "copyCode":
+    case "insertCode":
+      return hasOnlyKeys(value, ["type", "code"]) && isBoundedString(value.code, MAX_CODE_TEXT);
+    case "selectModel":
+      return hasOnlyKeys(value, ["type", "modelId"]) && isNonEmptyBoundedString(value.modelId, 256);
+    case "loadConversation":
+    case "deleteConversation":
+      return hasOnlyKeys(value, ["type", "id"]) && isNonEmptyBoundedString(value.id, 512);
+    case "executeToolCall":
+      return (
+        hasOnlyKeys(value, ["type", "toolCallId", "action", "trustForSession"]) &&
+        isNonEmptyBoundedString(value.toolCallId, 512) &&
+        (value.action === "execute" || value.action === "reject") &&
+        isOptionalBoolean(value.trustForSession)
+      );
+    case "getPathCompletions":
+      return (
+        hasOnlyKeys(value, ["type", "requestId", "query"]) &&
+        Number.isSafeInteger(value.requestId) &&
+        (value.requestId as number) >= 0 &&
+        isBoundedString(value.query, 4096)
+      );
+    case "openFile":
+      return (
+        hasOnlyKeys(value, ["type", "path", "line"]) &&
+        isNonEmptyBoundedString(value.path, 32_768) &&
+        (value.line === undefined || (Number.isSafeInteger(value.line) && (value.line as number) >= 1))
+      );
+    default:
+      return false;
+  }
+}
+
+function validateSendMessage(value: Record<string, unknown>): boolean {
+  if (
+    !hasOnlyKeys(value, ["type", "text", "modelId", "reasoning", "referencedFiles"]) ||
+    !isNonEmptyBoundedString(value.text, MAX_CHAT_TEXT) ||
+    !isNonEmptyBoundedString(value.modelId, 256) ||
+    (value.reasoning !== "off" && value.reasoning !== "high" && value.reasoning !== "max")
+  ) {
+    return false;
+  }
+
+  if (value.referencedFiles === undefined) {
+    return true;
+  }
+  if (!Array.isArray(value.referencedFiles) || value.referencedFiles.length > MAX_REFERENCES) {
+    return false;
+  }
+
+  let totalContent = 0;
+  for (const reference of value.referencedFiles) {
+    if (
+      !isRecord(reference) ||
+      !hasOnlyKeys(reference, ["path", "content", "type"]) ||
+      !isNonEmptyBoundedString(reference.path, 32_768) ||
+      (reference.type !== "file" && reference.type !== "directory") ||
+      (reference.content !== undefined && !isBoundedString(reference.content, MAX_REFERENCE_CONTENT))
+    ) {
+      return false;
+    }
+    totalContent += typeof reference.content === "string" ? reference.content.length : 0;
+    if (totalContent > MAX_TOTAL_REFERENCE_CONTENT) {
+      return false;
+    }
+  }
+  return true;
+}
+
+const APP_CONFIG_KEYS = [
+  "apiKey",
+  "baseUrl",
+  "model",
+  "thinkingMode",
+  "reasoningEffort",
+  "temperature",
+  "topP",
+  "maxTokens",
+  "responseFormat",
+  "permissionMode",
+  "toolExecutionModes",
+  "autoContext",
+  "enableBetaFeatures",
+  "userId",
+] as const satisfies readonly (keyof AppConfig)[];
+
+function isAppConfigPatch(value: unknown): value is Partial<AppConfig> {
+  if (!isRecord(value) || !hasOnlyKeys(value, APP_CONFIG_KEYS)) {
+    return false;
+  }
+
+  return (
+    isOptionalBoundedString(value.apiKey, 16_384) &&
+    (value.baseUrl === undefined || isHttpUrl(value.baseUrl)) &&
+    (value.model === undefined || isNonEmptyBoundedString(value.model, 256)) &&
+    isOptionalBoolean(value.thinkingMode) &&
+    (value.reasoningEffort === undefined || value.reasoningEffort === "high" || value.reasoningEffort === "max") &&
+    isOptionalNumberInRange(value.temperature, 0, 2) &&
+    isOptionalNumberInRange(value.topP, 0, 1) &&
+    (value.maxTokens === undefined || (Number.isSafeInteger(value.maxTokens) && (value.maxTokens as number) >= 1 && (value.maxTokens as number) <= 1_000_000)) &&
+    (value.responseFormat === undefined || value.responseFormat === "text" || value.responseFormat === "json_object") &&
+    (value.permissionMode === undefined || ["chat", "read-only", "workspace", "full-access"].includes(value.permissionMode as string)) &&
+    (value.toolExecutionModes === undefined || isToolExecutionModes(value.toolExecutionModes)) &&
+    isOptionalBoolean(value.autoContext) &&
+    isOptionalBoolean(value.enableBetaFeatures) &&
+    isOptionalBoundedString(value.userId, 256)
+  );
+}
+
+function isToolExecutionModes(value: unknown): boolean {
+  if (!isRecord(value) || Object.keys(value).length > 100) {
+    return false;
+  }
+  return Object.entries(value).every(
+    ([name, mode]) => /^[a-zA-Z0-9_-]{1,128}$/.test(name) && (mode === "disabled" || mode === "enabled" || mode === "auto_approve"),
+  );
+}
+
+function isHttpUrl(value: unknown): boolean {
+  if (!isNonEmptyBoundedString(value, 4096)) {
+    return false;
+  }
+  try {
+    const url = new URL(value);
+    return (url.protocol === "https:" || url.protocol === "http:") && !!url.hostname && !url.username && !url.password;
+  } catch {
+    return false;
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
+}
+
+function hasOnlyKeys(value: Record<string, unknown>, allowedKeys: readonly string[]): boolean {
+  const allowed = new Set(allowedKeys);
+  return Object.keys(value).every((key) => allowed.has(key));
+}
+
+function isBoundedString(value: unknown, maxLength: number): value is string {
+  return typeof value === "string" && value.length <= maxLength;
+}
+
+function isNonEmptyBoundedString(value: unknown, maxLength: number): value is string {
+  return isBoundedString(value, maxLength) && value.trim().length > 0;
+}
+
+function isOptionalBoundedString(value: unknown, maxLength: number): boolean {
+  return value === undefined || isBoundedString(value, maxLength);
+}
+
+function isOptionalBoolean(value: unknown): boolean {
+  return value === undefined || typeof value === "boolean";
+}
+
+function isOptionalNumberInRange(value: unknown, min: number, max: number): boolean {
+  return value === undefined || (typeof value === "number" && Number.isFinite(value) && value >= min && value <= max);
+}

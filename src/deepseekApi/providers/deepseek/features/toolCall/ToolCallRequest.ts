@@ -17,7 +17,6 @@ export function buildToolCallRequest(options: BuildToolCallRequestOptions): Chat
     model,
     messages,
     stream,
-    ...(stream ? { stream_options: { include_usage: true } } : {}),
     ...(tools.length > 0 ? { tools } : {}),
     ...(cycleOptions.maxTokens !== undefined ? { max_tokens: cycleOptions.maxTokens } : {}),
     ...(cycleOptions.responseFormat ? { response_format: { type: cycleOptions.responseFormat } } : {}),

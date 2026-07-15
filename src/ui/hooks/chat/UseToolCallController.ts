@@ -42,9 +42,10 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
             toolCall.toolCallId === data.toolCallId
               ? {
                   ...toolCall,
-                  status: data.isError ? ("error" as const) : ("completed" as const),
+                  status: data.rejected ? ("rejected" as const) : data.isError ? ("error" as const) : ("completed" as const),
                   result: data.result,
                   requiresConfirmation: false,
+                  rejected: data.rejected,
                 }
               : toolCall,
           ),
@@ -69,6 +70,7 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
 
   const postToolCallAction = useCallback(
     (toolCallId: string, action: ToolCallAction, options: ToolCallActionOptions = {}) => {
+      setToolCallGroups((previous) => markToolCallDecision(previous, toolCallId, action));
       vscode?.postMessage({ type: "executeToolCall", toolCallId, action, trustForSession: options.trustForSession });
     },
     [vscode],
@@ -173,4 +175,21 @@ function getPendingUserDecisionToolCalls(groups: ToolCallGroup[]): ToolCallState
   return groups
     .flatMap((group) => group.toolCalls)
     .filter((toolCall) => toolCall.status === "pending" && (toolCall.requiresConfirmation || toolCall.dangerConfirmation));
+}
+
+function markToolCallDecision(groups: ToolCallGroup[], toolCallId: string, action: ToolCallAction): ToolCallGroup[] {
+  return groups.map((group) => ({
+    ...group,
+    toolCalls: group.toolCalls.map((toolCall) =>
+      toolCall.toolCallId === toolCallId
+        ? {
+            ...toolCall,
+            status: action === "execute" ? ("running" as const) : ("rejected" as const),
+            requiresConfirmation: false,
+            dangerConfirmation: undefined,
+            rejected: action === "reject",
+          }
+        : toolCall,
+    ),
+  }));
 }

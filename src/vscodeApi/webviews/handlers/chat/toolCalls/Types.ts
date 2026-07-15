@@ -1,5 +1,5 @@
 import type * as vscode from "vscode";
-import type { AppConfig, ChatMessage, ToolCall, ToolDefinition, ToolExecutionMode, ToolExecutionModes } from "@/adapters";
+import type { AppConfig, AssistantTimelineEvent, ChatMessage, ToolCall, ToolDefinition, ToolExecutionMode, ToolExecutionModes } from "@/adapters";
 import type { ToolCallCycleResult } from "@/deepseekApi/providers/deepseek/features/toolCall";
 import type { ToolExecutor } from "@/core/tools/ToolExecutor";
 import type { ConfirmationRequiredResult, ExecutionResult } from "@/core/tools/Types";
@@ -60,7 +60,7 @@ export interface ToolCallRunOptions {
 
 export interface ToolCallRunResult {
   content: string;
-  reasoning?: string;
+  timeline: AssistantTimelineEvent[];
   toolCalls?: StoredExecution[];
   partial?: boolean;
 }
@@ -69,6 +69,7 @@ export interface ToolExecutionContext {
   toolExecutor: ToolExecutor;
   webviewView: vscode.WebviewView;
   executedToolCalls: Map<string, StoredExecution>;
+  signal?: AbortSignal;
   getToolMode: (toolName: string) => ToolExecutionMode;
   shouldSkipManualConfirmation: (toolName: string) => boolean;
   getCurrentRound: () => number;
@@ -96,7 +97,6 @@ export interface PostFinalMessageOptions {
   result: ToolCallCycleResult;
   executedToolCalls: Map<string, StoredExecution>;
   streamedContent: string;
-  streamedReasoning: string;
 }
 
 export interface HandleRunErrorOptions {
@@ -105,5 +105,4 @@ export interface HandleRunErrorOptions {
   stream: StreamEventEmitter;
   executedToolCalls: Map<string, StoredExecution>;
   streamedContent: string;
-  streamedReasoning: string;
 }

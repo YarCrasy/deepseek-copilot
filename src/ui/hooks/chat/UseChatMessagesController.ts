@@ -31,7 +31,7 @@ export function useChatMessagesController({
   const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([]);
   const [internalIsProcessing, setInternalIsProcessing] = useState(false);
   const internalListRef = useRef<HTMLDivElement | null>(null);
-  const { nextMessageId, reasoningRef, streamingMessageIdRef, enqueueStreamingText, resetStreaming } = useStreamHandler();
+  const { nextMessageId, streamingMessageIdRef, appendTimelineDelta, appendTimelineToolGroup, resetStreaming } = useStreamHandler();
 
   const messages = externalMessages ?? internalMessages;
   const setMessages = externalSetMessages ?? setInternalMessages;
@@ -52,7 +52,7 @@ export function useChatMessagesController({
         const { wasStreamed, ...rest } = message;
         setMessages((current) => {
           if (wasStreamed && rest.role === "assistant") {
-            return updateStreamedAssistant(current, streamingMessageIdRef.current, rest.toolCalls);
+            return updateStreamedAssistant(current, streamingMessageIdRef.current, rest.toolCalls, rest.timeline);
           }
 
           return [
@@ -62,6 +62,7 @@ export function useChatMessagesController({
               role: rest.role as ChatMessage["role"],
               content: rest.content,
               toolCalls: rest.toolCalls as StoredToolCall[] | undefined,
+              timeline: rest.timeline,
             },
           ];
         });
@@ -74,19 +75,18 @@ export function useChatMessagesController({
       resetStreaming();
     }, [setProcessing, resetStreaming]),
 
-    onStreamChunk: useCallback(
-      (content: string) => {
-        enqueueStreamingText("content", content, setMessages);
+    onStreamTimelineDelta: useCallback(
+      ({ eventId, eventType, content }) => {
+        appendTimelineDelta(eventId, eventType, content, setMessages);
       },
-      [enqueueStreamingText, setMessages],
+      [appendTimelineDelta, setMessages],
     ),
 
-    onStreamReasoning: useCallback(
-      (content: string) => {
-        reasoningRef.current = `${reasoningRef.current}${content}`;
-        enqueueStreamingText("reasoning", content, setMessages);
+    onStreamTimelineToolGroup: useCallback(
+      (event) => {
+        appendTimelineToolGroup(event, setMessages);
       },
-      [enqueueStreamingText, reasoningRef, setMessages],
+      [appendTimelineToolGroup, setMessages],
     ),
 
     onStreamDone: useCallback(
@@ -133,6 +133,7 @@ export function useChatMessagesController({
         onConfigLoaded?.({
           reasoning: config.thinkingMode === false ? "off" : config.reasoningEffort === "max" ? "max" : "high",
           model: config.model ?? undefined,
+          permissionMode: config.permissionMode,
         });
       },
       [onConfigLoaded],
@@ -160,10 +161,16 @@ function removeCancelledTurn(current: ChatMessage[]): ChatMessage[] {
   return next;
 }
 
-function updateStreamedAssistant(current: ChatMessage[], streamingId: string | null, toolCalls: StoredToolCall[] | undefined): ChatMessage[] {
+function updateStreamedAssistant(
+  current: ChatMessage[],
+  streamingId: string | null,
+  toolCalls: StoredToolCall[] | undefined,
+  timeline: ChatMessage["timeline"],
+): ChatMessage[] {
   const patch = (message: ChatMessage): ChatMessage => ({
     ...message,
     toolCalls: toolCalls as StoredToolCall[] | undefined,
+    timeline: timeline ?? message.timeline,
   });
 
   if (streamingId) {

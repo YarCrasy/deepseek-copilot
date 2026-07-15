@@ -1,4 +1,5 @@
 import type { ConversationMessage, StoredToolCall, DangerConfirmationData } from "@/adapters/messages/Webview";
+import type { PermissionMode } from "@/adapters";
 
 export type { StoredToolCall, DangerConfirmationData };
 
@@ -10,6 +11,7 @@ export type InitialConfig = {
   provider?: string;
   reasoning?: string;
   model?: string;
+  permissionMode?: PermissionMode;
 };
 
 /** User action for a tool call. */

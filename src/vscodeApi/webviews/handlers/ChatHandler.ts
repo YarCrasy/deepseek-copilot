@@ -5,7 +5,7 @@ import { appendProjectInstructionsToSystemPrompt, loadProjectInstructions } from
 import { HistoryManager, SettingsManager, SecretsManager } from "@/vscodeApi/storage";
 import { GOAL_STORAGE_KEY } from "@/shared/constants";
 import { logWarning } from "@/shared/logging/Logger";
-import type { AppConfig, ChatMessage, Conversation, ConversationMessage, PermissionMode, StoredToolCall, ToolDefinition, ToolExecutionModes, WebviewToHandlerMessage } from "@/adapters";
+import type { AppConfig, AssistantTimelineEvent, ChatMessage, Conversation, ConversationMessage, PermissionMode, StoredToolCall, ToolDefinition, ToolExecutionModes, WebviewToHandlerMessage } from "@/adapters";
 import { createSystemMessage, mapReasoningEffort } from "@/adapters/deepseek/Chat";
 import { BUILT_IN_TOOLS, ToolExecutor, ToolRegistry } from "@/core/tools";
 import { buildFileContext } from "@/core/context/FileReferences";
@@ -21,7 +21,7 @@ import type { SendMessagePayload } from "./chat/Types";
 interface SaveAssistantResultOptions {
   userMessage: ConversationMessage;
   content: string;
-  reasoning?: string;
+  timeline: AssistantTimelineEvent[];
   model: string;
   toolCalls?: StoredToolCall[];
 }
@@ -143,6 +143,7 @@ export class ChatHandler {
         reasoningEffort: providerConfig.reasoningEffort ?? "high",
       };
       const tools = getToolsForPermissionMode(config.permissionMode, allTools).filter((tool) => toolExecutionModes[tool.function.name] !== "disabled");
+      appendToolAvailabilityContext(messages, config.permissionMode, tools);
       if (tools.length > 0) {
         const result = await this.toolCallSession.run({
           messages,
@@ -159,7 +160,7 @@ export class ChatHandler {
             await this.saveAssistantResult({
               userMessage,
               content: result.content,
-              reasoning: result.reasoning,
+              timeline: result.timeline,
               model: toolProviderConfig.model,
               toolCalls: result.toolCalls as StoredToolCall[] | undefined,
             });
@@ -174,7 +175,7 @@ export class ChatHandler {
           webviewView,
           signal: this.abortController.signal,
         });
-        await this.saveAssistantResult({ userMessage, content: result.content, reasoning: result.reasoning, model: providerConfig.model });
+        await this.saveAssistantResult({ userMessage, content: result.content, timeline: result.timeline, model: providerConfig.model });
       }
     } catch (err: unknown) {
       if (err instanceof PartialStreamError) {
@@ -182,7 +183,7 @@ export class ChatHandler {
           await this.saveAssistantResult({
             userMessage,
             content: err.partial.content,
-            reasoning: err.partial.reasoning,
+            timeline: err.partial.timeline,
             model: providerConfig.model,
           });
         }
@@ -378,7 +379,11 @@ ${payload.text}`
     });
     webviewView.webview.postMessage({
       type: "addMessage",
-      message: { role: "assistant", content: assistantText },
+      message: {
+        role: "assistant",
+        content: assistantText,
+        timeline: [{ id: `command-${Date.now()}`, type: "content", content: assistantText }],
+      },
     });
   }
 
@@ -388,12 +393,12 @@ ${payload.text}`
     return getToolsForPermissionMode(config.permissionMode, allTools).filter((tool) => toolExecutionModes[tool.function.name] !== "disabled");
   }
 
-  private async saveAssistantResult({ userMessage, content, reasoning, model, toolCalls }: SaveAssistantResultOptions): Promise<void> {
+  private async saveAssistantResult({ userMessage, content, timeline, model, toolCalls }: SaveAssistantResultOptions): Promise<void> {
     await this.conversationState.saveMessages({
       messages: [
         userMessage,
         this.conversationState.createMessage("assistant", content, {
-          reasoning,
+          timeline,
           toolCalls,
         }),
       ],
@@ -450,6 +455,23 @@ function getToolsForPermissionMode(permissionMode: PermissionMode, tools: ToolDe
   }
 
   return tools.filter((tool) => allowedToolNames.includes(tool.function.name));
+}
+
+function appendToolAvailabilityContext(messages: ChatMessage[], permissionMode: PermissionMode, tools: ToolDefinition[]): void {
+  const systemMessage = messages.find((message) => message.role === "system");
+  if (!systemMessage) {
+    return;
+  }
+
+  const availableToolNames = tools.map((tool) => tool.function.name);
+  const capabilityNotice =
+    permissionMode === "read-only"
+      ? "This mode cannot create or modify files and cannot execute terminal commands. If the request requires those capabilities, explain the limitation immediately. Do not inspect the workspace first unless that inspection directly helps answer the request."
+      : permissionMode === "chat"
+        ? "No workspace tools are available. If the request requires workspace access or changes, explain the limitation immediately."
+        : "Use only the tools listed below and do not imply that unavailable capabilities can be used.";
+
+  systemMessage.content = `${systemMessage.content ?? ""}\n\nRuntime permissions:\n- Permission mode: ${permissionMode}\n- Available tools: ${availableToolNames.length > 0 ? availableToolNames.join(", ") : "none"}\n- ${capabilityNotice}`;
 }
 
 function parseSlashCommand(text: string): ParsedSlashCommand | null {

@@ -24,11 +24,6 @@ export interface FimResponse {
     finish_reason: string;
     logprobs?: unknown;
   }>;
-  usage?: {
-    prompt_tokens: number;
-    completion_tokens: number;
-    total_tokens: number;
-  };
 }
 
 export async function fimCompletion(request: FimRequest, apiKey: string, baseUrl: string): Promise<FimResponse> {

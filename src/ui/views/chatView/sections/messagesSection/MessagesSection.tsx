@@ -56,7 +56,6 @@ function MessagesSection({
   }, [messages, isProcessing, tools.activeTimelineGroups, listRef]);
 
   const emptyStateVisible = messages.length === 0 && !isProcessing;
-
   return (
     <>
       <div className="msgList" ref={listRef} onClick={handleCodeAction}>
@@ -66,16 +65,13 @@ function MessagesSection({
           <>
             <ChatMessages
               messages={messages}
+              activeToolCallGroups={tools.activeTimelineGroups}
               renderToolCallGroups={(groups) => (
                 <ToolCallTimeline
                   groups={groups}
                   vscode={vscode}
                 />
               )}
-            />
-            <ToolCallTimeline
-              groups={tools.activeTimelineGroups}
-              vscode={vscode}
             />
           </>
         )}

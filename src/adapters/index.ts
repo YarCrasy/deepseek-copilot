@@ -5,6 +5,7 @@ export type {
   HandlerToWebviewMessage,
   Conversation,
   ConversationMessage,
+  AssistantTimelineEvent,
   StoredToolCall,
   AvailableToolInfo,
   AvailableToolParameter,
@@ -18,7 +19,6 @@ export type {
   ChatCompletionRequest,
   ChatCompletionResponse,
   StreamChunk,
-  ChatUsage,
   MessageRole,
 } from "./deepseek/Chat";
 export type { DeepSeekModelId, DeepSeekModelInfo, ReasoningEffort, ResponseFormatType, ModelOption } from "./deepseek/Models";

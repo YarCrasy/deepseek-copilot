@@ -1,9 +1,9 @@
 import type { ToolDefinition } from "@/adapters";
-import type { RegisteredTool, ToolMetadata } from "../Types";
+import type { RegisteredTool, ToolHandlerContext, ToolMetadata } from "../Types";
 import { analyzeDangerLevel } from "./DangerAnalysis";
 import { executeWorkspaceCommand } from "./ShellExecution";
 
-async function handleTerminalCommand(args: Record<string, unknown>): Promise<string> {
+async function handleTerminalCommand(args: Record<string, unknown>, context?: ToolHandlerContext): Promise<string> {
   const command = args.command as string;
   const cwd = args.cwd as string | undefined;
 
@@ -22,10 +22,10 @@ async function handleTerminalCommand(args: Record<string, unknown>): Promise<str
     });
   }
 
-  return executeWorkspaceCommand(command, cwd);
+  return executeWorkspaceCommand(command, cwd, context?.signal);
 }
 
-async function handleTerminalCommandForced(args: Record<string, unknown>): Promise<string> {
+async function handleTerminalCommandForced(args: Record<string, unknown>, context?: ToolHandlerContext): Promise<string> {
   const command = args.command as string;
   const cwd = args.cwd as string | undefined;
 
@@ -33,7 +33,7 @@ async function handleTerminalCommandForced(args: Record<string, unknown>): Promi
     return "Error: command parameter is required";
   }
 
-  return executeWorkspaceCommand(command, cwd);
+  return executeWorkspaceCommand(command, cwd, context?.signal);
 }
 
 export const terminalCommandDefinition: ToolDefinition = {
@@ -41,7 +41,7 @@ export const terminalCommandDefinition: ToolDefinition = {
   function: {
     name: "run_terminal_command",
     description:
-      "Run a command in the workspace terminal. Warning: destructive commands such as rm or git reset --hard require explicit confirmation. Timeout: 30 seconds.",
+      "Run a command in the workspace terminal. Its successful output is authoritative; do not follow it with verification-only reads or directory listings unless the output is ambiguous or the user requested verification. Warning: destructive commands such as rm or git reset --hard require explicit confirmation. Timeout: 30 seconds.",
     strict: true,
     parameters: {
       type: "object",

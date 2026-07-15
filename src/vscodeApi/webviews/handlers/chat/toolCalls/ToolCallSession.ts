@@ -27,7 +27,6 @@ export class ToolCallSession {
 
   async run(options: ToolCallRunOptions): Promise<ToolCallRunResult | undefined> {
     let streamedContent = "";
-    let streamedReasoning = "";
     const executedToolCalls = new Map<string, StoredExecution>();
     const enabledTools = getRunnableTools(options).map((tool) =>
       options.providerConfig.enableBetaFeatures ? { ...tool, function: { ...tool.function, strict: true } } : tool,
@@ -52,13 +51,15 @@ export class ToolCallSession {
           maxTokens: options.providerConfig.maxTokens,
           responseFormat: options.providerConfig.responseFormat,
           userId: options.providerConfig.userId,
-          onRoundStart: (round, toolCalls) => this.handleRoundStart(round, toolCalls, options),
+          onRoundStart: async (round, toolCalls) => {
+            stream.toolGroup(round, toolCalls.map((toolCall) => toolCall.id));
+            await this.handleRoundStart(round, toolCalls, options);
+          },
           onStreamChunk: (content) => {
             streamedContent += content;
             stream.chunk(content);
           },
           onStreamReasoning: (reasoning) => {
-            streamedReasoning += reasoning;
             if (options.exposeReasoning) {
               stream.reasoning(reasoning);
             }
@@ -66,9 +67,9 @@ export class ToolCallSession {
         },
       });
 
-      return this.postFinalMessage({ options, stream, result, executedToolCalls, streamedContent, streamedReasoning });
+      return this.postFinalMessage({ options, stream, result, executedToolCalls, streamedContent });
     } catch (err: unknown) {
-      return this.handleRunError({ err, options, stream, executedToolCalls, streamedContent, streamedReasoning });
+      return this.handleRunError({ err, options, stream, executedToolCalls, streamedContent });
     } finally {
       this.pendingToolCallCycle = null;
       this.pendingDangerConfirmation = null;
@@ -118,6 +119,7 @@ export class ToolCallSession {
       toolExecutor: this.toolExecutor,
       webviewView: options.webviewView,
       executedToolCalls,
+      signal: options.signal,
       getToolMode: (toolName: string) => getToolMode(options, toolName),
       shouldSkipManualConfirmation: (toolName: string) => shouldSkipManualConfirmation(toolName),
       getCurrentRound: () => this.currentRound,
@@ -170,9 +172,10 @@ export class ToolCallSession {
     await pendingCycle.batchPromise;
   }
 
-  private postFinalMessage({ options, stream, result, executedToolCalls, streamedContent, streamedReasoning }: PostFinalMessageOptions): ToolCallRunResult {
+  private postFinalMessage({ options, stream, result, executedToolCalls, streamedContent }: PostFinalMessageOptions): ToolCallRunResult {
     const toolCallResults = Array.from(executedToolCalls.values());
-    const hasStreamedContent = streamedContent.length > 0 || streamedReasoning.length > 0;
+    const timeline = stream.getTimeline();
+    const hasStreamedContent = timeline.length > 0;
 
     if (result.finalMessage.content || toolCallResults.length > 0) {
       options.webviewView.webview.postMessage({
@@ -182,26 +185,27 @@ export class ToolCallSession {
           content: hasStreamedContent ? "" : (result.finalMessage.content ?? ""),
           wasStreamed: hasStreamedContent,
           toolCalls: toolCallResults.length > 0 ? toolCallResults : undefined,
+          timeline,
         },
       });
     }
 
     stream.done({
       finish_reason: result.response.choices[0]?.finish_reason ?? "stop",
-      usage: result.response.usage,
     });
 
     return {
       content: hasStreamedContent ? streamedContent : (result.finalMessage.content ?? ""),
-      reasoning: hasStreamedContent ? streamedReasoning : (result.finalMessage.reasoning_content ?? undefined),
+      timeline,
       toolCalls: toolCallResults.length > 0 ? toolCallResults : undefined,
     };
   }
 
-  private handleRunError({ err, options, stream, executedToolCalls, streamedContent, streamedReasoning }: HandleRunErrorOptions): ToolCallRunResult | undefined {
+  private handleRunError({ err, options, stream, executedToolCalls, streamedContent }: HandleRunErrorOptions): ToolCallRunResult | undefined {
     if (isCancellationError(err)) {
       const partialToolCalls = Array.from(executedToolCalls.values());
-      const hasPartial = streamedContent.length > 0 || streamedReasoning.length > 0 || partialToolCalls.length > 0;
+      const timeline = stream.getTimeline();
+      const hasPartial = timeline.length > 0 || partialToolCalls.length > 0;
 
       if (!options.isCancelling()) {
         if (partialToolCalls.length > 0) {
@@ -210,8 +214,9 @@ export class ToolCallSession {
             message: {
               role: "assistant",
               content: streamedContent || "",
-              wasStreamed: streamedContent.length > 0,
+              wasStreamed: timeline.length > 0,
               toolCalls: partialToolCalls,
+              timeline,
             },
           });
         }
@@ -221,7 +226,7 @@ export class ToolCallSession {
       return hasPartial
         ? {
             content: streamedContent,
-            reasoning: streamedReasoning || undefined,
+            timeline,
             toolCalls: partialToolCalls.length > 0 ? partialToolCalls : undefined,
             partial: true,
           }

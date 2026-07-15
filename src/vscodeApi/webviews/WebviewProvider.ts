@@ -10,6 +10,7 @@ import { CHAT_VIEW_TYPE, CONFIG_SECTION, SIDEBAR_VIEW_ID } from "@/shared/consta
 import { logWarning } from "@/shared/logging/Logger";
 import type { WebviewToHandlerMessage } from "@/adapters";
 import type { ReferencedFilePayload } from "@/vscodeApi/commands/ChatCommands";
+import { isWebviewToHandlerMessage } from "./WebviewMessageValidation";
 
 type ChatCommandMessage = { type: "addReferencedFiles"; files: ReferencedFilePayload[] } | { type: "setDraft"; text: string };
 
@@ -209,32 +210,4 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
     const items = await getPathCompletionItems(query);
     await webviewView.webview.postMessage({ type: "pathCompletions", requestId, query, items });
   }
-}
-
-const WEBVIEW_MESSAGE_TYPES = new Set<WebviewToHandlerMessage["type"]>([
-  "getConfig",
-  "saveConfig",
-  "resetConfig",
-  "testConnection",
-  "sendMessage",
-  "cancelGeneration",
-  "copyCode",
-  "insertCode",
-  "selectModel",
-  "newConversation",
-  "getHistory",
-  "loadConversation",
-  "deleteConversation",
-  "executeToolCall",
-  "getPathCompletions",
-  "getAvailableTools",
-  "openFile",
-]);
-
-function isWebviewToHandlerMessage(message: unknown): message is WebviewToHandlerMessage {
-  if (!message || typeof message !== "object") {
-    return false;
-  }
-  const type = (message as { type?: unknown }).type;
-  return typeof type === "string" && WEBVIEW_MESSAGE_TYPES.has(type as WebviewToHandlerMessage["type"]);
 }

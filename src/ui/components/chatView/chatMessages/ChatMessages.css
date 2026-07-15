@@ -53,6 +53,16 @@
   margin: 0 0 12px;
 }
 
+.chronologicalAssistant {
+  flex-direction: column;
+  gap: 12px;
+  display: flex;
+
+  .reasoning-block {
+    margin: 0;
+  }
+}
+
 .reasoning-content {
   color: var(--text-primary);
   white-space: pre-wrap;

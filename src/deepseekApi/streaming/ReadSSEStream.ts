@@ -11,13 +11,18 @@ export async function readSSEStream(options: ReadSSEStreamOptions): Promise<void
   let buffer = "";
 
   while (true) {
+    if (signal?.aborted) {
+      await reader.cancel();
+      throw createAbortError();
+    }
     const { done, value } = await reader.read();
     if (done) {
       onDone();
       break;
     }
     if (signal?.aborted) {
-      break;
+      await reader.cancel();
+      throw createAbortError();
     }
 
     buffer += decoder.decode(value, { stream: true });
@@ -36,11 +41,20 @@ export async function readSSEStream(options: ReadSSEStreamOptions): Promise<void
         return;
       }
 
+      let parsed: unknown;
       try {
-        onChunk(JSON.parse(data));
+        parsed = JSON.parse(data);
       } catch {
         // Ignore malformed SSE chunks.
+        continue;
       }
+      onChunk(parsed);
     }
   }
+}
+
+function createAbortError(): Error {
+  const error = new Error("Stream cancelled");
+  error.name = "AbortError";
+  return error;
 }

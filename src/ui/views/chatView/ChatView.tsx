@@ -5,7 +5,7 @@ import { InputCtrls, InputFooter, MessagesSection } from "./sections";
 import { useChatConfig } from "./hooks";
 import type { ApiKeyStatus, ChatMessage } from "./ChatViewTypes";
 import { getVsCodeApi } from "@webview/VsCodeApi";
-import type { Conversation } from "@/adapters";
+import type { Conversation, PermissionMode } from "@/adapters";
 
 interface ReferencedFile {
   path: string;
@@ -19,6 +19,7 @@ interface ReferencedFile {
 type ChatCommandMessage = { type: "addReferencedFiles"; files: ReferencedFile[] } | { type: "setDraft"; text: string };
 
 interface ChatViewState {
+  schemaVersion: 2;
   draft: string;
   referencedFiles: ReferencedFile[];
   messages: ChatMessage[];
@@ -42,15 +43,17 @@ function ChatView({ loadedConversation }: ChatViewProps) {
   const {
     selectedModel,
     reasoning,
+    permissionMode,
     selectedModelRef,
     reasoningRef,
     applySavedConfig,
     handleReasoningChange,
     handleModelChange,
+    handlePermissionModeChange,
   } = useChatConfig();
 
   const handleConfigLoaded = useMemo(
-    () => (config: { reasoning?: string; model?: string }) => {
+    () => (config: { reasoning?: string; model?: string; permissionMode?: PermissionMode }) => {
       applySavedConfig(config);
     },
     [applySavedConfig],
@@ -100,7 +103,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
 
   useEffect(() => {
     const vscode = getVsCodeApi();
-    vscode?.setState<ChatViewState>({ draft, referencedFiles, messages });
+    vscode?.setState<ChatViewState>({ schemaVersion: 2, draft, referencedFiles, messages });
   }, [draft, referencedFiles, messages]);
 
   useEffect(() => {
@@ -164,8 +167,10 @@ function ChatView({ loadedConversation }: ChatViewProps) {
         <InputFooter
           reasoning={reasoning}
           selectedModel={selectedModel}
+          permissionMode={permissionMode}
           onModelChange={handleModelChange}
           onReasoningChange={handleReasoningChange}
+          onPermissionModeChange={handlePermissionModeChange}
           referencedFiles={referencedFiles}
           onRemoveReferencedFile={removeFile}
         />
@@ -176,11 +181,12 @@ function ChatView({ loadedConversation }: ChatViewProps) {
 
 function getSavedChatState(): ChatViewState | undefined {
   const state = getVsCodeApi()?.getState<Partial<ChatViewState>>();
-  if (!state || typeof state !== "object") {
+  if (!state || typeof state !== "object" || state.schemaVersion !== 2) {
     return undefined;
   }
 
   return {
+    schemaVersion: 2,
     draft: typeof state.draft === "string" ? state.draft : "",
     referencedFiles: Array.isArray(state.referencedFiles) ? state.referencedFiles.filter(isReferencedFile) : [],
     messages: Array.isArray(state.messages) ? (state.messages as ChatMessage[]) : [],

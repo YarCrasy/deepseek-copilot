@@ -1,8 +1,11 @@
 import * as assert from "assert";
 import * as path from "path";
+import { mkdtemp, mkdir, realpath, rm, symlink } from "fs/promises";
+import { tmpdir } from "os";
 import {
   getToolWorkspaceHost,
   resolveWorkspacePath,
+  resolveWorkspacePathSecure,
   setToolWorkspaceHost,
   type ToolWorkspaceEntryType,
   type ToolWorkspaceHost,
@@ -80,7 +83,49 @@ suite("workspace path validation", () => {
     await getToolWorkspaceHost().readFile(path.join(workspaceRoot, "src/index.ts"));
 
     assert.deepStrictEqual(calls, ["src/index.ts"]);
-    assert.throws(() => getToolWorkspaceHost().readFile("../outside.txt"), /traversal/);
-    assert.throws(() => getToolWorkspaceHost().writeFile(".env", Buffer.from("secret")), /sensitive/);
+    await assert.rejects(() => getToolWorkspaceHost().readFile("../outside.txt"), /traversal/);
+    await assert.rejects(() => getToolWorkspaceHost().writeFile(".env", Buffer.from("secret")), /sensitive/);
+  });
+
+  test("rejects symbolic links and junctions that resolve outside the workspace", async () => {
+    const sandbox = await mkdtemp(path.join(tmpdir(), "deepseek-copilot-path-test-"));
+    const root = path.join(sandbox, "workspace");
+    const outside = path.join(sandbox, "outside");
+    await mkdir(root);
+    await mkdir(outside);
+    const link = path.join(root, "escape");
+
+    try {
+      await symlink(outside, link, process.platform === "win32" ? "junction" : "dir");
+      await assert.rejects(
+        () => resolveWorkspacePathSecure("escape/data.txt", root, realpath),
+        /outside the workspace through a symbolic link or junction/,
+      );
+
+      let readAttempted = false;
+      setToolWorkspaceHost({
+        ...createNoopWorkspaceHost(root),
+        realPath: (absolutePath) => realpath(absolutePath),
+        readFile: async () => {
+          readAttempted = true;
+          return Buffer.from("outside");
+        },
+      });
+      await assert.rejects(() => getToolWorkspaceHost().readFile("escape/data.txt"), /outside the workspace/);
+      assert.strictEqual(readAttempted, false);
+    } finally {
+      await rm(sandbox, { recursive: true, force: true });
+    }
   });
 });
+
+function createNoopWorkspaceHost(rootPath: string): ToolWorkspaceHost {
+  return {
+    getRootPath: () => rootPath,
+    readFile: async () => Buffer.from(""),
+    writeFile: async () => undefined,
+    stat: async () => ({ type: "unknown", size: 0 }),
+    createParentDirectory: async () => undefined,
+    readDirectory: async () => [],
+  };
+}

@@ -1,4 +1,4 @@
-import type { ChatMessage, ChatUsage, StreamChunk, ToolCall, ToolDefinition } from "@/adapters";
+import type { ChatMessage, StreamChunk, ToolCall, ToolDefinition } from "@/adapters";
 import { chatCompletionStream, type ChatResponse } from "../Chat";
 import { buildToolCallRequest } from "./ToolCallRequest";
 import type { ToolCallCycleOptions } from "./ToolCallTypes";
@@ -27,7 +27,6 @@ export async function streamToolCallRound(options: StreamToolCallRoundOptions): 
   let finalReasoning = "";
   let hasToolCallsInStream = false;
   const streamingToolCalls = new Map<number, ToolCall>();
-  let usage: ChatUsage | undefined;
   let finishReason = "stop";
 
   await chatCompletionStream({
@@ -35,25 +34,15 @@ export async function streamToolCallRound(options: StreamToolCallRoundOptions): 
     apiKey,
     baseUrl,
     onChunk: (chunk) => {
-      const state = { finalContent, finalReasoning, hasToolCallsInStream, streamingToolCalls, usage, finishReason };
+      const state = { finalContent, finalReasoning, hasToolCallsInStream, streamingToolCalls, finishReason };
       const nextState = applyStreamChunk({ chunk, state, cycleOptions, emitStreamEvents });
       finalContent = nextState.finalContent;
       finalReasoning = nextState.finalReasoning;
       hasToolCallsInStream = nextState.hasToolCallsInStream;
-      usage = nextState.usage;
       finishReason = nextState.finishReason;
     },
     signal: cycleOptions.signal,
   });
-
-  if (!hasToolCallsInStream && emitStreamEvents) {
-    if (finalReasoning) {
-      cycleOptions.onStreamReasoning?.(finalReasoning);
-    }
-    if (finalContent) {
-      cycleOptions.onStreamChunk?.(finalContent);
-    }
-  }
 
   const message: ChatMessage = {
     role: "assistant",
@@ -76,7 +65,6 @@ export async function streamToolCallRound(options: StreamToolCallRoundOptions): 
           : (finishReason as "stop" | "length" | "tool_calls" | "content_filter" | "insufficient_system_resource" | null),
       },
     ],
-    usage,
   };
 }
 
@@ -85,25 +73,33 @@ interface StreamState {
   finalReasoning: string;
   hasToolCallsInStream: boolean;
   streamingToolCalls: Map<number, ToolCall>;
-  usage: ChatUsage | undefined;
   finishReason: string;
 }
 
 function applyStreamChunk(options: { chunk: StreamChunk; state: StreamState; cycleOptions: ToolCallCycleOptions; emitStreamEvents: boolean }): StreamState {
-  const { chunk, state } = options;
+  const { chunk, state, cycleOptions, emitStreamEvents } = options;
 
   switch (chunk.type) {
-    case "content":
+    case "content": {
+      const content = chunk.content ?? "";
+      if (emitStreamEvents && content) {
+        cycleOptions.onStreamChunk?.(content);
+      }
       return { ...state, finalContent: state.finalContent + (chunk.content ?? "") };
-    case "reasoning":
+    }
+    case "reasoning": {
+      const reasoning = chunk.reasoning_content ?? "";
+      if (emitStreamEvents && reasoning) {
+        cycleOptions.onStreamReasoning?.(reasoning);
+      }
       return { ...state, finalReasoning: state.finalReasoning + (chunk.reasoning_content ?? "") };
+    }
     case "tool_call":
       mergeStreamingToolCalls(state.streamingToolCalls, chunk.tool_calls);
       return { ...state, hasToolCallsInStream: true };
     case "done":
       return {
         ...state,
-        usage: chunk.usage ?? state.usage,
         finishReason: chunk.finish_reason ?? state.finishReason,
       };
     case "error":

@@ -63,7 +63,6 @@ export class DeepSeekProvider extends BaseProvider {
       model: req.model || this.config.model,
       messages: req.messages,
       stream: req.stream,
-      stream_options: deepSeekRequest.stream_options,
       max_tokens: req.max_tokens,
       temperature: req.temperature,
       top_p: req.top_p,
