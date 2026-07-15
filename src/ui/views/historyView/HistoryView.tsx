@@ -47,9 +47,7 @@ function HistoryView() {
   }, [conversations, query, sortBy]);
 
   const deleteAllVisible = () => {
-    if (window.confirm(`Delete ${visibleConversations.length} conversation(s)? This cannot be undone.`)) {
-      vscode?.postMessage({ type: "deleteConversations", ids: visibleConversations.map((conversation) => conversation.id) });
-    }
+    vscode?.postMessage({ type: "deleteConversations", ids: visibleConversations.map((conversation) => conversation.id) });
   };
 
   return (
@@ -80,7 +78,7 @@ function HistoryView() {
               datetime={new Date(conversation.updatedAt)}
               messageCount={conversation.messageCount}
               onClick={() => vscode?.postMessage({ type: "loadConversation", id: conversation.id })}
-              onDelete={() => window.confirm(`Delete “${conversation.title}”?`) && vscode?.postMessage({ type: "deleteConversation", id: conversation.id })}
+              onDelete={() => vscode?.postMessage({ type: "deleteConversation", id: conversation.id })}
             />
           ))
         )}

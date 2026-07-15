@@ -36,11 +36,23 @@ export class HistoryHandler {
 
   private async deleteConversation(id: string, webviewView: vscode.WebviewView): Promise<void> {
     const deleted = await this.historyManager.getById(id);
+    if (!deleted) {
+      await this.getHistory(webviewView);
+      return;
+    }
+    const confirmation = await vscode.window.showWarningMessage(
+      `Delete conversation "${deleted.title}"?`,
+      { modal: true, detail: "You can undo the deletion immediately afterwards." },
+      "Delete",
+    );
+    if (confirmation !== "Delete") {
+      return;
+    }
     await this.historyManager.delete(id);
     this.onConversationDeleted?.(id);
     webviewView.webview.postMessage({ type: "conversationDeleted", id });
     await this.getHistory(webviewView);
-    if (deleted && (await vscode.window.showInformationMessage("Conversation deleted.", "Undo")) === "Undo") {
+    if ((await vscode.window.showInformationMessage("Conversation deleted.", "Undo")) === "Undo") {
       await this.historyManager.save(deleted);
       await this.getHistory(webviewView);
     }
@@ -50,6 +62,18 @@ export class HistoryHandler {
     const deleted = (await Promise.all(ids.map((id) => this.historyManager.getById(id)))).filter(
       (item): item is Conversation => item !== undefined,
     );
+    if (deleted.length === 0) {
+      await this.getHistory(webviewView);
+      return;
+    }
+    const confirmation = await vscode.window.showWarningMessage(
+      `Delete ${deleted.length} conversation(s)?`,
+      { modal: true, detail: "You can undo the deletion immediately afterwards." },
+      "Delete all",
+    );
+    if (confirmation !== "Delete all") {
+      return;
+    }
     await this.historyManager.deleteMany(ids);
     ids.forEach((id) => this.onConversationDeleted?.(id));
     await this.getHistory(webviewView);
