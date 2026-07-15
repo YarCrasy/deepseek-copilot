@@ -27,6 +27,7 @@ suite("ConversationState", () => {
           arguments: "{}",
           result: "listed: .",
           round: 1,
+          status: "completed",
         },
       ],
     });

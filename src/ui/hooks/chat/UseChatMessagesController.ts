@@ -31,7 +31,7 @@ export function useChatMessagesController({
   const [internalMessages, setInternalMessages] = useState<ChatMessage[]>([]);
   const [internalIsProcessing, setInternalIsProcessing] = useState(false);
   const internalListRef = useRef<HTMLDivElement | null>(null);
-  const { nextMessageId, streamingMessageIdRef, appendTimelineDelta, appendTimelineToolGroup, resetStreaming } = useStreamHandler();
+  const { nextMessageId, streamingMessageIdRef, appendTimelineDelta, appendTimelineToolGroup, flushTimelineDeltas, resetStreaming } = useStreamHandler();
 
   const messages = externalMessages ?? internalMessages;
   const setMessages = externalSetMessages ?? setInternalMessages;
@@ -49,6 +49,7 @@ export function useChatMessagesController({
   const dispatcher: MessageDispatcher = {
     onAddMessage: useCallback(
       (message) => {
+        flushTimelineDeltas();
         const { wasStreamed, ...rest } = message;
         setMessages((current) => {
           if (wasStreamed && rest.role === "assistant") {
@@ -67,7 +68,7 @@ export function useChatMessagesController({
           ];
         });
       },
-      [nextMessageId, setMessages, streamingMessageIdRef],
+      [nextMessageId, setMessages, streamingMessageIdRef, flushTimelineDeltas],
     ),
 
     onShowTyping: useCallback(() => {
@@ -91,6 +92,7 @@ export function useChatMessagesController({
 
     onStreamDone: useCallback(
       (info) => {
+        flushTimelineDeltas();
         setProcessing(false);
 
         if (info.cancelled) {
@@ -107,7 +109,7 @@ export function useChatMessagesController({
 
         focusInput();
       },
-      [focusInput, setMessages, setProcessing, resetStreaming, onGenerationCancelled],
+      [focusInput, setMessages, setProcessing, resetStreaming, onGenerationCancelled, flushTimelineDeltas],
     ),
 
     onStreamError: useCallback(

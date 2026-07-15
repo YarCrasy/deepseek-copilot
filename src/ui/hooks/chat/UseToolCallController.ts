@@ -27,7 +27,7 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
       const newGroup = createToolCallGroup({
         toolCalls: data.toolCalls,
         round: data.round,
-        status: "pending",
+        status: "awaiting_confirmation",
         requiresConfirmation: !data.autoExecute,
         dangerConfirmation: data.dangerConfirmation,
       });
@@ -42,7 +42,7 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
             toolCall.toolCallId === data.toolCallId
               ? {
                   ...toolCall,
-                  status: data.rejected ? ("rejected" as const) : data.isError ? ("error" as const) : ("completed" as const),
+                  status: data.status,
                   result: data.result,
                   requiresConfirmation: false,
                   rejected: data.rejected,
@@ -51,6 +51,10 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
           ),
         })),
       );
+    }, []),
+
+    onToolCallActionAccepted: useCallback((data) => {
+      setToolCallGroups((previous) => markToolCallAccepted(previous, data.toolCallId, data.status));
     }, []),
 
     onClearChat: useCallback(() => setToolCallGroups([]), []),
@@ -70,7 +74,6 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
 
   const postToolCallAction = useCallback(
     (toolCallId: string, action: ToolCallAction, options: ToolCallActionOptions = {}) => {
-      setToolCallGroups((previous) => markToolCallDecision(previous, toolCallId, action));
       vscode?.postMessage({ type: "executeToolCall", toolCallId, action, trustForSession: options.trustForSession });
     },
     [vscode],
@@ -105,7 +108,7 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
 interface CreateToolCallGroupOptions {
   toolCalls: ToolCall[];
   round: number;
-  status: "running" | "pending";
+  status: "running" | "awaiting_confirmation";
   requiresConfirmation?: boolean;
   dangerConfirmation?: Parameters<NonNullable<MessageDispatcher["onToolCallConfirmationRequired"]>>[0]["dangerConfirmation"];
 }
@@ -168,26 +171,26 @@ function getVisibleActiveGroups(messages: ChatMessage[], activeGroups: ToolCallG
 function getPendingToolCalls(groups: ToolCallGroup[]) {
   return groups
     .flatMap((group) => group.toolCalls)
-    .filter((toolCall) => toolCall.requiresConfirmation && toolCall.status === "pending" && !toolCall.dangerConfirmation);
+    .filter((toolCall) => toolCall.requiresConfirmation && toolCall.status === "awaiting_confirmation" && !toolCall.dangerConfirmation);
 }
 
 function getPendingUserDecisionToolCalls(groups: ToolCallGroup[]): ToolCallState[] {
   return groups
     .flatMap((group) => group.toolCalls)
-    .filter((toolCall) => toolCall.status === "pending" && (toolCall.requiresConfirmation || toolCall.dangerConfirmation));
+    .filter((toolCall) => toolCall.status === "awaiting_confirmation" && (toolCall.requiresConfirmation || toolCall.dangerConfirmation));
 }
 
-function markToolCallDecision(groups: ToolCallGroup[], toolCallId: string, action: ToolCallAction): ToolCallGroup[] {
+function markToolCallAccepted(groups: ToolCallGroup[], toolCallId: string, status: "running" | "rejected"): ToolCallGroup[] {
   return groups.map((group) => ({
     ...group,
     toolCalls: group.toolCalls.map((toolCall) =>
       toolCall.toolCallId === toolCallId
         ? {
             ...toolCall,
-            status: action === "execute" ? ("running" as const) : ("rejected" as const),
+            status,
             requiresConfirmation: false,
             dangerConfirmation: undefined,
-            rejected: action === "reject",
+            rejected: status === "rejected",
           }
         : toolCall,
     ),

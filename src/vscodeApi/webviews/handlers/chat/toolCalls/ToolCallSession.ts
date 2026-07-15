@@ -1,3 +1,4 @@
+import type * as vscode from "vscode";
 import type { ToolCall, ToolDefinition, ToolExecutionMode } from "@/adapters";
 import { runToolCallCycle } from "@/deepseekApi/providers/deepseek/features/toolCall";
 import { logWarning } from "@/shared/logging/Logger";
@@ -23,9 +24,11 @@ export class ToolCallSession {
   private pendingDangerConfirmation: PendingDangerConfirmation | null = null;
   private readonly trustedDangerKeys = new Set<string>();
   private currentRound = 0;
+  private activeWebview?: vscode.WebviewView;
   constructor(private readonly toolExecutor: ToolExecutor) {}
 
   async run(options: ToolCallRunOptions): Promise<ToolCallRunResult | undefined> {
+    this.activeWebview = options.webviewView;
     let streamedContent = "";
     const executedToolCalls = new Map<string, StoredExecution>();
     const enabledTools = getRunnableTools(options).map((tool) =>
@@ -42,7 +45,7 @@ export class ToolCallSession {
         baseUrl: options.providerConfig.baseUrl,
         executeToolCall: (toolCall) => executeToolCall(toolCall, this.createExecutionContext(options, executedToolCalls)),
         cycleOptions: {
-          maxRounds: 6,
+          maxRounds: options.providerConfig.maxToolRounds,
           signal: options.signal,
           streamFinalResponse: true,
           streamToolCallRounds: hasAutoApprovedTools(options, enabledTools),
@@ -73,6 +76,7 @@ export class ToolCallSession {
     } finally {
       this.pendingToolCallCycle = null;
       this.pendingDangerConfirmation = null;
+      this.activeWebview = undefined;
     }
   }
 
@@ -98,6 +102,11 @@ export class ToolCallSession {
         confirmed: payload.action === "execute",
         trustForSession: payload.action === "execute" ? payload.trustForSession : false,
       });
+      void this.activeWebview?.webview.postMessage({
+        type: "toolCallActionAccepted",
+        toolCallId: payload.toolCallId,
+        status: payload.action === "execute" ? "running" : "rejected",
+      });
       return;
     }
 
@@ -111,6 +120,12 @@ export class ToolCallSession {
       logWarning(`[ChatHandler] Tool call ${payload.toolCallId} not found in pending cycle`);
     } else if (actionResult === "duplicate") {
       logWarning(`[ChatHandler] Tool call ${payload.toolCallId} already resolved`);
+    } else {
+      this.activeWebview?.webview.postMessage({
+        type: "toolCallActionAccepted",
+        toolCallId: payload.toolCallId,
+        status: payload.action === "execute" ? "running" : "rejected",
+      });
     }
   }
 
@@ -121,7 +136,6 @@ export class ToolCallSession {
       executedToolCalls,
       signal: options.signal,
       getToolMode: (toolName: string) => getToolMode(options, toolName),
-      shouldSkipManualConfirmation: (toolName: string) => shouldSkipManualConfirmation(toolName),
       getCurrentRound: () => this.currentRound,
       getPendingCycle: () => this.pendingToolCallCycle,
       isDangerTrusted: (toolCall: ToolCall, confirmationResult: ConfirmationRequiredResult) => this.isDangerTrusted(toolCall, confirmationResult),
@@ -155,7 +169,7 @@ export class ToolCallSession {
     this.currentRound = round;
     options.webviewView.webview.postMessage({ type: "toolCallStarted", toolCalls, round });
 
-    const manualToolCalls = toolCalls.filter((toolCall) => getToolMode(options, toolCall.function.name) === "enabled" && !shouldSkipManualConfirmation(toolCall.function.name));
+    const manualToolCalls = toolCalls.filter((toolCall) => getToolMode(options, toolCall.function.name) === "enabled");
     if (manualToolCalls.length === 0) {
       return;
     }
@@ -169,7 +183,6 @@ export class ToolCallSession {
       autoExecute: false,
     });
 
-    await pendingCycle.batchPromise;
   }
 
   private postFinalMessage({ options, stream, result, executedToolCalls, streamedContent }: PostFinalMessageOptions): ToolCallRunResult {
@@ -203,6 +216,22 @@ export class ToolCallSession {
 
   private handleRunError({ err, options, stream, executedToolCalls, streamedContent }: HandleRunErrorOptions): ToolCallRunResult | undefined {
     if (isCancellationError(err)) {
+      for (const execution of executedToolCalls.values()) {
+        if (execution.status === "pending" || execution.status === "awaiting_confirmation" || execution.status === "running") {
+          execution.status = "cancelled";
+          execution.isError = false;
+          execution.requiresConfirmation = false;
+          execution.result ??= "Cancelled with the active generation.";
+          void options.webviewView.webview.postMessage({
+            type: "toolCallResult",
+            toolCallId: execution.toolCallId,
+            toolName: execution.toolName,
+            result: execution.result,
+            isError: false,
+            status: "cancelled",
+          });
+        }
+      }
       const partialToolCalls = Array.from(executedToolCalls.values());
       const timeline = stream.getTimeline();
       const hasPartial = timeline.length > 0 || partialToolCalls.length > 0;
@@ -243,7 +272,7 @@ function canTrustDanger(confirmationResult: ConfirmationRequiredResult): boolean
 }
 
 function createDangerTrustKey(toolCall: ToolCall, confirmationResult: ConfirmationRequiredResult): string {
-  return `${toolCall.function.name}:${confirmationResult.dangerLevel}`;
+  return `${toolCall.function.name}:${confirmationResult.dangerLevel}:${toolCall.function.arguments}`;
 }
 
 function isCancellationError(err: unknown): boolean {
@@ -264,8 +293,4 @@ function getRunnableTools(options: ToolCallRunOptions): ToolDefinition[] {
 
 function getToolMode(options: ToolCallRunOptions, toolName: string): ToolExecutionMode {
   return options.toolExecutionModes[toolName] ?? "enabled";
-}
-
-function shouldSkipManualConfirmation(toolName: string): boolean {
-  return toolName === "edit_file" || toolName === "apply_patch";
 }

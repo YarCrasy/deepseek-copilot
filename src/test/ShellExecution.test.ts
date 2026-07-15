@@ -7,11 +7,23 @@ import { executeWorkspaceCommand } from "@/core/tools/definitions/ShellExecution
 import { setToolWorkspaceHost, type ToolWorkspaceHost } from "@/core/tools/ToolWorkspace";
 
 suite("shell execution", () => {
+  test("returns structured non-zero results and retains the tail of truncated output", async () => {
+    setToolWorkspaceHost(createUnusedWorkspaceHost(process.cwd()));
+    const script = "process.stdout.write('H'.repeat(6000)); process.stderr.write('TAIL'); process.exit(7)";
+    const result = await executeWorkspaceCommand(`"${process.execPath}" -e "${script}"`, { maxOutputBytes: 4096 });
+    assert.strictEqual(result.exitCode, 7);
+    assert.strictEqual(result.timedOut, false);
+    assert.ok(result.stdout.includes("output truncated"));
+    assert.ok(result.stderr.endsWith("TAIL"));
+    assert.ok(result.cwd);
+    assert.ok(result.shell);
+  });
+
   test("aborts a running command promptly", async () => {
     setToolWorkspaceHost(createUnusedWorkspaceHost(process.cwd()));
     const controller = new AbortController();
     const startedAt = Date.now();
-    const execution = executeWorkspaceCommand(`"${process.execPath}" -e "setInterval(() => {}, 1000)"`, undefined, controller.signal);
+    const execution = executeWorkspaceCommand(`"${process.execPath}" -e "setInterval(() => {}, 1000)"`, { signal: controller.signal });
     setTimeout(() => controller.abort(), 100);
 
     await assert.rejects(execution, (error: unknown) => error instanceof Error && error.name === "AbortError");
@@ -26,7 +38,7 @@ suite("shell execution", () => {
     const controller = new AbortController();
 
     try {
-      const execution = executeWorkspaceCommand(`"${process.execPath}" "${fixture}" "${marker}"`, undefined, controller.signal);
+      const execution = executeWorkspaceCommand(`"${process.execPath}" "${fixture}" "${marker}"`, { signal: controller.signal });
       setTimeout(() => controller.abort(), 200);
       await assert.rejects(execution, (error: unknown) => error instanceof Error && error.name === "AbortError");
       await new Promise((resolve) => setTimeout(resolve, 1_000));

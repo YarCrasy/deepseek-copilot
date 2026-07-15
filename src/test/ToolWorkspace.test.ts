@@ -84,7 +84,9 @@ suite("workspace path validation", () => {
 
     assert.deepStrictEqual(calls, ["src/index.ts"]);
     await assert.rejects(() => getToolWorkspaceHost().readFile("../outside.txt"), /traversal/);
-    await assert.rejects(() => getToolWorkspaceHost().writeFile(".env", Buffer.from("secret")), /sensitive/);
+    await assert.rejects(() => getToolWorkspaceHost().readFile(".env"), /sensitive/);
+    await getToolWorkspaceHost().writeFile(".env", Buffer.from("secret"));
+    assert.strictEqual(calls.at(-1), ".env", "writes use a separate path policy and may update legitimate sensitive-named files");
   });
 
   test("rejects symbolic links and junctions that resolve outside the workspace", async () => {

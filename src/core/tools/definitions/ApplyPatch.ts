@@ -34,6 +34,7 @@ async function handleApplyPatch(args: Record<string, unknown>): Promise<string> 
     dangerLevel: "caution",
     warningMessage: `Apply patch to "${parsed.path}"?`,
     filePath: parsed.path,
+    beforeHash: preview.beforeHash,
   });
 }
 

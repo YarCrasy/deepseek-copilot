@@ -23,12 +23,15 @@ export interface AppConfig {
   topP: number;
 
   maxTokens: number;
+  maxToolRounds: number;
   responseFormat: "text" | "json_object";
 
   permissionMode: PermissionMode;
   toolExecutionModes: ToolExecutionModes;
 
   autoContext: boolean;
+  historyEnabled: boolean;
+  historyRetentionDays: number;
   enableBetaFeatures: boolean;
 
   userId?: string;
@@ -43,9 +46,12 @@ export const DEFAULT_CONFIG: AppConfig = {
   temperature: 1.0,
   topP: 1.0,
   maxTokens: 8192,
+  maxToolRounds: 6,
   responseFormat: "text",
   permissionMode: "read-only",
   toolExecutionModes: {},
   autoContext: false,
+  historyEnabled: true,
+  historyRetentionDays: 30,
   enableBetaFeatures: false,
 };

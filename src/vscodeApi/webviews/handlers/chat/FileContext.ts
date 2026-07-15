@@ -36,14 +36,16 @@ export async function buildGitReviewContext(): Promise<string> {
 
   const status = await runGit(workspaceFolder.uri.fsPath, ["status", "--short"], 4_000);
   const diff = await runGit(workspaceFolder.uri.fsPath, ["diff", "--", "."], 18_000);
+  const staged = await runGit(workspaceFolder.uri.fsPath, ["diff", "--cached", "--", "."], 18_000);
 
-  if (!status && !diff) {
+  if (!status && !diff && !staged) {
     return "No current Git changes were detected.";
   }
 
   return compactText([
     status ? `Git status:\n\`\`\`\n${status}\n\`\`\`` : "",
     diff ? `Git diff:\n\`\`\`diff\n${diff}\n\`\`\`` : "",
+    staged ? `Git staged diff:\n\`\`\`diff\n${staged}\n\`\`\`` : "",
   ]).join("\n\n");
 }
 
@@ -76,11 +78,13 @@ async function buildGitContext(budget: number): Promise<string> {
   const status = await runGit(workspaceFolder.uri.fsPath, ["status", "--short"], GIT_STATUS_BUDGET);
   const diffBudget = Math.max(0, Math.min(GIT_DIFF_BUDGET, budget - status.length - 80));
   const diff = diffBudget > 0 ? await runGit(workspaceFolder.uri.fsPath, ["diff", "--", "."], diffBudget) : "";
+  const staged = diffBudget > 0 ? await runGit(workspaceFolder.uri.fsPath, ["diff", "--cached", "--", "."], diffBudget) : "";
 
   return truncateText(
     compactText([
       status ? `[Git status]\n\`\`\`\n${status}\n\`\`\`` : "",
       diff ? `[Git diff]\n\`\`\`diff\n${diff}\n\`\`\`` : "",
+      staged ? `[Git staged diff]\n\`\`\`diff\n${staged}\n\`\`\`` : "",
     ]).join("\n\n"),
     budget,
   );

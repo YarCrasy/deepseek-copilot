@@ -11,8 +11,6 @@ export interface PendingToolCallCycle {
   individualResolves: Map<string, (action: ToolCallAction) => void>;
   individualPromises: Map<string, Promise<ToolCallAction>>;
   resolved: Set<string>;
-  resolveBatch: () => void;
-  batchPromise: Promise<void>;
 }
 
 export interface PendingDangerConfirmation {
@@ -45,6 +43,7 @@ export interface StoredExecution {
   requiresConfirmation?: boolean;
   dangerLevel?: string;
   dangerConfirmed?: boolean;
+  status: "pending" | "awaiting_confirmation" | "running" | "completed" | "rejected" | "cancelled" | "error";
 }
 
 export interface ToolCallRunOptions {
@@ -71,7 +70,6 @@ export interface ToolExecutionContext {
   executedToolCalls: Map<string, StoredExecution>;
   signal?: AbortSignal;
   getToolMode: (toolName: string) => ToolExecutionMode;
-  shouldSkipManualConfirmation: (toolName: string) => boolean;
   getCurrentRound: () => number;
   getPendingCycle: () => PendingToolCallCycle | null;
   requestDangerConfirmation: (

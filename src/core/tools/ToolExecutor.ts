@@ -43,6 +43,9 @@ export class ToolExecutor {
           warningMessage: parsedResult.warningMessage,
           command: parsedResult.command,
           filePath: parsedResult.filePath,
+          cwd: parsedResult.cwd,
+          shell: parsedResult.shell,
+          beforeHash: parsedResult.beforeHash,
         };
 
         return {
@@ -57,7 +60,7 @@ export class ToolExecutor {
         toolCallId: toolCall.id,
         toolName: toolCall.function.name,
         result,
-        isError: false,
+        isError: isStructuredCommandError(parsedResult),
       };
     } catch (err: unknown) {
       if (isCancellationError(err)) {
@@ -98,7 +101,7 @@ export class ToolExecutor {
         toolCallId: toolCall.id,
         toolName: toolCall.function.name,
         result,
-        isError: false,
+        isError: isStructuredCommandError(parseJson(result)),
       };
     } catch (err: unknown) {
       if (isCancellationError(err)) {
@@ -148,6 +151,16 @@ function isConfirmationRequiredResult(value: unknown): value is ConfirmationRequ
 
 function isDangerLevel(value: unknown): value is DangerLevel {
   return value === "safe" || value === "caution" || value === "dangerous" || value === "destructive";
+}
+
+function parseJson(value: string): unknown {
+  try { return JSON.parse(value); } catch { return null; }
+}
+
+function isStructuredCommandError(value: unknown): boolean {
+  if (!value || typeof value !== "object") {return false;}
+  const result = value as { kind?: unknown; exitCode?: unknown; timedOut?: unknown; cancelled?: unknown };
+  return result.kind === "command_result" && (result.exitCode !== 0 || result.timedOut === true || result.cancelled === true);
 }
 
 function getErrorMessage(err: unknown): string {

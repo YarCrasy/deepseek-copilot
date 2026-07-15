@@ -14,18 +14,11 @@ export async function executeToolCall(toolCall: ToolCall, ctx: ToolExecutionCont
 
   const mode = ctx.getToolMode(toolCall.function.name);
   if (mode === "disabled") {
-    ctx.webviewView.webview.postMessage({
-      type: "toolCallResult",
-      toolCallId: toolCall.id,
-      toolName: toolCall.function.name,
-      result: TOOL_DISABLED,
-      isError: true,
-    });
-    updateStoredToolCall(ctx, toolCall.id, { result: TOOL_DISABLED, isError: true, rejected: true });
+    postToolCallResult(ctx, createRejectedResult(toolCall, TOOL_DISABLED));
     return TOOL_DISABLED;
   }
 
-  if (mode === "enabled" && !ctx.shouldSkipManualConfirmation(toolCall.function.name)) {
+  if (mode === "enabled") {
     return executeManualToolCall(toolCall, ctx);
   }
 
@@ -40,37 +33,28 @@ export async function executeToolCall(toolCall: ToolCall, ctx: ToolExecutionCont
 }
 
 function recordInitialToolCall(toolCall: ToolCall, ctx: ToolExecutionContext): void {
+  const requiresConfirmation = ctx.getToolMode(toolCall.function.name) === "enabled";
   ctx.executedToolCalls.set(toolCall.id, {
     toolCallId: toolCall.id,
     toolName: toolCall.function.name,
     arguments: toolCall.function.arguments,
     round: ctx.getCurrentRound(),
-    requiresConfirmation: ctx.getToolMode(toolCall.function.name) === "enabled" && !ctx.shouldSkipManualConfirmation(toolCall.function.name),
+    requiresConfirmation,
+    status: requiresConfirmation ? "awaiting_confirmation" : "running",
   });
 }
 
 async function executeManualToolCall(toolCall: ToolCall, ctx: ToolExecutionContext): Promise<string> {
   const individualPromise = ctx.getPendingCycle()?.individualPromises.get(toolCall.id);
   if (!individualPromise) {
-    updateStoredToolCall(ctx, toolCall.id, { result: CYCLE_UNAVAILABLE, isError: true });
+    const result = createErrorResult(toolCall, CYCLE_UNAVAILABLE);
+    postToolCallResult(ctx, result);
     return CYCLE_UNAVAILABLE;
   }
 
   const action = await individualPromise;
   if (action === "reject") {
-    ctx.webviewView.webview.postMessage({
-      type: "toolCallResult",
-      toolCallId: toolCall.id,
-      toolName: toolCall.function.name,
-      result: USER_REJECTED,
-      isError: true,
-      rejected: true,
-    });
-    updateStoredToolCall(ctx, toolCall.id, {
-      result: USER_REJECTED,
-      isError: true,
-      rejected: true,
-    });
+    postToolCallResult(ctx, createRejectedResult(toolCall, USER_REJECTED));
     return USER_REJECTED;
   }
 
@@ -85,7 +69,6 @@ async function executeManualToolCall(toolCall: ToolCall, ctx: ToolExecutionConte
 
 async function handleExecutionResult(options: HandleExecutionResultOptions): Promise<string> {
   const { toolCall, result, ctx, announceStarted, round } = options;
-
   const dangerInfo = ToolExecutor.isConfirmationRequired(result.result);
   updateStoredToolCall(ctx, toolCall.id, {
     result: result.result,
@@ -99,25 +82,14 @@ async function handleExecutionResult(options: HandleExecutionResultOptions): Pro
   }
 
   if (ctx.isDangerTrusted(toolCall, dangerInfo)) {
-    return executeForcedAfterTrust(toolCall, ctx);
+    return executeForcedAfterTrust(toolCall, ctx, dangerInfo);
   }
 
+  updateStoredToolCall(ctx, toolCall.id, { status: "awaiting_confirmation" });
   const decision = await ctx.requestDangerConfirmation(toolCall, dangerInfo, { announceStarted, round });
   if (!decision.confirmed) {
     clearFileDiffPreview();
-    postToolCallResult(ctx, {
-      toolCallId: toolCall.id,
-      toolName: toolCall.function.name,
-      result: DANGER_CANCELLED,
-      isError: true,
-      rejected: true,
-    });
-    updateStoredToolCall(ctx, toolCall.id, {
-      result: DANGER_CANCELLED,
-      isError: true,
-      dangerConfirmed: false,
-      rejected: true,
-    });
+    postToolCallResult(ctx, createRejectedResult(toolCall, DANGER_CANCELLED));
     return DANGER_CANCELLED;
   }
 
@@ -125,25 +97,42 @@ async function handleExecutionResult(options: HandleExecutionResultOptions): Pro
     ctx.trustDangerForSession(toolCall, dangerInfo);
   }
 
-  return executeForcedAfterTrust(toolCall, ctx);
+  updateStoredToolCall(ctx, toolCall.id, { status: "running" });
+  return executeForcedAfterTrust(toolCall, ctx, dangerInfo);
 }
 
 function clearFileDiffPreview(): void {
   getToolWorkspaceHost().clearFileDiffPreview?.();
 }
 
-async function executeForcedAfterTrust(toolCall: ToolCall, ctx: ToolExecutionContext): Promise<string> {
-  const forcedResult = await ctx.toolExecutor.executeForced(toolCall, { signal: ctx.signal });
+async function executeForcedAfterTrust(toolCall: ToolCall, ctx: ToolExecutionContext, confirmation?: import("@/core/tools/Types").ConfirmationRequiredResult): Promise<string> {
+  const forcedToolCall = confirmation?.beforeHash ? withExpectedBeforeHash(toolCall, confirmation.beforeHash) : toolCall;
+  const forcedResult = await ctx.toolExecutor.executeForced(forcedToolCall, { signal: ctx.signal });
   postToolCallResult(ctx, forcedResult);
-  updateStoredToolCall(ctx, toolCall.id, {
-    result: forcedResult.result,
-    isError: forcedResult.isError,
-    dangerConfirmed: true,
-  });
+  updateStoredToolCall(ctx, toolCall.id, { dangerConfirmed: true });
   return forcedResult.result;
 }
 
-function postToolCallResult(ctx: ToolExecutionContext, result: ExecutionResult & { rejected?: boolean }): void {
+function withExpectedBeforeHash(toolCall: ToolCall, beforeHash: string): ToolCall {
+  try {
+    const args = JSON.parse(toolCall.function.arguments) as Record<string, unknown>;
+    return { ...toolCall, function: { ...toolCall.function, arguments: JSON.stringify({ ...args, expectedBeforeHash: beforeHash }) } };
+  } catch { return toolCall; }
+}
+
+function createRejectedResult(toolCall: ToolCall, result: string): ExecutionResult & { rejected: true; status: "rejected" } {
+  return { toolCallId: toolCall.id, toolName: toolCall.function.name, result, isError: false, rejected: true, status: "rejected" };
+}
+
+function createErrorResult(toolCall: ToolCall, result: string): ExecutionResult & { status: "error" } {
+  return { toolCallId: toolCall.id, toolName: toolCall.function.name, result, isError: true, status: "error" };
+}
+
+function postToolCallResult(
+  ctx: ToolExecutionContext,
+  result: ExecutionResult & { rejected?: boolean; status?: StoredExecution["status"] },
+): void {
+  const status = result.status ?? (result.rejected ? "rejected" : result.isError ? "error" : "completed");
   ctx.webviewView.webview.postMessage({
     type: "toolCallResult",
     toolCallId: result.toolCallId,
@@ -151,6 +140,14 @@ function postToolCallResult(ctx: ToolExecutionContext, result: ExecutionResult &
     result: result.result,
     isError: result.isError,
     rejected: result.rejected,
+    status,
+  });
+  updateStoredToolCall(ctx, result.toolCallId, {
+    result: result.result,
+    isError: result.isError,
+    rejected: result.rejected,
+    requiresConfirmation: false,
+    status,
   });
 }
 

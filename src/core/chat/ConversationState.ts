@@ -1,8 +1,10 @@
 import type { AssistantTimelineEvent, ChatMessage, Conversation, ConversationMessage, StoredToolCall } from "@/adapters";
+import { randomUUID } from "crypto";
 import { createConversationTitle } from "./ConversationTitle";
 
 export interface ConversationStore {
   save(conversation: Conversation): Promise<void>;
+  getWorkspaceUri?(): string;
 }
 
 export interface SaveConversationTurnOptions {
@@ -36,12 +38,12 @@ export class ConversationState {
   }
 
   getApiMessages(): ChatMessage[] {
-    return toApiMessages(this.activeConversation?.messages ?? []);
+    return toApiMessages(selectContextMessages(this.activeConversation?.messages ?? []));
   }
 
   createMessage(role: ConversationMessage["role"], content: string, extra: Pick<ConversationMessage, "timeline" | "toolCalls"> = {}): ConversationMessage {
     return {
-      id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      id: randomUUID(),
       role,
       content,
       createdAt: Date.now(),
@@ -65,11 +67,12 @@ export class ConversationState {
     const existing = this.activeConversation;
     const nextMessages = [...(existing?.messages ?? []), ...options.messages];
     const conversation: Conversation = {
-      id: existing?.id ?? `conversation-${now}`,
+      id: existing?.id ?? randomUUID(),
       title: createConversationTitle(nextMessages, existing?.title),
       createdAt: existing?.createdAt ?? now,
       updatedAt: now,
       model: options.model,
+      workspaceUri: existing?.workspaceUri ?? this.conversationStore.getWorkspaceUri?.() ?? "workspace:unknown",
       messages: nextMessages,
     };
 
@@ -116,6 +119,37 @@ function toApiMessages(messages: ConversationMessage[]): ChatMessage[] {
 
     return [apiMessage, ...toolResults];
   });
+}
+
+const CONTEXT_CHARACTER_BUDGET = 120_000;
+const MAX_CONTEXT_FIELD_CHARACTERS = 24_000;
+
+function selectContextMessages(messages: ConversationMessage[]): ConversationMessage[] {
+  const selected: ConversationMessage[] = [];
+  let remaining = CONTEXT_CHARACTER_BUDGET;
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const message = trimContextMessage(messages[index]);
+    const size = estimateMessageSize(message);
+    if (selected.length > 0 && size > remaining) {break;}
+    selected.unshift(message);
+    remaining -= size;
+  }
+  return selected;
+}
+
+function estimateMessageSize(message: ConversationMessage): number {
+  return message.content.length + (message.timeline ?? []).reduce((sum, event) => sum + ("content" in event ? event.content.length : 0), 0) +
+    (message.toolCalls ?? []).reduce((sum, tool) => sum + tool.arguments.length + (tool.result?.length ?? 0), 0);
+}
+
+function trimContextMessage(message: ConversationMessage): ConversationMessage {
+  const trim = (value: string): string => value.length <= MAX_CONTEXT_FIELD_CHARACTERS ? value : `${value.slice(0, 12_000)}\n...[context pruned]...\n${value.slice(-12_000)}`;
+  return {
+    ...message,
+    content: trim(message.content),
+    timeline: message.timeline?.map((event) => "content" in event ? { ...event, content: trim(event.content) } : event),
+    toolCalls: message.toolCalls?.map((tool) => ({ ...tool, arguments: trim(tool.arguments), result: tool.result === undefined ? undefined : trim(tool.result) })),
+  };
 }
 
 function collectTimelineText(timeline: AssistantTimelineEvent[] | undefined, type: "reasoning" | "content"): string {

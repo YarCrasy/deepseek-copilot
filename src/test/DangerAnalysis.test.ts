@@ -46,4 +46,13 @@ suite("danger analysis", () => {
   test("leaves safe read-only commands safe", () => {
     assert.deepStrictEqual(analyzeDangerLevel("ls src/core/tools"), { level: "safe" });
   });
+
+  test("reviews every chained segment and detects destructive Windows commands", () => {
+    assert.strictEqual(analyzeDangerLevel("dir && Remove-Item .\\dist -Recurse -Force").level, "destructive");
+    assert.strictEqual(analyzeDangerLevel("echo ok | npm publish").level, "dangerous");
+  });
+
+  test("treats unknown commands as caution", () => {
+    assert.strictEqual(analyzeDangerLevel("custom-build-tool --run").level, "caution");
+  });
 });

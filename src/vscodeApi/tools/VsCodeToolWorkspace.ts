@@ -5,10 +5,23 @@ import type { ToolWorkspaceEntryType, ToolWorkspaceHost, ToolWorkspaceStat } fro
 
 export function createVsCodeToolWorkspace(): ToolWorkspaceHost {
   const inlinePreview = createInlineDiffPreview();
+  let selectedRootPath: string | undefined;
+  const getRootUri = (): vscode.Uri | undefined => {
+    const requestedRootPath = selectedRootPath;
+    const selected = requestedRootPath
+      ? vscode.workspace.workspaceFolders?.find((folder) => path.resolve(folder.uri.fsPath) === path.resolve(requestedRootPath))?.uri
+      : undefined;
+    const activeUri = vscode.window.activeTextEditor?.document.uri;
+    return selected ?? (activeUri ? vscode.workspace.getWorkspaceFolder(activeUri)?.uri : undefined) ?? vscode.workspace.workspaceFolders?.[0]?.uri;
+  };
 
   return {
     getRootPath(): string | undefined {
-      return vscode.workspace.workspaceFolders?.[0]?.uri.fsPath;
+      return getRootUri()?.fsPath;
+    },
+
+    setRootPath(rootPath: string | undefined): void {
+      selectedRootPath = rootPath;
     },
 
     realPath(absolutePath: string): Promise<string> {
@@ -16,16 +29,16 @@ export function createVsCodeToolWorkspace(): ToolWorkspaceHost {
     },
 
     async readFile(relativePath: string): Promise<Uint8Array> {
-      return vscode.workspace.fs.readFile(toWorkspaceUri(relativePath));
+      return vscode.workspace.fs.readFile(toWorkspaceUri(getRootUri(), relativePath));
     },
 
     async writeFile(relativePath: string, content: Uint8Array): Promise<void> {
-      await vscode.workspace.fs.writeFile(toWorkspaceUri(relativePath), content);
+      await vscode.workspace.fs.writeFile(toWorkspaceUri(getRootUri(), relativePath), content);
       inlinePreview.clear();
     },
 
     async stat(relativePath: string): Promise<ToolWorkspaceStat> {
-      const stat = await vscode.workspace.fs.stat(toWorkspaceUri(relativePath));
+      const stat = await vscode.workspace.fs.stat(toWorkspaceUri(getRootUri(), relativePath));
       return {
         type: toEntryType(stat.type),
         size: stat.size,
@@ -37,16 +50,16 @@ export function createVsCodeToolWorkspace(): ToolWorkspaceHost {
       if (!parentPath || parentPath === ".") {
         return;
       }
-      await vscode.workspace.fs.createDirectory(toWorkspaceUri(parentPath));
+      await vscode.workspace.fs.createDirectory(toWorkspaceUri(getRootUri(), parentPath));
     },
 
     async readDirectory(relativePath: string): Promise<Array<[string, ToolWorkspaceEntryType]>> {
-      const entries = await vscode.workspace.fs.readDirectory(toWorkspaceUri(relativePath));
+      const entries = await vscode.workspace.fs.readDirectory(toWorkspaceUri(getRootUri(), relativePath));
       return entries.map(([name, type]) => [name, toEntryType(type)]);
     },
 
     async prepareFileDiff(relativePath: string, before: string, after: string): Promise<void> {
-      const originalUri = toWorkspaceUri(relativePath);
+      const originalUri = toWorkspaceUri(getRootUri(), relativePath);
       await inlinePreview.show(originalUri, before, after);
     },
 
@@ -56,8 +69,7 @@ export function createVsCodeToolWorkspace(): ToolWorkspaceHost {
   };
 }
 
-function toWorkspaceUri(relativePath: string): vscode.Uri {
-  const root = vscode.workspace.workspaceFolders?.[0]?.uri;
+function toWorkspaceUri(root: vscode.Uri | undefined, relativePath: string): vscode.Uri {
   if (!root) {
     throw new Error("No workspace folder open");
   }

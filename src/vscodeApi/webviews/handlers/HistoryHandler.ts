@@ -18,6 +18,9 @@ export class HistoryHandler {
       case "deleteConversation":
         void this.deleteConversation(message.id, webviewView);
         break;
+      case "deleteConversations":
+        void this.deleteConversations(message.ids, webviewView);
+        break;
       case "loadConversation":
         void this.loadConversation(message.id, webviewView);
         break;
@@ -27,15 +30,33 @@ export class HistoryHandler {
   }
 
   private async getHistory(webviewView: vscode.WebviewView): Promise<void> {
-    const conversations = await this.historyManager.getAll();
+    const conversations = await this.historyManager.getSummaries();
     webviewView.webview.postMessage({ type: "history", conversations });
   }
 
   private async deleteConversation(id: string, webviewView: vscode.WebviewView): Promise<void> {
+    const deleted = await this.historyManager.getById(id);
     await this.historyManager.delete(id);
     this.onConversationDeleted?.(id);
     webviewView.webview.postMessage({ type: "conversationDeleted", id });
     await this.getHistory(webviewView);
+    if (deleted && (await vscode.window.showInformationMessage("Conversation deleted.", "Undo")) === "Undo") {
+      await this.historyManager.save(deleted);
+      await this.getHistory(webviewView);
+    }
+  }
+
+  private async deleteConversations(ids: string[], webviewView: vscode.WebviewView): Promise<void> {
+    const deleted = (await Promise.all(ids.map((id) => this.historyManager.getById(id)))).filter(
+      (item): item is Conversation => item !== undefined,
+    );
+    await this.historyManager.deleteMany(ids);
+    ids.forEach((id) => this.onConversationDeleted?.(id));
+    await this.getHistory(webviewView);
+    if (deleted.length > 0 && (await vscode.window.showInformationMessage(`${deleted.length} conversation(s) deleted.`, "Undo")) === "Undo") {
+      await Promise.all(deleted.map((conversation) => this.historyManager.save(conversation)));
+      await this.getHistory(webviewView);
+    }
   }
 
   private async loadConversation(id: string, webviewView: vscode.WebviewView): Promise<void> {

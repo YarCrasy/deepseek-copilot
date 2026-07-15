@@ -21,7 +21,7 @@ export type ToolCallActionOptions = {
 };
 
 /** UI status for a tool call. */
-type ToolCallStatus = "pending" | "running" | "completed" | "error" | "rejected";
+export type ToolCallStatus = "pending" | "awaiting_confirmation" | "running" | "completed" | "error" | "rejected" | "cancelled";
 
 /** UI tool call state. */
 export interface ToolCallState {

@@ -11,6 +11,7 @@ export interface ReferencedFilePayload {
   language?: string;
   type: "file" | "directory";
   size?: number;
+  selection?: { startLine: number; startCharacter: number; endLine: number; endCharacter: number };
 }
 
 const execFile = promisify(cp.execFile);
@@ -80,6 +81,12 @@ async function addActiveSelectionToChat(provider: WebviewProvider): Promise<void
       language: editor.document.languageId,
       type: "file",
       size: Buffer.byteLength(text, "utf8"),
+      selection: {
+        startLine,
+        startCharacter: editor.selection.start.character + 1,
+        endLine,
+        endCharacter: editor.selection.end.character + 1,
+      },
     },
   ]);
 }
@@ -161,7 +168,7 @@ async function createReferenceFromUri(uri: vscode.Uri): Promise<ReferencedFilePa
 }
 
 async function runGit(args: string[], cwd: string): Promise<string> {
-  const { stdout } = await execFile("git", args, { cwd, maxBuffer: MAX_REFERENCE_BYTES * 2 });
+  const { stdout } = await execFile("git", args, { cwd, maxBuffer: MAX_REFERENCE_BYTES * 2, timeout: 5_000, encoding: "utf8" });
   return stdout;
 }
 

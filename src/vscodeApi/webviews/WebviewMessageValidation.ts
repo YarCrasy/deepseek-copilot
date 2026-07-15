@@ -38,6 +38,8 @@ export function isWebviewToHandlerMessage(value: unknown): value is WebviewToHan
     case "loadConversation":
     case "deleteConversation":
       return hasOnlyKeys(value, ["type", "id"]) && isNonEmptyBoundedString(value.id, 512);
+    case "deleteConversations":
+      return hasOnlyKeys(value, ["type", "ids"]) && Array.isArray(value.ids) && value.ids.length <= 100 && value.ids.every((id) => isNonEmptyBoundedString(id, 512));
     case "executeToolCall":
       return (
         hasOnlyKeys(value, ["type", "toolCallId", "action", "trustForSession"]) &&
@@ -84,10 +86,11 @@ function validateSendMessage(value: Record<string, unknown>): boolean {
   for (const reference of value.referencedFiles) {
     if (
       !isRecord(reference) ||
-      !hasOnlyKeys(reference, ["path", "content", "type"]) ||
+      !hasOnlyKeys(reference, ["path", "content", "type", "selection"]) ||
       !isNonEmptyBoundedString(reference.path, 32_768) ||
       (reference.type !== "file" && reference.type !== "directory") ||
-      (reference.content !== undefined && !isBoundedString(reference.content, MAX_REFERENCE_CONTENT))
+      (reference.content !== undefined && !isBoundedString(reference.content, MAX_REFERENCE_CONTENT)) ||
+      (reference.selection !== undefined && !isSelectionRange(reference.selection))
     ) {
       return false;
     }
@@ -99,6 +102,11 @@ function validateSendMessage(value: Record<string, unknown>): boolean {
   return true;
 }
 
+function isSelectionRange(value: unknown): boolean {
+  return isRecord(value) && hasOnlyKeys(value, ["startLine", "startCharacter", "endLine", "endCharacter"]) &&
+    [value.startLine, value.startCharacter, value.endLine, value.endCharacter].every((part) => Number.isSafeInteger(part) && (part as number) >= 1);
+}
+
 const APP_CONFIG_KEYS = [
   "apiKey",
   "baseUrl",
@@ -108,10 +116,13 @@ const APP_CONFIG_KEYS = [
   "temperature",
   "topP",
   "maxTokens",
+  "maxToolRounds",
   "responseFormat",
   "permissionMode",
   "toolExecutionModes",
   "autoContext",
+  "historyEnabled",
+  "historyRetentionDays",
   "enableBetaFeatures",
   "userId",
 ] as const satisfies readonly (keyof AppConfig)[];
@@ -129,11 +140,14 @@ function isAppConfigPatch(value: unknown): value is Partial<AppConfig> {
     (value.reasoningEffort === undefined || value.reasoningEffort === "high" || value.reasoningEffort === "max") &&
     isOptionalNumberInRange(value.temperature, 0, 2) &&
     isOptionalNumberInRange(value.topP, 0, 1) &&
-    (value.maxTokens === undefined || (Number.isSafeInteger(value.maxTokens) && (value.maxTokens as number) >= 1 && (value.maxTokens as number) <= 1_000_000)) &&
+    (value.maxTokens === undefined || (Number.isSafeInteger(value.maxTokens) && (value.maxTokens as number) >= 1 && (value.maxTokens as number) <= 65_536)) &&
+    (value.maxToolRounds === undefined || (Number.isSafeInteger(value.maxToolRounds) && (value.maxToolRounds as number) >= 1 && (value.maxToolRounds as number) <= 20)) &&
     (value.responseFormat === undefined || value.responseFormat === "text" || value.responseFormat === "json_object") &&
     (value.permissionMode === undefined || ["chat", "read-only", "workspace", "full-access"].includes(value.permissionMode as string)) &&
     (value.toolExecutionModes === undefined || isToolExecutionModes(value.toolExecutionModes)) &&
     isOptionalBoolean(value.autoContext) &&
+    isOptionalBoolean(value.historyEnabled) &&
+    (value.historyRetentionDays === undefined || (Number.isSafeInteger(value.historyRetentionDays) && (value.historyRetentionDays as number) >= 0 && (value.historyRetentionDays as number) <= 3650)) &&
     isOptionalBoolean(value.enableBetaFeatures) &&
     isOptionalBoundedString(value.userId, 256)
   );

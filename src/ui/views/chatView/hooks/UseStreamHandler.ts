@@ -8,6 +8,8 @@ type TimelineToolGroupEvent = Extract<AssistantTimelineEvent, { type: "tool-grou
 /** Maintains the single assistant message receiving the current event stream. */
 export function useStreamHandler() {
   const streamingMessageIdRef = useRef<string | null>(null);
+  const pendingDeltasRef = useRef<Array<{ eventId: string; eventType: TimelineTextEvent["type"]; content: string; setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>> }>>([]);
+  const frameRef = useRef<number | null>(null);
 
   const nextMessageId = useCallback(() => crypto.randomUUID(), []);
 
@@ -29,6 +31,31 @@ export function useStreamHandler() {
     [nextMessageId],
   );
 
+  const flushTimelineDeltas = useCallback(() => {
+    if (frameRef.current !== null) {cancelAnimationFrame(frameRef.current);}
+    frameRef.current = null;
+    const pending = pendingDeltasRef.current.splice(0);
+    if (pending.length === 0) {return;}
+    const setMessages = pending[0].setMessages;
+    const messageId = ensureStreamingAssistantMessage(setMessages);
+    setMessages((current) => current.map((message) => {
+      if (message.id !== messageId) {return message;}
+      const timeline = [...(message.timeline ?? [])];
+      let content = message.content;
+      for (const delta of pending) {
+        const index = timeline.findIndex((event) => event.id === delta.eventId);
+        if (index >= 0) {
+          const existing = timeline[index];
+          if (existing.type === delta.eventType) {timeline[index] = { ...existing, content: existing.content + delta.content };}
+        } else {
+          timeline.push({ id: delta.eventId, type: delta.eventType, content: delta.content });
+        }
+        if (delta.eventType === "content") {content += delta.content;}
+      }
+      return { ...message, content, timeline };
+    }));
+  }, [ensureStreamingAssistantMessage]);
+
   const appendTimelineDelta = useCallback(
     (
       eventId: string,
@@ -39,39 +66,15 @@ export function useStreamHandler() {
       if (!content) {
         return;
       }
-      const messageId = ensureStreamingAssistantMessage(setMessages);
-
-      setMessages((current) =>
-        current.map((message) => {
-          if (message.id !== messageId) {
-            return message;
-          }
-
-          const timeline = [...(message.timeline ?? [])];
-          const existingIndex = timeline.findIndex((event) => event.id === eventId);
-          if (existingIndex >= 0) {
-            const existing = timeline[existingIndex];
-            if (existing.type !== eventType) {
-              return message;
-            }
-            timeline[existingIndex] = { ...existing, content: existing.content + content };
-          } else {
-            timeline.push({ id: eventId, type: eventType, content });
-          }
-
-          return {
-            ...message,
-            content: eventType === "content" ? message.content + content : message.content,
-            timeline,
-          };
-        }),
-      );
+      pendingDeltasRef.current.push({ eventId, eventType, content, setMessages });
+      if (frameRef.current === null) {frameRef.current = requestAnimationFrame(flushTimelineDeltas);}
     },
-    [ensureStreamingAssistantMessage],
+    [flushTimelineDeltas],
   );
 
   const appendTimelineToolGroup = useCallback(
     (event: TimelineToolGroupEvent, setMessages: React.Dispatch<React.SetStateAction<ChatMessage[]>>) => {
+      flushTimelineDeltas();
       const messageId = ensureStreamingAssistantMessage(setMessages);
       setMessages((current) =>
         current.map((message) =>
@@ -81,16 +84,20 @@ export function useStreamHandler() {
         ),
       );
     },
-    [ensureStreamingAssistantMessage],
+    [ensureStreamingAssistantMessage, flushTimelineDeltas],
   );
 
-  useEffect(() => resetStreaming, [resetStreaming]);
+  useEffect(() => () => {
+    if (frameRef.current !== null) {cancelAnimationFrame(frameRef.current);}
+    resetStreaming();
+  }, [resetStreaming]);
 
   return {
     streamingMessageIdRef,
     nextMessageId,
     appendTimelineDelta,
     appendTimelineToolGroup,
+    flushTimelineDeltas,
     resetStreaming,
   };
 }

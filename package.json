@@ -156,20 +156,34 @@
         "yrs-dpsk-copilot.temperature": {
           "type": "number",
           "default": 1,
+          "minimum": 0,
+          "maximum": 2,
           "scope": "application",
           "description": "Sampling temperature"
         },
         "yrs-dpsk-copilot.topP": {
           "type": "number",
           "default": 1,
+          "minimum": 0,
+          "maximum": 1,
           "scope": "application",
           "description": "Top P sampling"
         },
         "yrs-dpsk-copilot.maxTokens": {
           "type": "number",
           "default": 8192,
+          "minimum": 1,
+          "maximum": 65536,
           "scope": "application",
           "description": "Maximum tokens for responses"
+        },
+        "yrs-dpsk-copilot.maxToolRounds": {
+          "type": "number",
+          "default": 6,
+          "minimum": 1,
+          "maximum": 20,
+          "scope": "application",
+          "description": "Maximum tool-call rounds per turn"
         },
         "yrs-dpsk-copilot.responseFormat": {
           "type": "string",
@@ -210,6 +224,20 @@
           "default": false,
           "scope": "application",
           "description": "Automatically include the active editor and git status/diff context with chat requests."
+        },
+        "yrs-dpsk-copilot.historyEnabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Store chat history for this workspace."
+        },
+        "yrs-dpsk-copilot.historyRetentionDays": {
+          "type": "number",
+          "default": 30,
+          "minimum": 0,
+          "maximum": 3650,
+          "scope": "window",
+          "description": "History retention in days. Use 0 to keep history until manually deleted."
         },
         "yrs-dpsk-copilot.projectInstructions.includeHomeAgents": {
           "type": "boolean",

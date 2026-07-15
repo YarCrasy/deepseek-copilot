@@ -193,6 +193,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
 
       case "getHistory":
       case "deleteConversation":
+      case "deleteConversations":
       case "loadConversation":
         this.historyHandler.handle(message, webviewView);
         break;

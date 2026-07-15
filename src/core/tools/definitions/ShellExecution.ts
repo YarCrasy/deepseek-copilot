@@ -2,60 +2,74 @@ import { spawn, spawnSync, type ChildProcess } from "child_process";
 import { realpath } from "fs/promises";
 import { getToolWorkspaceHost, resolveWorkspacePathSecure } from "../ToolWorkspace";
 
-const COMMAND_TIMEOUT_MS = 30_000;
-const MAX_OUTPUT_BYTES = 1024 * 1024;
+export const DEFAULT_COMMAND_TIMEOUT_MS = 30_000;
+export const DEFAULT_MAX_OUTPUT_BYTES = 1024 * 1024;
+export const MIN_COMMAND_TIMEOUT_MS = 1_000;
+export const MAX_COMMAND_TIMEOUT_MS = 120_000;
+export const MIN_OUTPUT_BYTES = 4 * 1024;
+export const MAX_OUTPUT_BYTES = 4 * 1024 * 1024;
 
-export async function executeWorkspaceCommand(command: string, cwd?: string, signal?: AbortSignal): Promise<string> {
+export interface WorkspaceCommandOptions {
+  cwd?: string;
+  signal?: AbortSignal;
+  timeoutMs?: number;
+  maxOutputBytes?: number;
+}
+
+export interface WorkspaceCommandResult {
+  kind: "command_result";
+  command: string;
+  cwd: string;
+  shell: string;
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+  signal: string | null;
+  timedOut: boolean;
+  cancelled: false;
+  truncated: { stdout: boolean; stderr: boolean };
+}
+
+export async function resolveCommandEnvironment(cwd?: string): Promise<{ cwd: string; shell: string }> {
   const rootPath = getToolWorkspaceHost().getRootPath();
   if (!rootPath) {
-    return "Error: No workspace folder open";
+    throw new Error("No workspace folder open");
   }
+  const workDir = cwd ? (await resolveWorkspacePathSecure(cwd, rootPath, realpath)).absolutePath : rootPath;
+  return { cwd: workDir, shell: process.platform === "win32" ? (process.env.ComSpec ?? "cmd.exe") : (process.env.SHELL ?? "/bin/sh") };
+}
 
-  let workDir = rootPath;
-  if (cwd) {
-    try {
-      workDir = (await resolveWorkspacePathSecure(cwd, rootPath, realpath)).absolutePath;
-    } catch (err: unknown) {
-      return `Error resolving cwd '${cwd}': ${getErrorMessage(err)}`;
-    }
-  }
+export async function executeWorkspaceCommand(command: string, options: WorkspaceCommandOptions = {}): Promise<WorkspaceCommandResult> {
+  const environment = await resolveCommandEnvironment(options.cwd);
+  const timeoutMs = clampInteger(options.timeoutMs, MIN_COMMAND_TIMEOUT_MS, MAX_COMMAND_TIMEOUT_MS, DEFAULT_COMMAND_TIMEOUT_MS);
+  const maxOutputBytes = clampInteger(options.maxOutputBytes, MIN_OUTPUT_BYTES, MAX_OUTPUT_BYTES, DEFAULT_MAX_OUTPUT_BYTES);
 
-  if (signal?.aborted) {
+  if (options.signal?.aborted) {
     throw createAbortError();
   }
 
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<WorkspaceCommandResult>((resolve, reject) => {
     const child = spawn(command, {
-      cwd: workDir,
-      shell: true,
+      cwd: environment.cwd,
+      shell: environment.shell,
       windowsHide: true,
       detached: process.platform !== "win32",
       stdio: ["ignore", "pipe", "pipe"],
     });
-    let stdout: Buffer<ArrayBufferLike> = Buffer.alloc(0);
-    let stderr: Buffer<ArrayBufferLike> = Buffer.alloc(0);
+    const stdout = new BoundedOutput(maxOutputBytes);
+    const stderr = new BoundedOutput(maxOutputBytes);
     let settled = false;
     let timedOut = false;
 
-    const appendOutput = (current: Buffer<ArrayBufferLike>, chunk: Buffer<ArrayBufferLike>): Buffer<ArrayBufferLike> => {
-      const remaining = MAX_OUTPUT_BYTES - current.byteLength;
-      return remaining <= 0 ? current : Buffer.concat([current, chunk.subarray(0, remaining)]);
-    };
-    child.stdout?.on("data", (chunk: Buffer<ArrayBufferLike>) => {
-      stdout = appendOutput(stdout, chunk);
-    });
-    child.stderr?.on("data", (chunk: Buffer<ArrayBufferLike>) => {
-      stderr = appendOutput(stderr, chunk);
-    });
+    child.stdout?.on("data", (chunk: Buffer) => stdout.append(chunk));
+    child.stderr?.on("data", (chunk: Buffer) => stderr.append(chunk));
 
     const cleanup = () => {
       clearTimeout(timeout);
-      signal?.removeEventListener("abort", onAbort);
+      options.signal?.removeEventListener("abort", onAbort);
     };
     const finish = (callback: () => void) => {
-      if (settled) {
-        return;
-      }
+      if (settled) {return;}
       settled = true;
       cleanup();
       callback();
@@ -67,62 +81,86 @@ export async function executeWorkspaceCommand(command: string, cwd?: string, sig
     const timeout = setTimeout(() => {
       timedOut = true;
       terminateProcessTree(child);
-    }, COMMAND_TIMEOUT_MS);
+    }, timeoutMs);
 
-    signal?.addEventListener("abort", onAbort, { once: true });
-    child.once("error", (err) => finish(() => reject(err)));
+    options.signal?.addEventListener("abort", onAbort, { once: true });
+    child.once("error", (error) => finish(() => reject(error)));
     child.once("close", (exitCode, exitSignal) => {
-      finish(() => {
-        const stdoutText = stdout.toString("utf8");
-        const stderrText = stderr.toString("utf8");
-        if (timedOut) {
-          resolve(formatCommandError(stdoutText, stderrText, `Command timed out after ${COMMAND_TIMEOUT_MS}ms`));
-          return;
-        }
-        if (exitCode !== 0) {
-          resolve(formatCommandError(stdoutText, stderrText, `Command exited with code ${exitCode ?? "unknown"}${exitSignal ? ` (${exitSignal})` : ""}`));
-          return;
-        }
-        resolve(formatCommandSuccess(stdoutText, stderrText));
-      });
+      finish(() => resolve({
+        kind: "command_result",
+        command,
+        cwd: environment.cwd,
+        shell: environment.shell,
+        stdout: stdout.toString(),
+        stderr: stderr.toString(),
+        exitCode,
+        signal: exitSignal,
+        timedOut,
+        cancelled: false,
+        truncated: { stdout: stdout.truncated, stderr: stderr.truncated },
+      }));
     });
-    if (signal?.aborted) {
-      onAbort();
-    }
+    if (options.signal?.aborted) {onAbort();}
   });
 }
 
-function terminateProcessTree(child: ChildProcess): void {
-  if (!child.pid) {
-    return;
+class BoundedOutput {
+  private readonly head: Buffer[] = [];
+  private readonly tail: Buffer[] = [];
+  private headBytes = 0;
+  private tailBytes = 0;
+  private readonly half: number;
+  truncated = false;
+
+  constructor(private readonly limit: number) {
+    this.half = Math.floor(limit / 2);
   }
+
+  append(chunk: Buffer): void {
+    if (this.headBytes < this.half) {
+      const take = Math.min(chunk.byteLength, this.half - this.headBytes);
+      this.head.push(chunk.subarray(0, take));
+      this.headBytes += take;
+      chunk = chunk.subarray(take);
+    }
+    if (chunk.byteLength === 0) {return;}
+    this.truncated = this.truncated || this.headBytes + this.tailBytes + chunk.byteLength > this.limit;
+    this.tail.push(chunk);
+    this.tailBytes += chunk.byteLength;
+    while (this.tailBytes > this.limit - this.half && this.tail.length > 0) {
+      const overflow = this.tailBytes - (this.limit - this.half);
+      const first = this.tail[0];
+      if (first.byteLength <= overflow) {
+        this.tail.shift();
+        this.tailBytes -= first.byteLength;
+      } else {
+        this.tail[0] = first.subarray(overflow);
+        this.tailBytes -= overflow;
+      }
+    }
+  }
+
+  toString(): string {
+    const marker = this.truncated ? Buffer.from("\n...[output truncated; middle omitted]...\n") : Buffer.alloc(0);
+    return Buffer.concat([...this.head, marker, ...this.tail]).toString("utf8");
+  }
+}
+
+function clampInteger(value: number | undefined, min: number, max: number, fallback: number): number {
+  return Number.isInteger(value) ? Math.min(max, Math.max(min, value!)) : fallback;
+}
+
+function terminateProcessTree(child: ChildProcess): void {
+  if (!child.pid) {return;}
   if (process.platform === "win32") {
     spawnSync("taskkill", ["/pid", String(child.pid), "/T", "/F"], { windowsHide: true, stdio: "ignore" });
     return;
   }
-
-  try {
-    process.kill(-child.pid, "SIGTERM");
-  } catch {
-    child.kill("SIGTERM");
-  }
-}
-
-function formatCommandSuccess(stdout: string, stderr: string): string {
-  const sections = [stdout, stderr ? `STDERR:\n${stderr}` : ""].filter(Boolean);
-  return sections.join("\n") || "(command completed with no output)";
-}
-
-function formatCommandError(stdout: string, stderr: string, error: string): string {
-  return [stdout, stderr ? `STDERR:\n${stderr}` : "", `Error: ${error}`].filter(Boolean).join("\n");
+  try { process.kill(-child.pid, "SIGTERM"); } catch { child.kill("SIGTERM"); }
 }
 
 function createAbortError(): Error {
   const error = new Error("Command execution cancelled");
   error.name = "AbortError";
   return error;
-}
-
-function getErrorMessage(err: unknown): string {
-  return err instanceof Error ? err.message : String(err);
 }

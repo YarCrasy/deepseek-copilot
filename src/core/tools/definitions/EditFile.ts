@@ -2,12 +2,14 @@ import type { ToolDefinition } from "@/adapters";
 import type { RegisteredTool, ToolMetadata } from "../Types";
 import { getToolWorkspaceHost } from "../ToolWorkspace";
 import { bufferLooksBinary, createStructuredResult, createUnifiedDiff } from "./StructuredResult";
+import { createHash } from "crypto";
 
 interface EditFileArgs {
   path: string;
   search: string;
   replace: string;
   replaceAll: boolean;
+  expectedBeforeHash?: string;
 }
 
 async function handleEditFile(args: Record<string, unknown>): Promise<string> {
@@ -26,6 +28,7 @@ async function handleEditFile(args: Record<string, unknown>): Promise<string> {
     dangerLevel: "caution",
     warningMessage: `Apply ${preview.replacementCount} replacement${preview.replacementCount === 1 ? "" : "s"} to "${parsed.path}"?`,
     filePath: parsed.path,
+    beforeHash: preview.beforeHash,
   });
 }
 
@@ -67,6 +70,7 @@ async function prepareEdit(
       after: string;
       replacementCount: number;
       diff: ReturnType<typeof createUnifiedDiff>;
+      beforeHash: string;
     }
 > {
   try {
@@ -77,6 +81,10 @@ async function prepareEdit(
     }
 
     const before = Buffer.from(content).toString("utf-8");
+    const beforeHash = createHash("sha256").update(content).digest("hex");
+    if (args.expectedBeforeHash && args.expectedBeforeHash !== beforeHash) {
+      return `Error editing file '${args.path}': file changed after confirmation. Expected sha256 ${args.expectedBeforeHash}, got ${beforeHash}.`;
+    }
     const replacementCount = countOccurrences(before, args.search);
     if (replacementCount === 0) {
       return `Error editing file '${args.path}': search text not found`;
@@ -101,6 +109,7 @@ async function prepareEdit(
       after,
       replacementCount: args.replaceAll ? replacementCount : 1,
       diff,
+      beforeHash,
     };
   } catch (err: unknown) {
     return `Error editing file '${args.path}': ${getErrorMessage(err)}`;
@@ -112,6 +121,7 @@ function parseEditFileArgs(args: Record<string, unknown>): EditFileArgs | string
   const search = args.search;
   const replace = args.replace;
   const replaceAll = args.replaceAll ?? false;
+  const expectedBeforeHash = typeof args.expectedBeforeHash === "string" ? args.expectedBeforeHash : undefined;
 
   if (typeof filePath !== "string" || filePath.trim() === "") {
     return "Error: path parameter is required";
@@ -131,6 +141,7 @@ function parseEditFileArgs(args: Record<string, unknown>): EditFileArgs | string
     search,
     replace,
     replaceAll,
+    expectedBeforeHash,
   };
 }
 
@@ -176,6 +187,10 @@ export const editFileDefinition: ToolDefinition = {
         replaceAll: {
           type: "boolean",
           description: "Replace every occurrence. Required when search text appears more than once.",
+        },
+        expectedBeforeHash: {
+          type: "string",
+          description: "Optional sha256 used to reject the edit if the file changed after preview.",
         },
       },
       required: ["path", "search", "replace"],

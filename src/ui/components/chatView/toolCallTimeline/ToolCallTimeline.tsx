@@ -52,6 +52,8 @@ function formatStatus(status: ToolCallState["status"]): string {
   switch (status) {
     case "pending":
       return "Pending";
+    case "awaiting_confirmation":
+      return "Awaiting confirmation";
     case "running":
       return "Running";
     case "completed":
@@ -60,6 +62,8 @@ function formatStatus(status: ToolCallState["status"]): string {
       return "Error";
     case "rejected":
       return "Rejected";
+    case "cancelled":
+      return "Cancelled";
   }
 }
 

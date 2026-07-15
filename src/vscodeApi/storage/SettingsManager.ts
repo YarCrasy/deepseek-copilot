@@ -12,10 +12,13 @@ const SYNCED_SETTING_KEYS = new Set<SyncedSettingKey>([
   "temperature",
   "topP",
   "maxTokens",
+  "maxToolRounds",
   "responseFormat",
   "permissionMode",
   "toolExecutionModes",
   "autoContext",
+  "historyEnabled",
+  "historyRetentionDays",
   "enableBetaFeatures",
 ]);
 
@@ -24,17 +27,20 @@ export class SettingsManager {
     const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
     return {
       apiKey: "", // Stored in SecretsManager, not in settings.
-      baseUrl: config.get("baseUrl") ?? DEEPSEEK_DEFAULTS.baseUrl,
+      baseUrl: normalizeBaseUrl(config.get("baseUrl")),
       model: config.get("model") ?? DEEPSEEK_DEFAULTS.model,
       thinkingMode: config.get("thinkingMode") ?? DEEPSEEK_DEFAULTS.thinkingMode,
       reasoningEffort: config.get("reasoningEffort") ?? DEEPSEEK_DEFAULTS.reasoningEffort,
-      temperature: config.get("temperature") ?? DEEPSEEK_DEFAULTS.temperature,
-      topP: config.get("topP") ?? DEEPSEEK_DEFAULTS.topP,
-      maxTokens: config.get("maxTokens") ?? DEEPSEEK_DEFAULTS.maxTokens,
+      temperature: clampNumber(config.get("temperature"), 0, 2, DEEPSEEK_DEFAULTS.temperature),
+      topP: clampNumber(config.get("topP"), 0, 1, DEEPSEEK_DEFAULTS.topP),
+      maxTokens: clampInteger(config.get("maxTokens"), 1, 65_536, DEEPSEEK_DEFAULTS.maxTokens),
+      maxToolRounds: clampInteger(config.get("maxToolRounds"), 1, 20, DEEPSEEK_DEFAULTS.maxToolRounds),
       responseFormat: config.get("responseFormat") ?? DEEPSEEK_DEFAULTS.responseFormat,
       permissionMode: normalizePermissionMode(config.get("permissionMode")),
       toolExecutionModes: normalizeToolExecutionModes(config.get("toolExecutionModes")),
       autoContext: config.get("autoContext") ?? DEEPSEEK_DEFAULTS.autoContext,
+      historyEnabled: config.get("historyEnabled") ?? DEEPSEEK_DEFAULTS.historyEnabled,
+      historyRetentionDays: clampInteger(config.get("historyRetentionDays"), 0, 3650, DEEPSEEK_DEFAULTS.historyRetentionDays),
       enableBetaFeatures: config.get("enableBetaFeatures") ?? DEEPSEEK_DEFAULTS.enableBetaFeatures,
     };
   }
@@ -48,7 +54,8 @@ export class SettingsManager {
       }
 
       const nextValue = normalizeSettingValue(key, value);
-      await config.update(key, nextValue, vscode.ConfigurationTarget.Global);
+      const target = key === "historyEnabled" || key === "historyRetentionDays" ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
+      await config.update(key, nextValue, target);
     }
   }
 
@@ -68,7 +75,31 @@ function normalizeSettingValue(key: SyncedSettingKey, value: unknown): unknown {
   if (key === "permissionMode") {
     return normalizePermissionMode(value);
   }
+  if (key === "baseUrl") {return normalizeBaseUrl(value);}
+  if (key === "temperature") {return clampNumber(value, 0, 2, DEEPSEEK_DEFAULTS.temperature);}
+  if (key === "topP") {return clampNumber(value, 0, 1, DEEPSEEK_DEFAULTS.topP);}
+  if (key === "maxTokens") {return clampInteger(value, 1, 65_536, DEEPSEEK_DEFAULTS.maxTokens);}
+  if (key === "maxToolRounds") {return clampInteger(value, 1, 20, DEEPSEEK_DEFAULTS.maxToolRounds);}
+  if (key === "historyRetentionDays") {return clampInteger(value, 0, 3650, DEEPSEEK_DEFAULTS.historyRetentionDays);}
   return value;
+}
+
+function normalizeBaseUrl(value: unknown): string {
+  if (typeof value !== "string") {return DEEPSEEK_DEFAULTS.baseUrl;}
+  try {
+    const url = new URL(value);
+    if (url.protocol !== "https:" && url.protocol !== "http:") {return DEEPSEEK_DEFAULTS.baseUrl;}
+    url.pathname = url.pathname.replace(/\/+$/, "");
+    return url.toString().replace(/\/$/, "");
+  } catch { return DEEPSEEK_DEFAULTS.baseUrl; }
+}
+
+function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
+  return typeof value === "number" && Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : fallback;
+}
+
+function clampInteger(value: unknown, min: number, max: number, fallback: number): number {
+  return typeof value === "number" && Number.isInteger(value) ? Math.min(max, Math.max(min, value)) : fallback;
 }
 
 function normalizePermissionMode(value: unknown): PermissionMode {

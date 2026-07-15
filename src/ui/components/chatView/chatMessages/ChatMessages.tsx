@@ -271,7 +271,7 @@ function buildMessageToolCallGroups(message: ChatMessage): ToolCallGroup[] {
       toolCallId: toolCall.toolCallId || `${message.id}-${index}`,
       toolName: toolCall.toolName,
       arguments: toolCall.arguments,
-      status: toolCall.rejected ? "rejected" : toolCall.isError ? "error" : "completed",
+      status: toolCall.status,
       result: toolCall.result,
       round,
       requiresConfirmation: toolCall.requiresConfirmation ?? false,

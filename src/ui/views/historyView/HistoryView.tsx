@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import type { Conversation, HandlerToWebviewMessage } from "@/adapters";
+import type { ConversationSummary, HandlerToWebviewMessage } from "@/adapters";
 import { HistoryListItem } from "@webview/components/historyView";
 import { useVsCode } from "../chatView/contexts";
 import "./HistoryView.css";
 
 function HistoryView() {
   const vscode = useVsCode();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<ConversationSummary[]>([]);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState("date_desc");
 
@@ -47,7 +47,9 @@ function HistoryView() {
   }, [conversations, query, sortBy]);
 
   const deleteAllVisible = () => {
-    visibleConversations.forEach((conversation) => vscode?.postMessage({ type: "deleteConversation", id: conversation.id }));
+    if (window.confirm(`Delete ${visibleConversations.length} conversation(s)? This cannot be undone.`)) {
+      vscode?.postMessage({ type: "deleteConversations", ids: visibleConversations.map((conversation) => conversation.id) });
+    }
   };
 
   return (
@@ -76,9 +78,9 @@ function HistoryView() {
               key={conversation.id}
               title={conversation.title}
               datetime={new Date(conversation.updatedAt)}
-              messageCount={conversation.messages.length}
+              messageCount={conversation.messageCount}
               onClick={() => vscode?.postMessage({ type: "loadConversation", id: conversation.id })}
-              onDelete={() => vscode?.postMessage({ type: "deleteConversation", id: conversation.id })}
+              onDelete={() => window.confirm(`Delete “${conversation.title}”?`) && vscode?.postMessage({ type: "deleteConversation", id: conversation.id })}
             />
           ))
         )}

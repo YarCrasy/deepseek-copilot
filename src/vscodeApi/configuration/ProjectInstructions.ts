@@ -4,6 +4,8 @@ import { CONFIG_SECTION, INCLUDE_HOME_AGENTS_KEY } from "@/shared/constants";
 
 const AGENTS_FILE_NAME = "AGENTS.md";
 const PROJECT_INSTRUCTIONS_HEADER = "## Project Instructions";
+const MAX_SOURCE_BYTES = 64 * 1024;
+const MAX_TOTAL_BYTES = 128 * 1024;
 
 export interface ProjectInstructionSource {
   path: string;
@@ -53,7 +55,14 @@ export async function loadProjectInstructions(): Promise<ProjectInstructionsResu
   }
 
   const loaded = await Promise.all(candidates.map(readInstructionSource));
-  const sources = loaded.filter((source): source is LoadedInstructionSource => source !== undefined).sort((a, b) => a.precedence - b.precedence);
+  const sources: LoadedInstructionSource[] = [];
+  let totalBytes = 0;
+  for (const source of loaded.filter((item): item is LoadedInstructionSource => item !== undefined).sort((a, b) => a.precedence - b.precedence)) {
+    if (totalBytes + source.bytes <= MAX_TOTAL_BYTES) {
+      sources.push(source);
+      totalBytes += source.bytes;
+    }
+  }
 
   return {
     content: formatProjectInstructions(sources),
@@ -79,13 +88,16 @@ interface LoadedInstructionSource extends ProjectInstructionSource {
 async function readInstructionSource(candidate: CandidateSource): Promise<LoadedInstructionSource | undefined> {
   try {
     const bytes = await vscode.workspace.fs.readFile(candidate.uri);
+    if (bytes.byteLength > MAX_SOURCE_BYTES) {
+      return undefined;
+    }
     const content = new TextDecoder("utf-8", { fatal: false }).decode(bytes).trim();
     if (!content) {
       return undefined;
     }
 
     return {
-      path: candidate.uri.fsPath,
+      path: formatSourcePath(candidate),
       scope: candidate.scope,
       precedence: candidate.precedence,
       bytes: bytes.byteLength,
@@ -99,13 +111,19 @@ async function readInstructionSource(candidate: CandidateSource): Promise<Loaded
   }
 }
 
+function formatSourcePath(candidate: CandidateSource): string {
+  if (candidate.scope === "home") {return "~/.yrs-dpsk-copilot/AGENTS.md";}
+  return candidate.scope === "workspace-local" ? ".yrs-dpsk-copilot/AGENTS.md" : "AGENTS.md";
+}
+
 function formatProjectInstructions(sources: LoadedInstructionSource[]): string {
   if (sources.length === 0) {
     return "";
   }
 
-  const sections = sources.map((source) => `### ${source.path}
-${source.content}`);
+  const sections = sources.map((source) => `<project-instructions source=${JSON.stringify(source.path)}>
+${source.content.replace(/<\/project-instructions>/gi, "&lt;/project-instructions&gt;")}
+</project-instructions>`);
 
   return `${PROJECT_INSTRUCTIONS_HEADER}
 The following AGENTS.md instructions are ordered from lowest to highest precedence. When they conflict, follow the later, higher-precedence source.

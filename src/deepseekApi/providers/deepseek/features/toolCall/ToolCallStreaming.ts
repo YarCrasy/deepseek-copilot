@@ -1,4 +1,5 @@
 import type { ChatMessage, StreamChunk, ToolCall, ToolDefinition } from "@/adapters";
+import { randomUUID } from "crypto";
 import { chatCompletionStream, type ChatResponse } from "../Chat";
 import { buildToolCallRequest } from "./ToolCallRequest";
 import type { ToolCallCycleOptions } from "./ToolCallTypes";
@@ -117,7 +118,7 @@ function mergeStreamingToolCalls(streamingToolCalls: Map<number, ToolCall>, part
     const existing = streamingToolCalls.get(idx);
     if (!existing) {
       streamingToolCalls.set(idx, {
-        id: partialTc.id ?? `stream-tc-${idx}-${Date.now()}`,
+        id: partialTc.id ?? randomUUID(),
         type: "function",
         function: {
           name: partialTc.function?.name ?? "",

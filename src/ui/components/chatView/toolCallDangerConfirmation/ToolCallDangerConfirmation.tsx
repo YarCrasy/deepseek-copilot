@@ -21,6 +21,8 @@ function DangerConfirmation({ toolCallId, dangerConfirmation, onConfirm, onCance
           <code>{dangerConfirmation.command}</code>
         </div>
       )}
+      {dangerConfirmation.cwd ? <div className="dangerExecutionContext"><strong>Working directory:</strong> <code>{dangerConfirmation.cwd}</code></div> : null}
+      {dangerConfirmation.shell ? <div className="dangerExecutionContext"><strong>Shell:</strong> <code>{dangerConfirmation.shell}</code></div> : null}
 
       <div className="toolCallDecisionRow">
         <button

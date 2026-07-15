@@ -2,6 +2,7 @@ import type { ToolDefinition } from "@/adapters";
 import type { RegisteredTool, ToolMetadata } from "../Types";
 import { getToolWorkspaceHost } from "../ToolWorkspace";
 import { bufferLooksBinary, createStructuredResult, createUnifiedDiff, isMissingFileError } from "./StructuredResult";
+import { createHash } from "crypto";
 
 async function handleCreateFile(args: Record<string, unknown>): Promise<string> {
   const filePath = args.path as string;
@@ -27,11 +28,13 @@ async function handleCreateFile(args: Record<string, unknown>): Promise<string> 
     }
 
     if (fileExists) {
+      const existing = await readExistingFile(filePath);
       return JSON.stringify({
         requiresConfirmation: true,
         dangerLevel: "caution",
         warningMessage: `The file "${filePath}" already exists. Creating a new file will OVERWRITE it.`,
         filePath,
+        beforeHash: existing?.hash,
       });
     }
 
@@ -50,6 +53,7 @@ async function handleCreateFile(args: Record<string, unknown>): Promise<string> 
       diffTruncated: diff.truncated,
       diffStats: diff.stats,
       afterSize: Buffer.byteLength(content, "utf-8"),
+      afterHash: hashText(content),
       summary: `File created: ${filePath}`,
     });
   } catch (err: unknown) {
@@ -63,6 +67,7 @@ async function handleCreateFile(args: Record<string, unknown>): Promise<string> 
 async function handleCreateFileForced(args: Record<string, unknown>): Promise<string> {
   const filePath = args.path as string;
   const content = (args.content as string) || "";
+  const expectedBeforeHash = args.expectedBeforeHash as string | undefined;
 
   if (!filePath) {
     return "Error: path parameter is required";
@@ -72,6 +77,9 @@ async function handleCreateFileForced(args: Record<string, unknown>): Promise<st
     const workspace = getToolWorkspaceHost();
 
     const before = await readExistingFile(filePath);
+    if (expectedBeforeHash && before?.hash !== expectedBeforeHash) {
+      return `Error overwriting file '${filePath}': file changed after confirmation.`;
+    }
 
     try {
       await workspace.createParentDirectory(filePath);
@@ -90,6 +98,7 @@ async function handleCreateFileForced(args: Record<string, unknown>): Promise<st
       binary: before?.binary || false,
       beforeSize: before?.size,
       afterSize: Buffer.byteLength(content, "utf-8"),
+      afterHash: hashText(content),
       summary: before !== undefined ? `File overwritten: ${filePath}` : `File created: ${filePath}`,
     });
   } catch (err: unknown) {
@@ -101,7 +110,7 @@ function getErrorMessage(err: unknown): string {
   return err instanceof Error ? err.message : String(err);
 }
 
-async function readExistingFile(filePath: string): Promise<{ content: string; size: number; binary: boolean } | undefined> {
+async function readExistingFile(filePath: string): Promise<{ content: string; size: number; binary: boolean; hash: string } | undefined> {
   try {
     const buffer = await getToolWorkspaceHost().readFile(filePath);
     const binary = bufferLooksBinary(buffer);
@@ -109,10 +118,15 @@ async function readExistingFile(filePath: string): Promise<{ content: string; si
       content: binary ? "" : Buffer.from(buffer).toString("utf-8"),
       size: buffer.byteLength,
       binary,
+      hash: createHash("sha256").update(buffer).digest("hex"),
     };
   } catch {
     return undefined;
   }
+}
+
+function hashText(content: string): string {
+  return createHash("sha256").update(content, "utf8").digest("hex");
 }
 
 export const createFileDefinition: ToolDefinition = {
@@ -132,6 +146,10 @@ export const createFileDefinition: ToolDefinition = {
         content: {
           type: "string",
           description: "File contents.",
+        },
+        expectedBeforeHash: {
+          type: "string",
+          description: "Internal sha256 guard used after overwrite confirmation.",
         },
       },
       required: ["path"],

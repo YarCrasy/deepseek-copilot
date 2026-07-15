@@ -82,6 +82,8 @@ La UI debe renderizar esa secuencia en su orden original. El contenido enviado d
 
 ## P1 — Fiabilidad y seguridad
 
+**Estado: implementado.** El ciclo usa estados nativos y acuses del host; terminal, SSE y red devuelven contratos estructurados con cancelación y timeout; el historial está versionado por workspace con índice ligero, retención, cuota y recuperación; el contexto se poda y delimita; y las rutas, instrucciones, hashes y workspaces múltiples tienen protecciones explícitas. Las ampliaciones opcionales de producto (renombrar, fijar e importar historiales) permanecen fuera de P1.
+
 ### Ciclo de tools y estados
 
 - Modelar estados con una máquina de estados única: `pending -> awaiting_confirmation -> running -> completed | rejected | cancelled | error`.

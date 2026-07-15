@@ -42,4 +42,7 @@ export interface ConfirmationRequiredResult {
   warningMessage: string;
   command?: string;
   filePath?: string;
+  cwd?: string;
+  shell?: string;
+  beforeHash?: string;
 }

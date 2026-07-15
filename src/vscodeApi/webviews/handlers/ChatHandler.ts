@@ -8,6 +8,7 @@ import { logWarning } from "@/shared/logging/Logger";
 import type { AppConfig, AssistantTimelineEvent, ChatMessage, Conversation, ConversationMessage, PermissionMode, StoredToolCall, ToolDefinition, ToolExecutionModes, WebviewToHandlerMessage } from "@/adapters";
 import { createSystemMessage, mapReasoningEffort } from "@/adapters/deepseek/Chat";
 import { BUILT_IN_TOOLS, ToolExecutor, ToolRegistry } from "@/core/tools";
+import { getToolWorkspaceHost } from "@/core/tools/ToolWorkspace";
 import { buildFileContext } from "@/core/context/FileReferences";
 import { ConversationState } from "@/core/chat/ConversationState";
 import { PartialStreamError } from "@/core/errors/PartialStreamError";
@@ -79,6 +80,7 @@ export class ChatHandler {
         break;
       case "newConversation":
         this.conversationState.reset();
+        getToolWorkspaceHost().setRootPath?.(undefined);
         this.toolCallSession.resetSessionTrust();
         webviewView.webview.postMessage({ type: "clearChat" });
         break;
@@ -89,6 +91,9 @@ export class ChatHandler {
 
   loadConversation(conversation: Conversation): void {
     this.conversationState.load(conversation);
+    if (conversation.workspaceUri.startsWith("file:")) {
+      getToolWorkspaceHost().setRootPath?.(vscode.Uri.parse(conversation.workspaceUri).fsPath);
+    }
   }
 
   forgetConversation(id: string): void {
@@ -268,6 +273,9 @@ ${payload.text}`
       case "summarize":
         this.postCommandTurn(webviewView, payload.text, this.buildConversationSummary());
         return true;
+      case "context":
+        await this.postCommandTurn(webviewView, payload.text, await this.buildContextOverview(payload, config));
+        return true;
       case "clear-context":
         this.conversationState.reset();
         this.toolCallSession.resetSessionTrust();
@@ -278,7 +286,7 @@ ${payload.text}`
         this.postCommandTurn(
           webviewView,
           payload.text,
-          `Unknown command: /${command.name}\n\nAvailable commands: /status, /review, /goal [text], /tools, /mode chat|read-only|workspace|full-access, /auto-context on|off, /clear-context, /summarize.`,
+          `Unknown command: /${command.name}\n\nAvailable commands: /status, /context, /review, /goal [text], /tools, /mode chat|read-only|workspace|full-access, /auto-context on|off, /clear-context, /summarize.`,
         );
         return true;
     }
@@ -430,6 +438,19 @@ ${payload.text}`
       type: "availableTools",
       tools: getAvailableToolMetadata(this.toolRegistry.getDefinitionsForAPI()),
     });
+  }
+
+  private async buildContextOverview(payload: SendMessagePayload, config: AppConfig): Promise<string> {
+    const instructions = await loadProjectInstructions();
+    const files = payload.referencedFiles?.map((file) => `- ${file.path}${file.content === undefined ? " (content omitted)" : ""}`) ?? [];
+    return [
+      "Context that would be sent with a normal request:",
+      `- Prior API messages after pruning: ${this.conversationState.getApiMessages().length}`,
+      `- Auto context: ${config.autoContext ? "active editor plus staged/unstaged Git changes" : "disabled"}`,
+      `- Project instructions: ${instructions.sources.length > 0 ? instructions.sources.map((source) => source.path).join(", ") : "none"}`,
+      `- Explicit references: ${files.length}`,
+      ...files,
+    ].join("\n");
   }
 
 }

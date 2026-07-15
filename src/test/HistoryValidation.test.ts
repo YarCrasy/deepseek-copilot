@@ -9,6 +9,7 @@ suite("history validation", () => {
       createdAt: 1,
       updatedAt: 2,
       model: "model",
+      workspaceUri: "file:///workspace",
       messages: [
         { id: "user-1", role: "user", content: "hello" },
         {

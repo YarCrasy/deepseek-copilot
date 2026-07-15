@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import type { VsCodeApi } from "@webview/VsCodeApi";
 import type { AssistantTimelineEvent, HandlerToWebviewMessage, AppConfig, StoredToolCall, ToolCall } from "@/adapters";
-import type { ApiKeyStatus, DangerConfirmationData } from "../ChatViewTypes";
+import type { ApiKeyStatus, DangerConfirmationData, ToolCallStatus } from "../ChatViewTypes";
 
 /**
  * Additional streamDone event data.
@@ -34,7 +34,8 @@ export type MessageDispatcher = {
   onApiKeyStatus?: (status: ApiKeyStatus) => void;
   onConfigLoaded?: (config: Partial<AppConfig>) => void;
   onToolCallStarted?: (data: { toolCalls: ToolCall[]; round: number }) => void;
-  onToolCallResult?: (data: { toolCallId: string; toolName: string; result: string; isError?: boolean; rejected?: boolean }) => void;
+  onToolCallResult?: (data: { toolCallId: string; toolName: string; result: string; isError?: boolean; rejected?: boolean; status: ToolCallStatus }) => void;
+  onToolCallActionAccepted?: (data: { toolCallId: string; status: "running" | "rejected" }) => void;
   onToolCallConfirmationRequired?: (data: { toolCalls: ToolCall[]; round: number; autoExecute: boolean; dangerConfirmation?: DangerConfirmationData }) => void;
 };
 
@@ -55,6 +56,7 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
     onConfigLoaded,
     onToolCallStarted,
     onToolCallResult,
+    onToolCallActionAccepted,
     onToolCallConfirmationRequired,
   } = dispatcher;
 
@@ -124,7 +126,12 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
             result: message.result,
             isError: message.isError,
             rejected: message.rejected,
+            status: message.status,
           });
+          break;
+
+        case "toolCallActionAccepted":
+          onToolCallActionAccepted?.({ toolCallId: message.toolCallId, status: message.status });
           break;
 
         case "toolCallConfirmationRequired":
@@ -156,6 +163,7 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
     onConfigLoaded,
     onToolCallStarted,
     onToolCallResult,
+    onToolCallActionAccepted,
     onToolCallConfirmationRequired,
   ]);
 }

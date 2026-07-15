@@ -3,6 +3,6 @@ export const CONFIG_SECTION = EXTENSION_ID;
 export const SIDEBAR_VIEW_ID = "workbench.view.extension.yrs-dpsk-copilot-sidebar";
 export const CHAT_VIEW_TYPE = "yrs-dpsk-copilot.chatView";
 export const API_KEY_SECRET_KEY = "yrs-dpsk-copilot.apiKey";
-export const CONVERSATION_STORAGE_KEY = "yrs-dpsk-copilot.conversations.v2";
+export const CONVERSATION_STORAGE_KEY = "yrs-dpsk-copilot.history.v3";
 export const GOAL_STORAGE_KEY = "yrs-dpsk-copilot.goal";
 export const INCLUDE_HOME_AGENTS_KEY = "projectInstructions.includeHomeAgents";

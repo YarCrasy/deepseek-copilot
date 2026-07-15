@@ -13,6 +13,7 @@ export interface StoredToolCall {
   requiresConfirmation?: boolean;
   dangerLevel?: string;
   dangerConfirmed?: boolean;
+  status: "pending" | "awaiting_confirmation" | "running" | "completed" | "rejected" | "cancelled" | "error";
 }
 
 export type AssistantTimelineEvent =
@@ -40,6 +41,9 @@ export interface DangerConfirmationData {
   warningMessage: string;
   command?: string;
   filePath?: string;
+  cwd?: string;
+  shell?: string;
+  beforeHash?: string;
   canTrustForSession?: boolean;
 }
 
@@ -63,6 +67,18 @@ export interface Conversation {
   updatedAt: number;
   messages: ConversationMessage[];
   model: string;
+  workspaceUri: string;
+}
+
+export interface ConversationSummary {
+  id: string;
+  title: string;
+  createdAt: number;
+  updatedAt: number;
+  model: string;
+  messageCount: number;
+  sizeBytes: number;
+  workspaceUri: string;
 }
 
 export interface AvailableToolParameter {
@@ -101,7 +117,7 @@ export type WebviewToHandlerMessage =
       text: string;
       modelId: string;
       reasoning: string;
-      referencedFiles?: Array<{ path: string; content?: string; type: "file" | "directory" }>;
+      referencedFiles?: Array<{ path: string; content?: string; type: "file" | "directory"; selection?: { startLine: number; startCharacter: number; endLine: number; endCharacter: number } }>;
     }
   | { type: "cancelGeneration" }
   | { type: "copyCode"; code: string }
@@ -111,6 +127,7 @@ export type WebviewToHandlerMessage =
   | { type: "getHistory" }
   | { type: "loadConversation"; id: string }
   | { type: "deleteConversation"; id: string }
+  | { type: "deleteConversations"; ids: string[] }
   | { type: "executeToolCall"; toolCallId: string; action: "execute" | "reject"; trustForSession?: boolean }
   | { type: "getPathCompletions"; requestId: number; query: string }
   | { type: "getAvailableTools" }
@@ -148,7 +165,7 @@ export type HandlerToWebviewMessage =
   | { type: "projectInstructionsStatus"; sources: ProjectInstructionStatusSource[]; homeAgentsAllowed: boolean }
   | { type: "pathCompletions"; requestId: number; query: string; items: PathCompletionItem[] }
   | { type: "modelChanged"; modelId: string }
-  | { type: "history"; conversations: Conversation[] }
+  | { type: "history"; conversations: ConversationSummary[] }
   | { type: "conversationLoaded"; conversation: Conversation }
   | { type: "conversationDeleted"; id: string }
   | {
@@ -164,7 +181,9 @@ export type HandlerToWebviewMessage =
       result: string;
       isError?: boolean;
       rejected?: boolean;
+      status: "completed" | "rejected" | "cancelled" | "error";
     }
+  | { type: "toolCallActionAccepted"; toolCallId: string; status: "running" | "rejected" }
   | {
       type: "toolCallConfirmationRequired";
       toolCalls: ToolCall[];

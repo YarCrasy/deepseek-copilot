@@ -28,6 +28,8 @@ function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionPr
             onChange={(event) => updateConfig("baseUrl", event.target.value)}
             onBlur={(event) => saveOnBlur("baseUrl", event.target.value)}
           />
+          {config.baseUrl.startsWith("http://") ? <small className="settingWarning">Warning: HTTP sends API credentials without transport encryption.</small> : null}
+          {!config.baseUrl.startsWith("https://api.deepseek.com") ? <small className="settingWarning">Custom API host: verify that you trust its operator.</small> : null}
         </div>
 
         {!config.thinkingMode && (
@@ -37,7 +39,7 @@ function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionPr
               label="Temperature"
               value={config.temperature}
               min={0}
-              max={1}
+              max={2}
               step={0.05}
               disabled={config.thinkingMode}
               onChange={(value) => updateConfig("temperature", value)}
@@ -68,11 +70,23 @@ function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionPr
               id="maxTokensInput"
               type="number"
               min="1"
-              max="393216"
+              max="65536"
               step="1"
               value={config.maxTokens}
               onChange={(event) => updateConfig("maxTokens", Number(event.target.value))}
               onBlur={(event) => saveOnBlur("maxTokens", Number(event.target.value))}
+            />
+          </div>
+          <div className="settingRow">
+            <label htmlFor="maxToolRoundsInput">Max tool rounds</label>
+            <input
+              id="maxToolRoundsInput"
+              type="number"
+              min={1}
+              max={20}
+              value={config.maxToolRounds}
+              onChange={(event) => updateConfig("maxToolRounds", Number(event.target.value))}
+              onBlur={(event) => saveOnBlur("maxToolRounds", Number(event.target.value))}
             />
           </div>
 
@@ -90,6 +104,29 @@ function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionPr
               <option value="json_object">JSON Object</option>
             </select>
           </div>
+        </div>
+
+        <Toggle
+          label="Store workspace history"
+          id="historyEnabled"
+          checked={config.historyEnabled}
+          onToggle={(checked) => {
+            updateConfig("historyEnabled", checked);
+            saveOnBlur("historyEnabled", checked);
+          }}
+        />
+        <div className="settingRow">
+          <label htmlFor="historyRetentionDays">History retention days (0 = unlimited)</label>
+          <input
+            id="historyRetentionDays"
+            type="number"
+            min={0}
+            max={3650}
+            value={config.historyRetentionDays}
+            disabled={!config.historyEnabled}
+            onChange={(event) => updateConfig("historyRetentionDays", Number(event.target.value))}
+            onBlur={(event) => saveOnBlur("historyRetentionDays", Number(event.target.value))}
+          />
         </div>
 
         <Toggle

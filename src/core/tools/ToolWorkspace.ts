@@ -9,6 +9,7 @@ export interface ToolWorkspaceStat {
 
 export interface ToolWorkspaceHost {
   getRootPath(): string | undefined;
+  setRootPath?(rootPath: string | undefined): void;
   realPath?(absolutePath: string): Promise<string>;
   readFile(path: string): Promise<Uint8Array>;
   writeFile(path: string, content: Uint8Array): Promise<void>;
@@ -99,24 +100,25 @@ export async function resolveWorkspacePathSecure(
 }
 
 function createValidatingWorkspaceHost(host: ToolWorkspaceHost): ToolWorkspaceHost {
-  async function validate(rawPath: string): Promise<string> {
+  async function validate(rawPath: string, allowSensitive = false): Promise<string> {
     const rootPath = host.getRootPath();
     if (!rootPath) {
       throw new Error("No workspace folder open");
     }
     const resolved = host.realPath
-      ? await resolveWorkspacePathSecure(rawPath, rootPath, host.realPath)
-      : resolveWorkspacePath(rawPath, rootPath);
+      ? await resolveWorkspacePathSecure(rawPath, rootPath, host.realPath, { allowSensitive })
+      : resolveWorkspacePath(rawPath, rootPath, { allowSensitive });
     return resolved.relativePath;
   }
 
   return {
     getRootPath: host.getRootPath.bind(host),
+    setRootPath: host.setRootPath?.bind(host),
     realPath: host.realPath?.bind(host),
     readFile: async (rawPath: string) => host.readFile(await validate(rawPath)),
-    writeFile: async (rawPath: string, content: Uint8Array) => host.writeFile(await validate(rawPath), content),
+    writeFile: async (rawPath: string, content: Uint8Array) => host.writeFile(await validate(rawPath, true), content),
     stat: async (rawPath: string) => host.stat(await validate(rawPath)),
-    createParentDirectory: async (rawPath: string) => host.createParentDirectory(await validate(rawPath)),
+    createParentDirectory: async (rawPath: string) => host.createParentDirectory(await validate(rawPath, true)),
     readDirectory: async (rawPath: string) => host.readDirectory(await validate(rawPath)),
     prepareFileDiff: host.prepareFileDiff
       ? async (rawPath: string, before: string, after: string) => host.prepareFileDiff!(await validate(rawPath), before, after)

@@ -5,8 +5,6 @@ export function createPendingToolCallCycle(toolCalls: ToolCall[], round: number)
   const individualResolves = new Map<string, (action: ToolCallAction) => void>();
   const individualPromises = new Map<string, Promise<ToolCallAction>>();
   const resolved = new Set<string>();
-  let resolveBatchRef: (() => void) | undefined;
-  let batchResolved = false;
 
   for (const toolCall of toolCalls) {
     const promise = new Promise<ToolCallAction>((resolve) => {
@@ -22,23 +20,12 @@ export function createPendingToolCallCycle(toolCalls: ToolCall[], round: number)
     individualPromises.set(toolCall.id, promise);
   }
 
-  const batchPromise = new Promise<void>((resolveBatch) => {
-    resolveBatchRef = resolveBatch;
-  });
-
   return {
     toolCalls: new Map(toolCalls.map((toolCall) => [toolCall.id, toolCall])),
     round,
     individualResolves,
     individualPromises,
     resolved,
-    resolveBatch: () => {
-      if (!batchResolved) {
-        batchResolved = true;
-        resolveBatchRef?.();
-      }
-    },
-    batchPromise,
   };
 }
 
@@ -53,10 +40,6 @@ export function resolveToolCallAction(cycle: PendingToolCallCycle, toolCallId: s
   }
 
   individualResolve(action);
-  if (cycle.resolved.size === cycle.toolCalls.size) {
-    cycle.resolveBatch();
-  }
-
   return "resolved";
 }
 
@@ -67,6 +50,4 @@ export function cancelPendingToolCallCycle(cycle: PendingToolCallCycle): void {
       cycle.resolved.add(toolCallId);
     }
   }
-
-  cycle.resolveBatch();
 }

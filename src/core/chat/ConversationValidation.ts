@@ -1,7 +1,7 @@
 import type { AssistantTimelineEvent, Conversation, ConversationMessage, StoredToolCall } from "@/adapters";
 
 export function isConversation(value: unknown): value is Conversation {
-  if (!isRecord(value) || !isBoundedString(value.id, 512) || !isBoundedString(value.title, 4096) || !isBoundedString(value.model, 256)) {
+  if (!isRecord(value) || !isBoundedString(value.id, 512) || !isBoundedString(value.title, 4096) || !isBoundedString(value.model, 256) || !isBoundedString(value.workspaceUri, 32_768)) {
     return false;
   }
   if (!isTimestamp(value.createdAt) || !isTimestamp(value.updatedAt) || !Array.isArray(value.messages) || value.messages.length > 10_000) {
@@ -54,7 +54,8 @@ function isStoredToolCall(value: unknown): value is StoredToolCall {
     (value.rejected === undefined || typeof value.rejected === "boolean") &&
     (value.requiresConfirmation === undefined || typeof value.requiresConfirmation === "boolean") &&
     (value.dangerLevel === undefined || ["safe", "caution", "dangerous", "destructive"].includes(value.dangerLevel as string)) &&
-    (value.dangerConfirmed === undefined || typeof value.dangerConfirmed === "boolean")
+    (value.dangerConfirmed === undefined || typeof value.dangerConfirmed === "boolean") &&
+    ["pending", "awaiting_confirmation", "running", "completed", "rejected", "cancelled", "error"].includes(value.status as string)
   );
 }
 

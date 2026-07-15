@@ -1,11 +1,13 @@
 import type { ToolDefinition } from "@/adapters";
 import type { RegisteredTool, ToolHandlerContext, ToolMetadata } from "../Types";
 import { analyzeDangerLevel } from "./DangerAnalysis";
-import { executeWorkspaceCommand } from "./ShellExecution";
+import { executeWorkspaceCommand, resolveCommandEnvironment } from "./ShellExecution";
 
 async function handleTerminalCommand(args: Record<string, unknown>, context?: ToolHandlerContext): Promise<string> {
   const command = args.command as string;
   const cwd = args.cwd as string | undefined;
+  const timeoutMs = args.timeoutMs as number | undefined;
+  const maxOutputBytes = args.maxOutputBytes as number | undefined;
 
   if (!command) {
     return "Error: command parameter is required";
@@ -13,27 +15,32 @@ async function handleTerminalCommand(args: Record<string, unknown>, context?: To
 
   const analysis = analyzeDangerLevel(command);
 
-  if (analysis.level === "destructive" || analysis.level === "dangerous") {
+  if (analysis.level !== "safe") {
+    const environment = await resolveCommandEnvironment(cwd);
     return JSON.stringify({
       requiresConfirmation: true,
       dangerLevel: analysis.level,
       warningMessage: analysis.message,
       command,
+      cwd: environment.cwd,
+      shell: environment.shell,
     });
   }
 
-  return executeWorkspaceCommand(command, cwd, context?.signal);
+  return JSON.stringify(await executeWorkspaceCommand(command, { cwd, signal: context?.signal, timeoutMs, maxOutputBytes }));
 }
 
 async function handleTerminalCommandForced(args: Record<string, unknown>, context?: ToolHandlerContext): Promise<string> {
   const command = args.command as string;
   const cwd = args.cwd as string | undefined;
+  const timeoutMs = args.timeoutMs as number | undefined;
+  const maxOutputBytes = args.maxOutputBytes as number | undefined;
 
   if (!command) {
     return "Error: command parameter is required";
   }
 
-  return executeWorkspaceCommand(command, cwd, context?.signal);
+  return JSON.stringify(await executeWorkspaceCommand(command, { cwd, signal: context?.signal, timeoutMs, maxOutputBytes }));
 }
 
 export const terminalCommandDefinition: ToolDefinition = {
@@ -41,7 +48,7 @@ export const terminalCommandDefinition: ToolDefinition = {
   function: {
     name: "run_terminal_command",
     description:
-      "Run a command in the workspace terminal. Its successful output is authoritative; do not follow it with verification-only reads or directory listings unless the output is ambiguous or the user requested verification. Warning: destructive commands such as rm or git reset --hard require explicit confirmation. Timeout: 30 seconds.",
+      "Run a non-interactive shell command in the workspace. The structured result is authoritative; do not add verification-only reads unless output is ambiguous or verification was requested. Commands cannot answer prompts or use a TTY.",
     strict: true,
     parameters: {
       type: "object",
@@ -53,6 +60,18 @@ export const terminalCommandDefinition: ToolDefinition = {
         cwd: {
           type: "string",
           description: "Working directory relative to the workspace. Defaults to the root.",
+        },
+        timeoutMs: {
+          type: "integer",
+          description: "Timeout in milliseconds (1000-120000). Defaults to 30000.",
+          minimum: 1000,
+          maximum: 120000,
+        },
+        maxOutputBytes: {
+          type: "integer",
+          description: "Maximum bytes retained per stdout/stderr stream (4096-4194304).",
+          minimum: 4096,
+          maximum: 4194304,
         },
       },
       required: ["command"],

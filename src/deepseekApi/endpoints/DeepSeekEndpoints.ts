@@ -1,15 +1,17 @@
+import { buildApiUrl } from "../client/DeepSeekFetch";
+
 export function buildChatUrl(baseUrl: string): string {
-  return `${baseUrl.replace(/\/$/, "")}/chat/completions`;
+  return buildApiUrl(baseUrl, "chat/completions");
 }
 
 export function buildModelsUrl(baseUrl: string): string {
-  return `${baseUrl.replace(/\/$/, "")}/models`;
+  return buildApiUrl(baseUrl, "models");
 }
 
 export function buildFimUrl(baseUrl: string): string {
-  return `${baseUrl.replace(/\/$/, "")}/completions`;
+  return buildApiUrl(baseUrl, "completions");
 }
 
 export function buildBalanceUrl(baseUrl: string): string {
-  return `${baseUrl.replace(/\/$/, "")}/user/balance`;
+  return buildApiUrl(baseUrl, "user/balance");
 }

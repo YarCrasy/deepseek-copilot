@@ -4,6 +4,7 @@ export type {
   WebviewToHandlerMessage,
   HandlerToWebviewMessage,
   Conversation,
+  ConversationSummary,
   ConversationMessage,
   AssistantTimelineEvent,
   StoredToolCall,

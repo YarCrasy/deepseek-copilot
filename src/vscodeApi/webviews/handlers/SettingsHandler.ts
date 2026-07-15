@@ -2,6 +2,7 @@ import * as vscode from "vscode";
 import { SettingsManager, SecretsManager } from "@/vscodeApi/storage";
 import { logWarning } from "@/shared/logging/Logger";
 import type { AppConfig, WebviewToHandlerMessage } from "@/adapters";
+import { deepseekFetch } from "@/deepseekApi/client/DeepSeekFetch";
 
 type SettingsMessage = Extract<WebviewToHandlerMessage, { type: "getConfig" | "saveConfig" | "resetConfig" | "testConnection" }>;
 type TestConnectionMessage = Extract<WebviewToHandlerMessage, { type: "testConnection" }>;
@@ -94,23 +95,19 @@ export class SettingsHandler {
   private async _testConnection(payload: TestConnectionMessage, webviewView: vscode.WebviewView): Promise<void> {
     const { apiKey, baseUrl, model } = payload;
     try {
-      const response = await fetch(`${baseUrl}/chat/completions`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+      await deepseekFetch({
+        pathOrUrl: "chat/completions",
+        apiKey,
+        baseUrl,
+        requestInit: {
+          method: "POST",
+          body: JSON.stringify({ model: model || "deepseek-v4-flash", messages: [{ role: "user", content: "Hello" }], max_tokens: 2 }),
         },
-        body: JSON.stringify({
-          model: model || "deepseek-v4-flash",
-          messages: [{ role: "user", content: "Hello" }],
-          max_tokens: 2,
-        }),
       });
 
       webviewView.webview.postMessage({
         type: "connectionTestResult",
-        success: response.ok,
-        error: response.ok ? undefined : `HTTP ${response.status}: ${await response.text()}`,
+        success: true,
       });
     } catch (err: unknown) {
       webviewView.webview.postMessage({
