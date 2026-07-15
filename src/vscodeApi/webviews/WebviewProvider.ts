@@ -34,7 +34,11 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
     this.historyHandler = new HistoryHandler(
       historyManager,
       (conversation) => this.chatHandler.loadConversation(conversation),
-      (id) => this.chatHandler.forgetConversation(id),
+      (id) => {
+        if (this.chatHandler.forgetConversation(id)) {
+          void this.webviewView?.webview.postMessage({ type: "clearChat" });
+        }
+      },
     );
 
     this.disposables.push(

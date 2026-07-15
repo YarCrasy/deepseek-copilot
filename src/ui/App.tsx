@@ -16,6 +16,9 @@ function App() {
       if (event.data.type === "conversationLoaded") {
         setLoadedConversation(event.data.conversation);
         setCurrentView("chat");
+      } else if (event.data.type === "conversationDeleted") {
+        const deletedId = event.data.id;
+        setLoadedConversation((current) => (current?.id === deletedId ? null : current));
       }
     };
 

@@ -75,7 +75,10 @@ export class HistoryHandler {
       return;
     }
     await this.historyManager.deleteMany(ids);
-    ids.forEach((id) => this.onConversationDeleted?.(id));
+    ids.forEach((id) => {
+      this.onConversationDeleted?.(id);
+      void webviewView.webview.postMessage({ type: "conversationDeleted", id });
+    });
     await this.getHistory(webviewView);
     if (deleted.length > 0 && (await vscode.window.showInformationMessage(`${deleted.length} conversation(s) deleted.`, "Undo")) === "Undo") {
       await Promise.all(deleted.map((conversation) => this.historyManager.save(conversation)));

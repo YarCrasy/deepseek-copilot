@@ -31,10 +31,12 @@ export class ConversationState {
     this.activeConversation = null;
   }
 
-  forget(id: string): void {
+  forget(id: string): boolean {
     if (this.activeConversation?.id === id) {
       this.reset();
+      return true;
     }
+    return false;
   }
 
   getApiMessages(): ChatMessage[] {

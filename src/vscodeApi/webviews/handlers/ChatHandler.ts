@@ -96,8 +96,8 @@ export class ChatHandler {
     }
   }
 
-  forgetConversation(id: string): void {
-    this.conversationState.forget(id);
+  forgetConversation(id: string): boolean {
+    return this.conversationState.forget(id);
   }
 
   private async sendMessage(payload: SendMessagePayload, webviewView: vscode.WebviewView): Promise<void> {

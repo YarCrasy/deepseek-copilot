@@ -39,5 +39,8 @@ suite("ConversationState", () => {
     assert.strictEqual(apiMessages[1].reasoning_content, "Inspect workspace. Use the result.");
     assert.strictEqual(apiMessages[1].content, "Done.");
     assert.strictEqual(apiMessages[1].content?.includes("YDSC_TOOL_ROUND"), false);
+    assert.strictEqual(state.forget("another-conversation"), false);
+    assert.strictEqual(state.forget(saved!.id), true);
+    assert.deepStrictEqual(state.getApiMessages(), []);
   });
 });
