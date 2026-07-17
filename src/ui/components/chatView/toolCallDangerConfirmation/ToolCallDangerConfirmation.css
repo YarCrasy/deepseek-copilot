@@ -27,8 +27,26 @@
 .dangerCommandPreview {
   min-width: 0;
   color: var(--text-secondary);
-  overflow-wrap: anywhere;
+  white-space: pre;
+  overflow: auto;
+  max-height: min(30vh, 320px);
+  margin: 0;
+  padding: 9px;
+  border: 1px solid color-mix(in srgb, var(--border-color) 68%, transparent);
+  background: var(--code-bg, color-mix(in srgb, var(--bg-secondary) 80%, black));
+  border-radius: 6px;
+  font: 11px/1.55 var(--font-mono);
+  &:focus-visible {
+    outline: 1px solid var(--accent-color);
+    outline-offset: 1px;
+  }
+}
+
+.dangerTrustExplanation {
+  color: var(--text-secondary);
+  margin: 0;
   font-size: 11px;
+  line-height: 1.45;
 }
 
 .dangerCancelBtn {

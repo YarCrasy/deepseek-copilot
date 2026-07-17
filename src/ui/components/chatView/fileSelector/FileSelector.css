@@ -70,3 +70,12 @@
   white-space: nowrap;
   overflow: hidden;
 }
+
+.pathCompletionEmpty {
+  color: var(--text-secondary);
+  align-items: center;
+  gap: 7px;
+  padding: 7px;
+  font-size: 12px;
+  display: flex;
+}

@@ -5,6 +5,15 @@
   height: 100%;
   display: flex;
   overflow: hidden;
+  .srOnly {
+    width: 1px;
+    height: 1px;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+    position: absolute;
+    overflow: hidden;
+  }
   .historyToolbar {
     align-items: center;
     gap: 5px;
@@ -45,7 +54,7 @@
     display: flex;
     overflow: hidden auto;
   }
-  .historyEmptyState {
+  .historyState {
     box-sizing: border-box;
     width: 100%;
     min-width: 0;
@@ -56,5 +65,27 @@
     align-items: center;
     padding: 20px;
     display: flex;
+    flex-direction: column;
+    gap: 8px;
+    &.historyError {
+      color: var(--vscode-errorForeground);
+      small {
+        color: var(--vscode-descriptionForeground);
+        overflow-wrap: anywhere;
+      }
+    }
+  }
+  .historyPagination {
+    border-top: 1px solid var(--border-color);
+    color: var(--vscode-descriptionForeground);
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 8px 10px;
+    font-size: 11px;
+    display: flex;
+    span {
+      text-align: center;
+    }
   }
 }

@@ -9,11 +9,11 @@ export const intro: PageContent = {
     {
       title: "Current beta scope",
       items: [
-        "Sidebar chat with responses that always stream and render progressively.",
+        "Sidebar chat with responses, reasoning, and tool calls streamed and rendered in chronological order.",
         "Thinking mode can be enabled or disabled without disabling tools.",
-        "Workspace tools can read files, list directories, search content, create files, and run terminal commands.",
-        "Path autocomplete appears in the input after typing ./ or ../.",
-        "Pending tool calls remain visible when switching between Chat, History, and Settings.",
+        "The chat, read-only, workspace, and full-access modes control read, search, edit, patch, and terminal tools.",
+        "Path autocomplete appears after typing ./ or ../, and auto context can include the active editor and Git changes.",
+        "Settings and global history are stored under ~/.yrs-dpsk-copilot/ with configurable retention, native deletion confirmation, and Undo.",
       ],
     },
     {

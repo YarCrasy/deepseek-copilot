@@ -6,6 +6,7 @@ import { useChatConfig } from "./hooks";
 import type { ApiKeyStatus, ChatMessage } from "./ChatViewTypes";
 import { getVsCodeApi } from "@webview/VsCodeApi";
 import type { Conversation, PermissionMode } from "@/adapters";
+import { t } from "@webview/i18n";
 
 interface ReferencedFile {
   path: string;
@@ -86,9 +87,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
 
   const handleGenerationCancelled = () => {
     const lastSubmittedPrompt = lastSubmittedPromptRef.current;
-    if (lastSubmittedPrompt) {
-      setDraft(lastSubmittedPrompt);
-    }
+    setDraft((currentDraft) => currentDraft.trim() ? currentDraft : lastSubmittedPrompt);
     requestAnimationFrame(focusInput);
   };
 
@@ -108,14 +107,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
 
   useEffect(() => {
     const vscode = getVsCodeApi();
-    if (!vscode) return;
-
-    const handleNewConversation = () => {
-      setMessages([]);
-      setDraft("");
-      setReferencedFiles([]);
-      vscode.postMessage({ type: "newConversation" });
-    };
+    if (!vscode) {return;}
 
     const handleMessage = (event: MessageEvent<ChatCommandMessage>) => {
       const message = event.data;
@@ -128,10 +120,8 @@ function ChatView({ loadedConversation }: ChatViewProps) {
       }
     };
 
-    window.addEventListener("deepseek:newConversation", handleNewConversation as EventListener);
     window.addEventListener("message", handleMessage);
     return () => {
-      window.removeEventListener("deepseek:newConversation", handleNewConversation as EventListener);
       window.removeEventListener("message", handleMessage);
     };
   }, [appendReferencedFiles]);
@@ -148,7 +138,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
         onFocusInput={focusInput}
         onGenerationCancelled={handleGenerationCancelled}
       />
-      {apiKeyStatus === "missing" ? <div className="statusMessage warning">API key missing</div> : null}
+      {apiKeyStatus === "missing" ? <div className="statusMessage warning">{t("API key missing")}</div> : null}
 
       <div className="inputArea">
         <InputCtrls
@@ -159,7 +149,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
           canSend={canSend}
           selectedModelRef={selectedModelRef}
           reasoningRef={reasoningRef}
-          placeholder={apiKeyStatus === "configured" ? "Ask anything about your code..." : "Configure your API key in settings first..."}
+          placeholder={apiKeyStatus === "configured" ? t("Ask anything about your code...") : t("Configure your API key in settings first...")}
           rows={1}
           referencedFiles={referencedFiles}
           onSend={handleSend}

@@ -13,16 +13,16 @@ export class HistoryHandler {
   handle(message: WebviewToHandlerMessage, webviewView: vscode.WebviewView): void {
     switch (message.type) {
       case "getHistory":
-        void this.getHistory(webviewView);
+        void this.run(() => this.getHistory(webviewView), webviewView);
         break;
       case "deleteConversation":
-        void this.deleteConversation(message.id, webviewView);
+        void this.run(() => this.deleteConversation(message.id, webviewView), webviewView);
         break;
       case "deleteConversations":
-        void this.deleteConversations(message.ids, webviewView);
+        void this.run(() => this.deleteConversations(message.ids, webviewView), webviewView);
         break;
       case "loadConversation":
-        void this.loadConversation(message.id, webviewView);
+        void this.run(() => this.loadConversation(message.id, webviewView), webviewView);
         break;
       default:
         logWarning(`[HistoryHandler] Unknown message: ${message.type}`);
@@ -31,7 +31,7 @@ export class HistoryHandler {
 
   private async getHistory(webviewView: vscode.WebviewView): Promise<void> {
     const conversations = await this.historyManager.getSummaries();
-    webviewView.webview.postMessage({ type: "history", conversations });
+    await webviewView.webview.postMessage({ type: "history", conversations });
   }
 
   private async deleteConversation(id: string, webviewView: vscode.WebviewView): Promise<void> {
@@ -50,11 +50,21 @@ export class HistoryHandler {
     }
     await this.historyManager.delete(id);
     this.onConversationDeleted?.(id);
-    webviewView.webview.postMessage({ type: "conversationDeleted", id });
+    await webviewView.webview.postMessage({ type: "conversationDeleted", id });
     await this.getHistory(webviewView);
     if ((await vscode.window.showInformationMessage("Conversation deleted.", "Undo")) === "Undo") {
       await this.historyManager.save(deleted);
       await this.getHistory(webviewView);
+    }
+  }
+
+  private async run(operation: () => Promise<void>, webviewView: vscode.WebviewView): Promise<void> {
+    try {
+      await operation();
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      logWarning(`[HistoryHandler] ${message}`);
+      await webviewView.webview.postMessage({ type: "historyError", error: message });
     }
   }
 
@@ -75,10 +85,10 @@ export class HistoryHandler {
       return;
     }
     await this.historyManager.deleteMany(ids);
-    ids.forEach((id) => {
+    await Promise.all(ids.map(async (id) => {
       this.onConversationDeleted?.(id);
-      void webviewView.webview.postMessage({ type: "conversationDeleted", id });
-    });
+      await webviewView.webview.postMessage({ type: "conversationDeleted", id });
+    }));
     await this.getHistory(webviewView);
     if (deleted.length > 0 && (await vscode.window.showInformationMessage(`${deleted.length} conversation(s) deleted.`, "Undo")) === "Undo") {
       await Promise.all(deleted.map((conversation) => this.historyManager.save(conversation)));
@@ -93,6 +103,6 @@ export class HistoryHandler {
     }
 
     this.onConversationLoaded?.(conversation);
-    webviewView.webview.postMessage({ type: "conversationLoaded", conversation });
+    await webviewView.webview.postMessage({ type: "conversationLoaded", conversation });
   }
 }

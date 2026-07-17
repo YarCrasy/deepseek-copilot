@@ -6,7 +6,7 @@ import { getDevViewContent } from "./utils/DevViewRenderer";
 import { getHtmlContent } from "./utils/HtmlRenderer";
 import { HistoryManager } from "@/vscodeApi/storage";
 import { getPathCompletionItems, insertCodeIntoActiveEditor, openWorkspaceFile } from "@/vscodeApi/editor/EditorActions";
-import { CHAT_VIEW_TYPE, CONFIG_SECTION, SIDEBAR_VIEW_ID } from "@/shared/constants";
+import { CHAT_VIEW_TYPE, SIDEBAR_VIEW_ID } from "@/shared/constants";
 import { logWarning } from "@/shared/logging/Logger";
 import type { WebviewToHandlerMessage } from "@/adapters";
 import type { ReferencedFilePayload } from "@/vscodeApi/commands/ChatCommands";
@@ -41,13 +41,6 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
       },
     );
 
-    this.disposables.push(
-      vscode.workspace.onDidChangeConfiguration((event) => {
-        if (event.affectsConfiguration(CONFIG_SECTION)) {
-          void this.refreshSettings();
-        }
-      }),
-    );
   }
 
   public async resolveWebviewView(webviewView: vscode.WebviewView): Promise<void> {
@@ -110,14 +103,6 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
       this.chatHandler.handle({ type: "newConversation" }, this.webviewView);
       await this.webviewView.webview.postMessage({ type: "setDraft", text: "" });
     }
-  }
-
-  private async refreshSettings(): Promise<void> {
-    if (!this.webviewView) {
-      return;
-    }
-
-    await this.settingsHandler.postCurrentConfig(this.webviewView);
   }
 
   private async postToChat(message: ChatCommandMessage): Promise<void> {

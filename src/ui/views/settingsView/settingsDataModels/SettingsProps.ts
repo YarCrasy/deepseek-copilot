@@ -6,11 +6,11 @@ export type ApiSectionProps = {
   updateConfig: UpdateConfigFn;
   saveOnBlur: SaveOnBlurFn;
   modelOptions: Array<{ value: string; label: string }>;
-  reasoningEffortOptions: Array<{ value: string; label: string }>;
+  reasoningEffortOptions: ReadonlyArray<{ value: NonNullable<AppConfig["reasoningEffort"]>; label: string }>;
 };
 
 export type AdvancedSectionProps = {
-  config: Pick<AppConfig, "temperature" | "topP" | "maxTokens" | "maxToolRounds" | "baseUrl" | "responseFormat" | "thinkingMode" | "enableBetaFeatures" | "historyEnabled" | "historyRetentionDays">;
+  config: Pick<AppConfig, "temperature" | "topP" | "maxTokens" | "maxToolRounds" | "baseUrl" | "responseFormat" | "thinkingMode" | "enableBetaFeatures" | "historyEnabled" | "historyRetentionDays" | "includeHomeAgents">;
   updateConfig: UpdateConfigFn;
   saveOnBlur: SaveOnBlurFn;
 };

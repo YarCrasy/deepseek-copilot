@@ -32,6 +32,7 @@ export interface AppConfig {
   autoContext: boolean;
   historyEnabled: boolean;
   historyRetentionDays: number;
+  includeHomeAgents: boolean;
   enableBetaFeatures: boolean;
 
   userId?: string;
@@ -53,5 +54,6 @@ export const DEFAULT_CONFIG: AppConfig = {
   autoContext: false,
   historyEnabled: true,
   historyRetentionDays: 30,
+  includeHomeAgents: false,
   enableBetaFeatures: false,
 };

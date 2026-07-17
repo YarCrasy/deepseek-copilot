@@ -2,6 +2,7 @@ import "./ApiSection.css";
 import type { ApiSectionProps } from "../index";
 import { Toggle } from "@webview/components/settingsView";
 import { useApiConnectionState } from "./UseApiConnectionState";
+import { t } from "@webview/i18n";
 
 function ApiSection({ config, updateConfig, saveOnBlur, modelOptions, reasoningEffortOptions }: ApiSectionProps) {
   const { apiKeyPreview, apiKeyStatusClass, handleApiKeyBlur, handleApiKeyChange, handleTestConnection, isTesting, showApiKey, toggleShowApiKey } =
@@ -9,10 +10,10 @@ function ApiSection({ config, updateConfig, saveOnBlur, modelOptions, reasoningE
 
   return (
     <section className="settingsSection apiSection">
-      <h3 className="sectionTitle">API Configuration</h3>
+      <h3 className="sectionTitle">{t("API Configuration")}</h3>
 
       <div className="settingRow">
-        <label htmlFor="apiKeyInput">API Key</label>
+        <label htmlFor="apiKeyInput">{t("API Key")}</label>
         <div className="inputWithAction">
           <input
             className={`apiKeyInput ${apiKeyStatusClass}`}
@@ -24,7 +25,7 @@ function ApiSection({ config, updateConfig, saveOnBlur, modelOptions, reasoningE
             onChange={handleApiKeyChange}
             onBlur={handleApiKeyBlur}
           />
-          <button type="button" className="btn-icon apiKeyToggle" aria-label="Show or hide API key" data-tooltip="Show/Hide API Key" data-tooltip-align="end" onClick={toggleShowApiKey}>
+          <button type="button" className="btn-icon apiKeyToggle" aria-label={t("Show or hide API key")} data-tooltip={t("Show/Hide API Key")} data-tooltip-align="end" onClick={toggleShowApiKey}>
             {showApiKey ? <span className="codicon codicon-eye-closed" /> : <span className="codicon codicon-eye" />}
           </button>
         </div>
@@ -32,19 +33,21 @@ function ApiSection({ config, updateConfig, saveOnBlur, modelOptions, reasoningE
         <div className="statusRow">
           <span className={`statusIndicator ${apiKeyStatusClass}`}>{apiKeyPreview}</span>
           <button type="button" className="btn-secondary" onClick={handleTestConnection} disabled={isTesting || !config.apiKey}>
-            Test Connection
+            {t("Test Connection")}
           </button>
         </div>
       </div>
 
       <div className="settingRow">
-        <label htmlFor="modelSelectSettings">Model</label>
+        <label htmlFor="modelSelectSettings">{t("Model")}</label>
         <select
           id="modelSelectSettings"
           value={config.model}
           onChange={(event) => {
-            updateConfig("model", event.target.value);
-            saveOnBlur("model", event.target.value);
+            const model = event.target.value;
+            if (!modelOptions.some((option) => option.value === model)) {return;}
+            updateConfig("model", model);
+            saveOnBlur("model", model);
           }}
         >
           {modelOptions.map((option) => (
@@ -58,7 +61,7 @@ function ApiSection({ config, updateConfig, saveOnBlur, modelOptions, reasoningE
       {/* Thinking Mode Toggle */}
       <Toggle
         id="thinkingModeToggle"
-        label="Thinking Mode"
+        label={t("Thinking Mode")}
         checked={config.thinkingMode}
         onToggle={(checked) => {
           updateConfig("thinkingMode", checked);
@@ -69,18 +72,20 @@ function ApiSection({ config, updateConfig, saveOnBlur, modelOptions, reasoningE
       {/* Reasoning effort, only when thinking mode is enabled. */}
       {config.thinkingMode && (
         <div className="settingRow">
-          <label htmlFor="reasoningEffort">Reasoning Effort</label>
+          <label htmlFor="reasoningEffort">{t("Reasoning Effort")}</label>
           <select
             id="reasoningEffort"
             value={config.reasoningEffort}
             onChange={(event) => {
-              updateConfig("reasoningEffort", event.target.value);
-              saveOnBlur("reasoningEffort", event.target.value);
+              const effort = reasoningEffortOptions.find((option) => option.value === event.target.value)?.value;
+              if (!effort) {return;}
+              updateConfig("reasoningEffort", effort);
+              saveOnBlur("reasoningEffort", effort);
             }}
           >
             {reasoningEffortOptions.map((option) => (
               <option key={option.value} value={option.value}>
-                {option.label}
+                {t(option.label)}
               </option>
             ))}
           </select>

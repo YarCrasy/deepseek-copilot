@@ -49,6 +49,22 @@
     flex-direction: column;
     gap: 10px;
     display: flex;
+    &:focus-visible {
+      outline: 1px solid var(--vscode-focusBorder);
+      outline-offset: 2px;
+    }
+  }
+  .settingsState {
+    color: var(--text-secondary);
+    min-height: 120px;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 10px;
+    display: flex;
+    &.settingsError {
+      color: var(--danger-color);
+    }
   }
   .settingRow {
     flex-direction: column;
@@ -56,13 +72,16 @@
     display: flex;
   }
   .notification {
-    min-height: 20px;
-    padding: 2px 2px 0;
+    min-height: 28px;
+    border: 1px solid var(--border-color);
+    border-radius: 7px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 6px 8px;
     font-size: 12px;
     font-weight: 600;
-    &.hidden {
-      visibility: hidden;
-    }
+    display: flex;
     &.success {
       color: var(--success-color);
     }
@@ -71,6 +90,10 @@
     }
     &.info {
       color: var(--text-secondary);
+    }
+    .btn-icon {
+      color: inherit;
+      flex: none;
     }
   }
 }

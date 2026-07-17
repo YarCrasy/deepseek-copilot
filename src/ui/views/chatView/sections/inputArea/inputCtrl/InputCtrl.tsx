@@ -1,8 +1,9 @@
 import React, { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 import type { HandlerToWebviewMessage, PathCompletionItem } from "@/adapters";
 import "./InputCtrl.css";
-import { FileSelector, getPathToken, isFileSelectorNavigationKey, type PathToken } from "@webview/components/chatView";
+import { FileSelector, getPathToken, type PathToken } from "@webview/components/chatView";
 import { useVsCode } from "@webview/views/chatView/contexts";
+import { t } from "@webview/i18n";
 
 interface ReferencedFile {
   path: string;
@@ -42,10 +43,13 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
     const taRef = useRef<HTMLTextAreaElement | null>(null);
     const requestIdRef = useRef(0);
     const activeRequestIdRef = useRef(0);
+    const completionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const lastCompletionQueryRef = useRef<string | null>(null);
     const vscode = useVsCode();
     const [pathToken, setPathToken] = useState<PathToken | null>(null);
     const [completions, setCompletions] = useState<PathCompletionItem[]>([]);
     const [activeIndex, setActiveIndex] = useState(0);
+    const [hasCompletionResponse, setHasCompletionResponse] = useState(false);
 
     useImperativeHandle(ref, () => taRef.current!, [taRef]);
 
@@ -56,35 +60,69 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
           return;
         }
 
-        setCompletions(message.items);
+        const uniqueItems = message.items.filter(
+          (item, index, items) => items.findIndex((candidate) => candidate.path === item.path && candidate.type === item.type) === index,
+        );
+        setCompletions(uniqueItems);
         setActiveIndex(0);
+        setHasCompletionResponse(true);
       };
 
       window.addEventListener("message", handleMessage);
       return () => window.removeEventListener("message", handleMessage);
     }, []);
 
+    useEffect(() => () => {
+      if (completionTimerRef.current) {
+        clearTimeout(completionTimerRef.current);
+      }
+    }, []);
+
     const requestPathCompletions = useCallback(
-      (value: string, cursor: number) => {
+      (value: string, cursor: number, immediate = false) => {
         const token = getPathToken(value, cursor);
         setPathToken(token);
 
+        if (completionTimerRef.current) {
+          clearTimeout(completionTimerRef.current);
+          completionTimerRef.current = null;
+        }
+
         if (!token || !vscode) {
           setCompletions([]);
+          setHasCompletionResponse(false);
+          lastCompletionQueryRef.current = null;
+          activeRequestIdRef.current = requestIdRef.current + 1;
+          requestIdRef.current = activeRequestIdRef.current;
           return;
         }
 
+        if (lastCompletionQueryRef.current === token.query) {
+          return;
+        }
+
+        lastCompletionQueryRef.current = token.query;
+        setCompletions([]);
+        setHasCompletionResponse(false);
         const requestId = requestIdRef.current + 1;
         requestIdRef.current = requestId;
         activeRequestIdRef.current = requestId;
-        vscode.postMessage({ type: "getPathCompletions", requestId, query: token.query });
+        const sendRequest = () => {
+          vscode.postMessage({ type: "getPathCompletions", requestId, query: token.query });
+        };
+
+        if (immediate) {
+          sendRequest();
+        } else {
+          completionTimerRef.current = setTimeout(sendRequest, 140);
+        }
       },
       [vscode],
     );
 
     const handleSend = useCallback(() => {
       const text = input.trim();
-      if (!text || !vscode || isProcessing) {
+      if (!text || !vscode || !canSend) {
         return;
       }
 
@@ -103,7 +141,7 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
           type: f.type,
         })),
       });
-    }, [input, vscode, isProcessing, setInput, selectedModelRef, reasoningRef, referencedFiles, onSend]);
+    }, [input, vscode, canSend, setInput, selectedModelRef, reasoningRef, referencedFiles, onSend]);
 
     const handleCancel = useCallback(() => {
       vscode?.postMessage({ type: "cancelGeneration" });
@@ -128,7 +166,8 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
           textarea.selectionEnd = cursor;
           textarea.focus();
           if (completion.type === "directory") {
-            requestPathCompletions(nextInput, cursor);
+            lastCompletionQueryRef.current = null;
+            requestPathCompletions(nextInput, cursor, true);
           } else {
             setCompletions([]);
             setPathToken(null);
@@ -164,12 +203,12 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
           }
         }
 
-        if (e.key === "Enter" && !e.shiftKey) {
+        if (e.key === "Enter" && !e.shiftKey && canSend) {
           e.preventDefault();
           handleSend();
         }
       },
-      [activeIndex, completions, handleSend, insertCompletion],
+      [activeIndex, canSend, completions, handleSend, insertCompletion],
     );
 
     const handleChange = useCallback(
@@ -187,25 +226,23 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
       }
     }, [input, requestPathCompletions]);
 
-    const handleKeyUp = useCallback(
-      (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-        if (isFileSelectorNavigationKey(e.key)) {
-          return;
-        }
-
-        handleCursorChange();
-      },
-      [handleCursorChange],
-    );
-
     return (
       <div className="inputCtrl">
         <FileSelector
           activeIndex={activeIndex}
           completions={completions}
-          isOpen={completions.length > 0 && Boolean(pathToken)}
+          isOpen={Boolean(pathToken) && hasCompletionResponse}
           onSelect={insertCompletion}
+          listboxId="path-completion-listbox"
         />
+
+        <span className="srOnly" role="status" aria-live="polite">
+          {pathToken && hasCompletionResponse
+            ? completions.length > 0
+              ? t("{count} path suggestions available.", { count: completions.length })
+              : t("No files or folders found.")
+            : ""}
+        </span>
 
         <textarea
           ref={taRef}
@@ -214,17 +251,21 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
           value={input}
           onChange={handleChange}
           onClick={handleCursorChange}
-          onKeyUp={handleKeyUp}
           onKeyDown={handleKeyDown}
           rows={rows}
-          disabled={isProcessing}
+          aria-label={t("Chat message")}
+          aria-autocomplete="list"
+          aria-expanded={completions.length > 0 && Boolean(pathToken)}
+          aria-controls={completions.length > 0 ? "path-completion-listbox" : undefined}
+          aria-activedescendant={completions.length > 0 ? `path-completion-option-${activeIndex}` : undefined}
+          aria-busy={isProcessing}
         />
         {isProcessing ? (
-          <button className="stopBtn inside" type="button" onClick={handleCancel} aria-label="Stop generation" data-tooltip="Stop generation">
+          <button className="stopBtn inside" type="button" onClick={handleCancel} aria-label={t("Stop generation")} data-tooltip={t("Stop generation")}>
             <span className="codicon codicon-debug-stop" aria-hidden="true" />
           </button>
         ) : (
-          <button className="sendBtn inside" type="button" onClick={handleSend} disabled={!canSend} aria-label="Send message">
+          <button className="sendBtn inside" type="button" onClick={handleSend} disabled={!canSend} aria-label={t("Send message")}>
             <span className="codicon codicon-send" aria-hidden="true" />
           </button>
         )}

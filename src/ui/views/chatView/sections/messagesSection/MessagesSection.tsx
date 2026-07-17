@@ -1,10 +1,11 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./MessagesSection.css";
 import { useVsCode } from "../../contexts";
 import type { MessagesSectionProps } from "../../ChatViewTypes";
 import { useMessageHandler } from "../../hooks";
 import { ChatEmptyState, ChatMessages, ToolCallConfirmationModal, ToolCallTimeline } from "@webview/components/chatView";
 import { useChatMessagesController, useCodeActionHandler, useToolCallController } from "../../../../hooks/chat";
+import { t } from "@webview/i18n";
 
 function MessagesSection({
   messages: externalMessages,
@@ -41,6 +42,8 @@ function MessagesSection({
     vscode,
   });
   const { dispatcher: chatDispatcher, isProcessing, listRef, messages } = chat;
+  const followsLatestRef = useRef(true);
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
 
   useMessageHandler(vscode, {
     ...chatDispatcher,
@@ -48,6 +51,9 @@ function MessagesSection({
   });
 
   useEffect(() => {
+    if (!followsLatestRef.current) {
+      return;
+    }
     requestAnimationFrame(() => {
       if (listRef.current) {
         listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -55,10 +61,30 @@ function MessagesSection({
     });
   }, [messages, isProcessing, tools.activeTimelineGroups, listRef]);
 
+  const handleScroll = useCallback(() => {
+    const list = listRef.current;
+    if (!list) {
+      return;
+    }
+    const followsLatest = list.scrollHeight - list.scrollTop - list.clientHeight < 72;
+    followsLatestRef.current = followsLatest;
+    setShowJumpToLatest(!followsLatest);
+  }, [listRef]);
+
+  const jumpToLatest = useCallback(() => {
+    const list = listRef.current;
+    if (!list) {
+      return;
+    }
+    followsLatestRef.current = true;
+    setShowJumpToLatest(false);
+    list.scrollTo({ top: list.scrollHeight, behavior: "smooth" });
+  }, [listRef]);
+
   const emptyStateVisible = messages.length === 0 && !isProcessing;
   return (
     <>
-      <div className="msgList" ref={listRef} onClick={handleCodeAction}>
+      <div className="msgList" ref={listRef} onClick={handleCodeAction} onScroll={handleScroll} aria-busy={isProcessing}>
         {emptyStateVisible ? (
           <ChatEmptyState />
         ) : (
@@ -77,14 +103,23 @@ function MessagesSection({
         )}
 
         {isProcessing ? (
-          <div className="typingIndicator" aria-live="polite">
+          <div className="typingIndicator" role="status" aria-live="polite">
             <div className="typingDots">
               <span /> <span /> <span />
             </div>
-            <span className="typingLabel">DeepSeek is thinking...</span>
+            <span className="typingLabel">{t("DeepSeek is thinking...")}</span>
           </div>
         ) : null}
       </div>
+      {showJumpToLatest ? (
+        <button className="jumpToLatest" type="button" onClick={jumpToLatest} aria-label={t("Jump to the latest response block")}>
+          <span className="codicon codicon-arrow-down" aria-hidden="true" />
+          {t("Latest")}
+        </button>
+      ) : null}
+      <span className="streamStatus srOnly" role="status" aria-live="polite">
+        {isProcessing ? t("DeepSeek response is streaming.") : t("Response generation finished.")}
+      </span>
       <ToolCallConfirmationModal
         pendingToolCalls={tools.pendingToolCalls}
         onExecute={tools.handleExecute}

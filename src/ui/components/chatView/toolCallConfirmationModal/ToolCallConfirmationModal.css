@@ -14,7 +14,7 @@
   flex-direction: column;
   gap: 8px;
   width: min(540px, 100%);
-  max-height: min(34vh, 300px);
+  max-height: min(62vh, 640px);
   padding: 12px;
   display: flex;
   overflow: auto;
@@ -39,9 +39,45 @@
   }
 }
 .toolCallModalArgs {
-  max-height: 160px;
   margin-top: 7px;
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+.toolCallFullReview {
+  border: 1px solid color-mix(in srgb, var(--border-color) 68%, transparent);
+  background: var(--code-bg, color-mix(in srgb, var(--bg-secondary) 80%, black));
+  color: var(--text-primary);
+  white-space: pre;
   overflow: auto;
+  max-height: min(34vh, 360px);
+  margin: 0;
+  padding: 10px;
+  border-radius: 6px;
+  font: 11px/1.55 var(--font-mono);
+  &:focus-visible {
+    outline: 1px solid var(--accent-color);
+    outline-offset: 1px;
+  }
+}
+.toolCallReviewLine {
+  display: block;
+  min-width: max-content;
+  &.diffAdd { background: color-mix(in srgb, #2ea043 18%, transparent); }
+  &.diffRemove { background: color-mix(in srgb, #f85149 18%, transparent); }
+  &.diffHunk { color: #a5a5ff; background: color-mix(in srgb, #6f42c1 16%, transparent); }
+}
+.toolCallOpenFile {
+  justify-self: start;
+  border: 1px solid var(--border-color);
+  background: var(--button-secondary-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 5px 9px;
+  font: inherit;
+  &:hover { background: var(--button-secondary-hover); }
+  &:focus-visible { outline: 1px solid var(--accent-color); outline-offset: 2px; }
 }
 .toolCallModalBatchActions {
   border-top: 1px solid color-mix(in srgb, var(--border-color) 65%, transparent);

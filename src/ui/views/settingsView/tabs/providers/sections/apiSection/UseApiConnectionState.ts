@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import type { ChangeEvent, FocusEvent } from "react";
 import { getVsCodeApi } from "@webview/VsCodeApi";
 import type { ApiKeyStatus, ApiSectionProps } from "..";
+import { t } from "@webview/i18n";
 
 type ApiSectionMessage =
   | { type: "apiKeyStatusSettings"; status: "configured" | "missing"; keyPreview?: string }
@@ -26,12 +27,12 @@ export function useApiConnectionState({ config, updateConfig, saveOnBlur }: ApiC
   }, [config.apiKey, isTesting, lastTestResult, statusOverride]);
 
   const apiKeyPreview = useMemo(() => {
-    if (isTesting) {return "Testing...";}
-    if (!config.apiKey) {return "Not configured";}
+    if (isTesting) {return t("Testing...");}
+    if (!config.apiKey) {return t("Not configured");}
     if (statusPreviewOverride) {return statusPreviewOverride;}
-    if (lastTestResult === "success") {return "Connection OK";}
-    if (lastTestResult === "failed") {return "Connection failed";}
-    return "Configured";
+    if (lastTestResult === "success") {return t("Connection OK");}
+    if (lastTestResult === "failed") {return t("Connection failed");}
+    return t("Configured");
   }, [config.apiKey, isTesting, lastTestResult, statusPreviewOverride]);
 
   const resetTransientStatus = useCallback(() => {
@@ -84,7 +85,7 @@ export function useApiConnectionState({ config, updateConfig, saveOnBlur }: ApiC
         setIsTesting(false);
         setLastTestResult(null);
         setStatusOverride(message.status);
-        setStatusPreviewOverride(message.status === "configured" ? (message.keyPreview ?? "Configured") : "Not configured");
+        setStatusPreviewOverride(message.status === "configured" ? (message.keyPreview ?? t("Configured")) : t("Not configured"));
       }
 
       if (message.type === "connectionTestResult") {

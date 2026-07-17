@@ -1,10 +1,13 @@
-import * as vscode from "vscode";
+import { existsSync, readFileSync } from "node:fs";
 import type { AppConfig, PermissionMode, ToolExecutionMode, ToolExecutionModes } from "@/adapters";
 import { DEEPSEEK_DEFAULTS } from "@/deepseekApi";
-import { CONFIG_SECTION } from "@/shared/constants";
+import { writeJsonFileAtomic } from "./JsonFileStorage";
+import { getSettingsFilePath } from "./UserDataPaths";
 
-type SyncedSettingKey = Exclude<keyof AppConfig, "apiKey" | "userId">;
-const SYNCED_SETTING_KEYS = new Set<SyncedSettingKey>([
+type StoredSettingKey = Exclude<keyof AppConfig, "apiKey" | "userId">;
+type StoredSettings = Pick<AppConfig, StoredSettingKey>;
+
+const STORED_SETTING_KEYS = new Set<StoredSettingKey>([
   "baseUrl",
   "model",
   "thinkingMode",
@@ -19,62 +22,118 @@ const SYNCED_SETTING_KEYS = new Set<SyncedSettingKey>([
   "autoContext",
   "historyEnabled",
   "historyRetentionDays",
+  "includeHomeAgents",
   "enableBetaFeatures",
 ]);
 
 export class SettingsManager {
-  static load(): AppConfig {
-    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
-    return {
-      apiKey: "", // Stored in SecretsManager, not in settings.
-      baseUrl: normalizeBaseUrl(config.get("baseUrl")),
-      model: config.get("model") ?? DEEPSEEK_DEFAULTS.model,
-      thinkingMode: config.get("thinkingMode") ?? DEEPSEEK_DEFAULTS.thinkingMode,
-      reasoningEffort: config.get("reasoningEffort") ?? DEEPSEEK_DEFAULTS.reasoningEffort,
-      temperature: clampNumber(config.get("temperature"), 0, 2, DEEPSEEK_DEFAULTS.temperature),
-      topP: clampNumber(config.get("topP"), 0, 1, DEEPSEEK_DEFAULTS.topP),
-      maxTokens: clampInteger(config.get("maxTokens"), 1, 65_536, DEEPSEEK_DEFAULTS.maxTokens),
-      maxToolRounds: clampInteger(config.get("maxToolRounds"), 1, 20, DEEPSEEK_DEFAULTS.maxToolRounds),
-      responseFormat: config.get("responseFormat") ?? DEEPSEEK_DEFAULTS.responseFormat,
-      permissionMode: normalizePermissionMode(config.get("permissionMode")),
-      toolExecutionModes: normalizeToolExecutionModes(config.get("toolExecutionModes")),
-      autoContext: config.get("autoContext") ?? DEEPSEEK_DEFAULTS.autoContext,
-      historyEnabled: config.get("historyEnabled") ?? DEEPSEEK_DEFAULTS.historyEnabled,
-      historyRetentionDays: clampInteger(config.get("historyRetentionDays"), 0, 3650, DEEPSEEK_DEFAULTS.historyRetentionDays),
-      enableBetaFeatures: config.get("enableBetaFeatures") ?? DEEPSEEK_DEFAULTS.enableBetaFeatures,
-    };
+  private static writeQueue: Promise<void> = Promise.resolve();
+
+  static initialize(initialSettings: unknown = {}): Promise<void> {
+    if (existsSync(getSettingsFilePath())) {
+      return Promise.resolve();
+    }
+    const initialConfig = normalizeConfig(initialSettings);
+    return SettingsManager.enqueueWrite(() => writeJsonFileAtomic(getSettingsFilePath(), toStoredSettings(initialConfig)));
   }
 
-  static async save(partial: Partial<AppConfig>): Promise<void> {
-    const config = vscode.workspace.getConfiguration(CONFIG_SECTION);
+  static load(): AppConfig {
+    const stored = readStoredSettings();
+    return normalizeConfig(stored);
+  }
 
-    for (const [key, value] of Object.entries(partial)) {
-      if (!isSyncedSettingKey(key) || value === undefined) {
-        continue;
+  static save(partial: Partial<AppConfig>): Promise<void> {
+    return SettingsManager.enqueueWrite(async () => {
+      const current = SettingsManager.load();
+      const next = { ...current };
+
+      for (const [key, value] of Object.entries(partial)) {
+        if (!isStoredSettingKey(key) || value === undefined) {
+          continue;
+        }
+        Object.assign(next, { [key]: normalizeSettingValue(key, value) });
       }
 
-      const nextValue = normalizeSettingValue(key, value);
-      const target = key === "historyEnabled" || key === "historyRetentionDays" ? vscode.ConfigurationTarget.Workspace : vscode.ConfigurationTarget.Global;
-      await config.update(key, nextValue, target);
-    }
+      await writeJsonFileAtomic(getSettingsFilePath(), toStoredSettings(next));
+    });
   }
 
-  static async reset(): Promise<void> {
-    await SettingsManager.save(DEEPSEEK_DEFAULTS);
+  static reset(): Promise<void> {
+    return SettingsManager.enqueueWrite(() => writeJsonFileAtomic(getSettingsFilePath(), toStoredSettings(DEEPSEEK_DEFAULTS)));
+  }
+
+  private static enqueueWrite(operation: () => Promise<void>): Promise<void> {
+    const next = SettingsManager.writeQueue.then(operation, operation);
+    SettingsManager.writeQueue = next.catch(() => undefined);
+    return next;
   }
 }
 
-function isSyncedSettingKey(key: string): key is SyncedSettingKey {
-  return SYNCED_SETTING_KEYS.has(key as SyncedSettingKey);
+function readStoredSettings(): unknown {
+  try {
+    return JSON.parse(readFileSync(getSettingsFilePath(), "utf8")) as unknown;
+  } catch {
+    return {};
+  }
 }
 
-function normalizeSettingValue(key: SyncedSettingKey, value: unknown): unknown {
-  if (key === "toolExecutionModes") {
-    return normalizeToolExecutionModes(value);
+function normalizeConfig(value: unknown): AppConfig {
+  const config = isRecord(value) ? value : {};
+  return {
+    apiKey: "",
+    baseUrl: normalizeBaseUrl(config.baseUrl),
+    model: normalizeNonEmptyString(config.model, DEEPSEEK_DEFAULTS.model),
+    thinkingMode: normalizeBoolean(config.thinkingMode, DEEPSEEK_DEFAULTS.thinkingMode),
+    reasoningEffort: normalizeReasoningEffort(config.reasoningEffort),
+    temperature: clampNumber(config.temperature, 0, 2, DEEPSEEK_DEFAULTS.temperature),
+    topP: clampNumber(config.topP, 0, 1, DEEPSEEK_DEFAULTS.topP),
+    maxTokens: clampInteger(config.maxTokens, 1, 65_536, DEEPSEEK_DEFAULTS.maxTokens),
+    maxToolRounds: clampInteger(config.maxToolRounds, 1, 20, DEEPSEEK_DEFAULTS.maxToolRounds),
+    responseFormat: normalizeResponseFormat(config.responseFormat),
+    permissionMode: normalizePermissionMode(config.permissionMode),
+    toolExecutionModes: normalizeToolExecutionModes(config.toolExecutionModes),
+    autoContext: normalizeBoolean(config.autoContext, DEEPSEEK_DEFAULTS.autoContext),
+    historyEnabled: normalizeBoolean(config.historyEnabled, DEEPSEEK_DEFAULTS.historyEnabled),
+    historyRetentionDays: clampInteger(config.historyRetentionDays, 0, 3650, DEEPSEEK_DEFAULTS.historyRetentionDays),
+    includeHomeAgents: normalizeBoolean(config.includeHomeAgents, DEEPSEEK_DEFAULTS.includeHomeAgents),
+    enableBetaFeatures: normalizeBoolean(config.enableBetaFeatures, DEEPSEEK_DEFAULTS.enableBetaFeatures),
+  };
+}
+
+function toStoredSettings(config: AppConfig): StoredSettings {
+  return {
+    baseUrl: config.baseUrl,
+    model: config.model,
+    thinkingMode: config.thinkingMode,
+    reasoningEffort: config.reasoningEffort,
+    temperature: config.temperature,
+    topP: config.topP,
+    maxTokens: config.maxTokens,
+    maxToolRounds: config.maxToolRounds,
+    responseFormat: config.responseFormat,
+    permissionMode: config.permissionMode,
+    toolExecutionModes: config.toolExecutionModes,
+    autoContext: config.autoContext,
+    historyEnabled: config.historyEnabled,
+    historyRetentionDays: config.historyRetentionDays,
+    includeHomeAgents: config.includeHomeAgents,
+    enableBetaFeatures: config.enableBetaFeatures,
+  };
+}
+
+function isStoredSettingKey(key: string): key is StoredSettingKey {
+  return STORED_SETTING_KEYS.has(key as StoredSettingKey);
+}
+
+function normalizeSettingValue(key: StoredSettingKey, value: unknown): unknown {
+  if (key === "toolExecutionModes") {return normalizeToolExecutionModes(value);}
+  if (key === "permissionMode") {return normalizePermissionMode(value);}
+  if (key === "reasoningEffort") {return normalizeReasoningEffort(value);}
+  if (key === "responseFormat") {return normalizeResponseFormat(value);}
+  if (key === "thinkingMode" || key === "autoContext" || key === "historyEnabled" || key === "includeHomeAgents" || key === "enableBetaFeatures") {
+    return normalizeBoolean(value, DEEPSEEK_DEFAULTS[key]);
   }
-  if (key === "permissionMode") {
-    return normalizePermissionMode(value);
-  }
+  if (key === "model") {return normalizeNonEmptyString(value, DEEPSEEK_DEFAULTS.model);}
   if (key === "baseUrl") {return normalizeBaseUrl(value);}
   if (key === "temperature") {return clampNumber(value, 0, 2, DEEPSEEK_DEFAULTS.temperature);}
   if (key === "topP") {return clampNumber(value, 0, 1, DEEPSEEK_DEFAULTS.topP);}
@@ -91,7 +150,9 @@ function normalizeBaseUrl(value: unknown): string {
     if (url.protocol !== "https:" && url.protocol !== "http:") {return DEEPSEEK_DEFAULTS.baseUrl;}
     url.pathname = url.pathname.replace(/\/+$/, "");
     return url.toString().replace(/\/$/, "");
-  } catch { return DEEPSEEK_DEFAULTS.baseUrl; }
+  } catch {
+    return DEEPSEEK_DEFAULTS.baseUrl;
+  }
 }
 
 function clampNumber(value: unknown, min: number, max: number, fallback: number): number {
@@ -103,23 +164,34 @@ function clampInteger(value: unknown, min: number, max: number, fallback: number
 }
 
 function normalizePermissionMode(value: unknown): PermissionMode {
-  return isPermissionMode(value) ? value : DEEPSEEK_DEFAULTS.permissionMode;
-}
-
-function isPermissionMode(value: unknown): value is PermissionMode {
-  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access";
+  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access" ? value : DEEPSEEK_DEFAULTS.permissionMode;
 }
 
 function normalizeToolExecutionModes(value: unknown): ToolExecutionModes {
-  if (!value || typeof value !== "object" || Array.isArray(value)) {
-    return DEEPSEEK_DEFAULTS.toolExecutionModes;
-  }
-
-  return Object.fromEntries(
-    Object.entries(value).filter((entry): entry is [string, ToolExecutionMode] => isToolExecutionMode(entry[1])),
-  );
+  if (!isRecord(value)) {return DEEPSEEK_DEFAULTS.toolExecutionModes;}
+  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, ToolExecutionMode] => isToolExecutionMode(entry[1])));
 }
 
 function isToolExecutionMode(value: unknown): value is ToolExecutionMode {
   return value === "disabled" || value === "enabled" || value === "auto_approve";
+}
+
+function normalizeBoolean(value: unknown, fallback: boolean): boolean {
+  return typeof value === "boolean" ? value : fallback;
+}
+
+function normalizeNonEmptyString(value: unknown, fallback: string): string {
+  return typeof value === "string" && value.trim().length > 0 ? value : fallback;
+}
+
+function normalizeReasoningEffort(value: unknown): AppConfig["reasoningEffort"] {
+  return value === "high" || value === "max" ? value : DEEPSEEK_DEFAULTS.reasoningEffort;
+}
+
+function normalizeResponseFormat(value: unknown): AppConfig["responseFormat"] {
+  return value === "text" || value === "json_object" ? value : DEEPSEEK_DEFAULTS.responseFormat;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return !!value && typeof value === "object" && !Array.isArray(value);
 }

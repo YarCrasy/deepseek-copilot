@@ -1,6 +1,6 @@
 import * as os from "os";
 import * as vscode from "vscode";
-import { CONFIG_SECTION, INCLUDE_HOME_AGENTS_KEY } from "@/shared/constants";
+import { SettingsManager } from "@/vscodeApi/storage";
 
 const AGENTS_FILE_NAME = "AGENTS.md";
 const PROJECT_INSTRUCTIONS_HEADER = "## Project Instructions";
@@ -132,7 +132,7 @@ ${sections.join("\n\n")}`;
 }
 
 function isHomeAgentsAllowed(): boolean {
-  return vscode.workspace.getConfiguration(CONFIG_SECTION).get<boolean>(INCLUDE_HOME_AGENTS_KEY, false) === true;
+  return SettingsManager.load().includeHomeAgents;
 }
 
 function isFileNotFoundError(err: unknown): boolean {

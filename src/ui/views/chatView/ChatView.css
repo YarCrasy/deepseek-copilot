@@ -2,6 +2,7 @@
   flex-direction: column;
   flex: auto;
   min-height: 0;
+  position: relative;
   display: flex;
   overflow: hidden;
   .newChatBtn {

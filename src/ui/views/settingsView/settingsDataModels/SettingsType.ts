@@ -5,5 +5,5 @@ export type SettingsConfig = AppConfig;
 
 export type ApiKeyStatus = "missing" | "configured" | "testing";
 
-export type UpdateConfigFn = (key: string, value: unknown) => void;
-export type SaveOnBlurFn = (key: string, value: unknown) => void;
+export type UpdateConfigFn = <K extends keyof AppConfig>(key: K, value: AppConfig[K]) => void;
+export type SaveOnBlurFn = <K extends keyof AppConfig>(key: K, value: AppConfig[K]) => void;

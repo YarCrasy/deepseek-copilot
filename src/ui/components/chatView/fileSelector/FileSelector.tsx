@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import type { PathCompletionItem } from "@/adapters";
 import "./FileSelector.css";
+import { t } from "@webview/i18n";
 
 export interface PathToken {
   query: string;
@@ -18,9 +19,10 @@ interface FileSelectorProps {
   completions: PathCompletionItem[];
   isOpen: boolean;
   onSelect: (completion: PathCompletionItem) => void;
+  listboxId: string;
 }
 
-export function FileSelector({ activeIndex, completions, isOpen, onSelect }: FileSelectorProps) {
+export function FileSelector({ activeIndex, completions, isOpen, onSelect, listboxId }: FileSelectorProps) {
   const completionItemRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   useEffect(() => {
@@ -33,26 +35,40 @@ export function FileSelector({ activeIndex, completions, isOpen, onSelect }: Fil
   }
 
   return (
-    <div className="pathCompletionPopup" role="listbox">
-      {completions.map((completion, index) => (
-        <button
-          key={`${completion.type}:${completion.path}`}
-          ref={(element) => {
-            completionItemRefs.current[index] = element;
-          }}
-          type="button"
-          className={`pathCompletionItem${index === activeIndex ? " active" : ""}`}
-          onMouseDown={(event) => {
-            event.preventDefault();
-            onSelect(completion);
-          }}
-          role="option"
-          aria-selected={index === activeIndex}
-        >
-          <CompletionIcon completion={completion} />
-          <span className="pathCompletionLabel">{completion.label}</span>
-        </button>
-      ))}
+    <div
+      className="pathCompletionPopup"
+      id={listboxId}
+      role={completions.length > 0 ? "listbox" : "status"}
+      aria-label={t("Workspace path suggestions")}
+    >
+      {completions.length > 0 ? (
+        completions.map((completion, index) => (
+          <button
+            key={`${completion.type}:${completion.path}`}
+            ref={(element) => {
+              completionItemRefs.current[index] = element;
+            }}
+            type="button"
+            className={`pathCompletionItem${index === activeIndex ? " active" : ""}`}
+            onMouseDown={(event) => {
+              event.preventDefault();
+              onSelect(completion);
+            }}
+            role="option"
+            tabIndex={-1}
+            id={`path-completion-option-${index}`}
+            aria-selected={index === activeIndex}
+          >
+            <CompletionIcon completion={completion} />
+            <span className="pathCompletionLabel">{completion.label}</span>
+          </button>
+        ))
+      ) : (
+        <div className="pathCompletionEmpty">
+          <span className="codicon codicon-folder-opened" aria-hidden="true" />
+          <span>{t("No files or folders found.")}</span>
+        </div>
+      )}
     </div>
   );
 }

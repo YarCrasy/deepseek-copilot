@@ -1,16 +1,17 @@
 import DeepSeekLogo from "@/assets/DeepSeekIcon.svg";
 import "./ChatEmptyState.css";
+import { t } from "@webview/i18n";
 
 function ChatEmptyState() {
   return (
     <div className="emptyState">
       <img src={DeepSeekLogo} alt="DeepSeek" />
       <h2>Yar's DeepSeek Copilot</h2>
-      <p>Ask about code, generate snippets, or stream reasoning directly into the editor.</p>
+      <p>{t("Ask about code, generate snippets, or stream reasoning directly into the editor.")}</p>
       <div className="emptyHints">
-        <kbd>Enter</kbd> send
+        <kbd>Enter</kbd> {t("send")}
         <span> &middot; </span>
-        <kbd>Shift+Enter</kbd> new line
+        <kbd>Shift+Enter</kbd> {t("new line")}
       </div>
     </div>
   );

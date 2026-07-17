@@ -27,6 +27,7 @@ export interface WorkspaceCommandResult {
   signal: string | null;
   timedOut: boolean;
   cancelled: false;
+  durationMs: number;
   truncated: { stdout: boolean; stderr: boolean };
 }
 
@@ -47,6 +48,8 @@ export async function executeWorkspaceCommand(command: string, options: Workspac
   if (options.signal?.aborted) {
     throw createAbortError();
   }
+
+  const startedAt = performance.now();
 
   return new Promise<WorkspaceCommandResult>((resolve, reject) => {
     const child = spawn(command, {
@@ -97,6 +100,7 @@ export async function executeWorkspaceCommand(command: string, options: Workspac
         signal: exitSignal,
         timedOut,
         cancelled: false,
+        durationMs: Math.max(0, Math.round(performance.now() - startedAt)),
         truncated: { stdout: stdout.truncated, stderr: stderr.truncated },
       }));
     });

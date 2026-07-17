@@ -3,19 +3,44 @@ import type { PageContent } from "../Types";
 export const technicalDecisions: PageContent = {
   navTitle: "技术决策",
   title: "技术决策",
-  description: "Yar's DeepSeek Copilot 架构决策。",
-  lead: "扩展将 VS Code API、DeepSeek API、核心工具逻辑和 React UI 分离。",
+  description: "架构、持久化、流式传输和执行方面的决策。",
+  lead: "扩展将领域状态、DeepSeek 传输、VS Code 能力和 React 渲染分离，使安全规则在扩展宿主中保持权威。",
   sections: [
     {
-      title: "规则",
+      title: "分层边界",
       items: [
-        "core 不得导入 vscode、React 或具体 HTTP 客户端。",
-        "deepseekApi 负责 DeepSeek 协议、流式响应、模型和工具调用请求。",
-        "vscodeApi 负责激活、命令、webview、工作区、文件和终端适配。",
-        "ui 负责 React webview，并且只通过共享消息契约通信。",
-        "web-doc 使用 Astro，并且必须支持英文、西班牙文和中文。",
-        "源代码文件夹使用 camelCase，源代码实现文件使用 PascalCase。",
-        "工具链、生成输出、路由文件和 barrel 文件保留生态要求的名称，例如 package.json、index.ts 和 Astro 路由文件。",
+        "core 负责与供应商无关的会话、上下文和工具领域逻辑，不导入 React 或具体 HTTP 客户端。",
+        "deepseekApi 负责请求、响应验证、SSE 解析、有限重试和工具调用编排。",
+        "vscodeApi 负责密钥、工作区访问、存储、命令、终端进程、确认以及宿主与 webview 的通信。",
+        "ui 负责 React webview，只有收到宿主消息后才会更改权威工具状态。",
+      ],
+    },
+    {
+      title: "按时间排序的事件模型",
+      items: [
+        "助手输出以类型化的推理、内容和工具组事件持久化，而不是将控制标记嵌入文本。",
+        "实时流和恢复的历史记录使用同一 timeline 契约，保留 think -> tool -> think -> response 顺序。",
+        "文本增量按动画帧分组，并在工具组、完成、取消或持久化之前刷新。",
+        "消息、事件、会话和备用工具调用 ID 使用 crypto.randomUUID()。",
+      ],
+    },
+    {
+      title: "工具和终端",
+      items: [
+        "工具状态使用单一原生生命周期，最终进入 completed、rejected、cancelled 或 error；拒绝不会被编码为执行错误。",
+        "调用按顺序执行，以保持写入顺序和独立批准；编排器会阻止名称和参数完全相同的重复调用。",
+        "终端使用 spawn、进程树取消、结构化结果、保留首尾的有界输出，以及非零退出码检测。",
+        "路径授权会解析真实路径和现有祖先，防止通过 symlink 或 junction 越界。会话会保留所选多根工作区的 URI。",
+        "已确认的文件写入带有 SHA-256 守卫；如果预览后磁盘内容发生变化，编辑或覆盖会失败。",
+      ],
+    },
+    {
+      title: "API、上下文和持久化",
+      items: [
+        "SSE 支持注释、CRLF、带或不带空格的 data 字段、多行事件、解码器收尾、异常 JSON 诊断和 reader 取消。",
+        "DeepSeek 请求使用规范化 URL，每次尝试超时 60 秒；对临时故障最多尝试三次，并遵守 Retry-After。",
+        "设置和会话历史保存在 ~/.yrs-dpsk-copilot/ 下。历史记录每个会话使用一个经过验证的 JSON 文件，并直接从这些文件生成列表。",
+        "上下文具有总预算、二进制检测、Git staged 和 unstaged 数据、受限的 AGENTS.md 来源，以及明确的不受信任数据分隔符。",
       ],
     },
   ],

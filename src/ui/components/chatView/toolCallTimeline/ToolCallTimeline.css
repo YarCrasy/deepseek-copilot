@@ -74,3 +74,24 @@
 .toolCallArgs {
   max-height: 180px;
 }
+.toolCallCopyActions {
+  flex-wrap: wrap;
+  gap: 6px;
+  display: flex;
+
+  button {
+    border: 1px solid var(--border-color);
+    background: var(--button-secondary-bg);
+    color: var(--text-primary);
+    cursor: pointer;
+    font: inherit;
+    border-radius: 6px;
+    padding: 4px 7px;
+    font-size: 10px;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--button-secondary-hover);
+    }
+  }
+}

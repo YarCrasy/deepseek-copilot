@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { VsCodeApi } from "@webview/VsCodeApi";
 import type { ToolCallGroup, ToolCallState } from "@webview/views/chatView/ChatViewTypes";
 import CollapsiblePanel from "../../shared/collapsiblePanel/CollapsiblePanel";
@@ -5,6 +6,7 @@ import { renderToolCallResultPreview } from "../toolCallResultPreview/ToolCallRe
 import { renderToolCallArgumentsPreview } from "../toolCallResultPreview/ToolCallResultRenderers";
 import "../toolCallResultPreview/ToolCallResultPreview.css";
 import "./ToolCallTimeline.css";
+import { t } from "@webview/i18n";
 
 interface ToolCallTimelineProps {
   groups: ToolCallGroup[];
@@ -17,7 +19,7 @@ function ToolCallTimeline({ groups, vscode }: ToolCallTimelineProps) {
   }
 
   return (
-    <div className="toolCallTimeline" aria-label="Tool calls">
+    <div className="toolCallTimeline" aria-label={t("Tool calls")}>
       {groups.map((group) => (
         <div className="toolCallGroup" key={group.id}>
           {group.toolCalls.map((toolCall) => (
@@ -35,13 +37,31 @@ interface ToolCallItemProps {
 }
 
 function ToolCallItem({ toolCall, vscode }: ToolCallItemProps) {
+  const [copyStatus, setCopyStatus] = useState("");
+
+  const copy = async (label: string, value: string) => {
+    try {
+      await navigator.clipboard.writeText(value);
+    } catch {
+      vscode?.postMessage({ type: "copyCode", code: value });
+    }
+    setCopyStatus(t("{label} copied.", { label }));
+    window.setTimeout(() => setCopyStatus(""), 1800);
+  };
+
   return (
     <CollapsiblePanel
       title={<span className="toolCallName">{toolCall.toolName}</span>}
-      meta={<span className={`toolCallStatus ${toolCall.status}`}>{formatStatus(toolCall.status)}</span>}
+      meta={<span className={`toolCallStatus ${toolCall.status}`} role="status" aria-live="polite">{formatStatus(toolCall.status)}</span>}
       className={`toolCallItem ${toolCall.status}`}
       bodyClassName="toolCallItemBody"
     >
+      <div className="toolCallCopyActions" aria-label={t("Copy {tool} data", { tool: toolCall.toolName })}>
+        <button type="button" onClick={() => void copy(t("Tool call"), formatToolCallForCopy(toolCall))}>{t("Copy call")}</button>
+        {toolCall.arguments ? <button type="button" onClick={() => void copy(t("Copy arguments"), toolCall.arguments)}>{t("Copy arguments")}</button> : null}
+        {toolCall.result ? <button type="button" onClick={() => void copy(t("Result"), toolCall.result ?? "")}>{t("Copy result")}</button> : null}
+      </div>
+      <span className="srOnly" role="status" aria-live="polite">{copyStatus}</span>
       {toolCall.arguments ? <div className="toolCallArgs">{renderToolCallArgumentsPreview(toolCall.toolName, toolCall.arguments)}</div> : null}
       {renderToolCallResultPreview({ toolCall, vscode })}
     </CollapsiblePanel>
@@ -51,20 +71,30 @@ function ToolCallItem({ toolCall, vscode }: ToolCallItemProps) {
 function formatStatus(status: ToolCallState["status"]): string {
   switch (status) {
     case "pending":
-      return "Pending";
+      return t("Pending");
     case "awaiting_confirmation":
-      return "Awaiting confirmation";
+      return t("Awaiting confirmation");
     case "running":
-      return "Running";
+      return t("Running");
     case "completed":
-      return "Completed";
+      return t("Completed");
     case "error":
-      return "Error";
+      return t("Error");
     case "rejected":
-      return "Rejected";
+      return t("Rejected");
     case "cancelled":
-      return "Cancelled";
+      return t("Cancelled");
   }
+}
+
+function formatToolCallForCopy(toolCall: ToolCallState): string {
+  let args: unknown = toolCall.arguments;
+  try {
+    args = JSON.parse(toolCall.arguments) as unknown;
+  } catch {
+    // Preserve malformed arguments exactly as received.
+  }
+  return JSON.stringify({ name: toolCall.toolName, arguments: args }, null, 2);
 }
 
 export default ToolCallTimeline;

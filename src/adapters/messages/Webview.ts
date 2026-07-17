@@ -166,6 +166,7 @@ export type HandlerToWebviewMessage =
   | { type: "pathCompletions"; requestId: number; query: string; items: PathCompletionItem[] }
   | { type: "modelChanged"; modelId: string }
   | { type: "history"; conversations: ConversationSummary[] }
+  | { type: "historyError"; error: string }
   | { type: "conversationLoaded"; conversation: Conversation }
   | { type: "conversationDeleted"; id: string }
   | {

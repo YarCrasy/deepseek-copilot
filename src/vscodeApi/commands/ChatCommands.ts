@@ -21,10 +21,7 @@ export function registerChatCommands(context: vscode.ExtensionContext, provider:
   context.subscriptions.push(
     vscode.commands.registerCommand("yrs-dpsk-copilot.addFileToChat", async (uri?: vscode.Uri, selectedUris?: vscode.Uri[]) => {
       const fallbackUri = vscode.window.activeTextEditor?.document.uri;
-      await addUrisToChat(provider, collectCommandUris(uri ?? fallbackUri, selectedUris), "file");
-    }),
-    vscode.commands.registerCommand("yrs-dpsk-copilot.addFolderToChat", async (uri?: vscode.Uri, selectedUris?: vscode.Uri[]) => {
-      await addUrisToChat(provider, collectCommandUris(uri, selectedUris), "directory");
+      await addFilesToChat(provider, collectCommandUris(uri ?? fallbackUri, selectedUris));
     }),
     vscode.commands.registerCommand("yrs-dpsk-copilot.addSelectionToChat", async () => {
       await addActiveSelectionToChat(provider);
@@ -38,18 +35,18 @@ export function registerChatCommands(context: vscode.ExtensionContext, provider:
   );
 }
 
-async function addUrisToChat(provider: WebviewProvider, uris: vscode.Uri[], expectedType: "file" | "directory"): Promise<void> {
+async function addFilesToChat(provider: WebviewProvider, uris: vscode.Uri[]): Promise<void> {
   const references: ReferencedFilePayload[] = [];
 
   for (const uri of uris) {
     const reference = await createReferenceFromUri(uri);
-    if (reference && reference.type === expectedType) {
+    if (reference) {
       references.push(reference);
     }
   }
 
   if (references.length === 0) {
-    vscode.window.showInformationMessage(expectedType === "file" ? "Select a file to add to Yar's DeepSeek Copilot chat." : "Select a folder to add to Yar's DeepSeek Copilot chat.");
+    vscode.window.showInformationMessage("Select a file to add to Yar's DeepSeek Copilot chat.");
     return;
   }
 
@@ -135,23 +132,12 @@ function collectCommandUris(uri?: vscode.Uri, selectedUris?: vscode.Uri[]): vsco
 async function createReferenceFromUri(uri: vscode.Uri): Promise<ReferencedFilePayload | null> {
   try {
     const stat = await vscode.workspace.fs.stat(uri);
-    const isDirectory = stat.type === vscode.FileType.Directory;
-    const path = getDisplayPath(uri);
-    const name = getName(uri);
-
-    if (isDirectory) {
-      return {
-        path,
-        name,
-        type: "directory",
-        size: stat.size,
-      };
-    }
-
     if (stat.type !== vscode.FileType.File) {
       return null;
     }
 
+    const path = getDisplayPath(uri);
+    const name = getName(uri);
     const content = stat.size <= MAX_REFERENCE_BYTES ? Buffer.from(await vscode.workspace.fs.readFile(uri)).toString("utf8") : undefined;
     return {
       path,

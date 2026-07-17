@@ -1,6 +1,6 @@
 import type { VsCodeApi } from "@webview/VsCodeApi";
 import type { ToolCallState } from "@webview/views/chatView/ChatViewTypes";
-import { detectDiff, parseStructuredToolResult } from "@webview/views/chatView/utils/FilePreview";
+import { detectDiff, parseStructuredToolResult, parseTerminalCommandResult } from "@webview/views/chatView/utils/FilePreview";
 import {
   renderDiffPreview,
   renderFilePreview,
@@ -8,6 +8,7 @@ import {
   renderSearchPreview,
   renderSearchResults,
   renderStructuredFilePreview,
+  renderTerminalResult,
   renderWriteSummary,
 } from "./ToolCallResultRenderers";
 import "./ToolCallResultPreview.css";
@@ -19,7 +20,16 @@ interface ResultPreviewOptions {
 
 export function renderToolCallResultPreview({ toolCall, vscode }: ResultPreviewOptions) {
   const result = toolCall.result;
-  if (!result) return null;
+  if (!result) {
+    return null;
+  }
+
+  if (toolCall.toolName === "run_terminal_command") {
+    const terminalResult = parseTerminalCommandResult(result);
+    if (terminalResult) {
+      return renderTerminalResult(terminalResult);
+    }
+  }
 
   const structured = parseStructuredToolResult(result);
   if (structured?.type === "file") {

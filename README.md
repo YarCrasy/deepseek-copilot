@@ -1,19 +1,27 @@
 # Yar's DeepSeek Copilot
 
-Yar's DeepSeek Copilot is a VS Code assistant focused entirely on DeepSeek. It adds a sidebar chat with streaming responses, reasoning output, conversation history, path autocomplete for workspace context, and controlled tool execution for workspace tasks.
+Yar's DeepSeek Copilot is a VS Code assistant focused entirely on DeepSeek. It adds a sidebar chat with streaming responses, a chronological reasoning and tool timeline, workspace-scoped history, path autocomplete, bounded context, and controlled tool execution.
 
-> Preview disclaimer: Yar's DeepSeek Copilot is an independent third-party extension. It is not affiliated with, endorsed by, sponsored by, or officially maintained by DeepSeek. Preview releases may contain bugs; review tool calls and keep important work under version control.
+> DISCLAIMER: Yar's DeepSeek Copilot is an independent third-party extension. It is not affiliated with, endorsed by, sponsored by, or officially maintained by DeepSeek. Preview releases may contain bugs; review tool calls and keep important work under version control.
 
-The extension is DeepSeek-only by design. There is no provider selector and no Ollama integration.
+> PRIVACY DISCLAIMER: Yar's DeepSeek Copilot does not collect, track, or transmit usage data. However, the extension uses the official DeepSeek API, so prompts, referenced workspace content, conversation context, and generated responses sent to DeepSeek may be processed in or transferred through China and may be cached or retained by DeepSeek. Review DeepSeek's current privacy policy and API terms before sending confidential, personal, or regulated information.
+
+The extension is DeepSeek-only by design.
 
 ## Features
 
 - Sidebar chat inside VS Code.
-- Streaming responses from DeepSeek.
-- Optional thinking mode and reasoning display.
-- Conversation history with load and delete actions.
+- Streaming responses from DeepSeek with native `think -> tool -> think -> response` ordering.
+- Optional thinking mode with separate reasoning events for every tool round.
+- Workspace-scoped conversation history with retention, lazy loading, deletion confirmation, and Undo.
 - Type `./` or `../` in the chat input to autocomplete workspace paths.
-- Built-in tools for reading files, listing directories, searching content, creating files, and running terminal commands.
+- Explorer and editor commands for attaching files, folders, and exact selections.
+- Tools for reading, listing, searching, creating, editing, patching, and running terminal commands.
+- Structured, non-interactive terminal execution with timeout, bounded output, and process-tree cancellation.
+- Permission selector in Chat and per-tool modes in Settings.
+- Automatic bounded context from the active editor and staged or unstaged Git changes.
+- Keyboard-accessible confirmations, controlled autoscroll, editable drafts during streaming, and reduced-motion support.
+- Webview interface localized automatically in English, Spanish, and Chinese.
 - Safety confirmations for dangerous or destructive tool calls.
 - Stop generation restores the cancelled prompt to the input and does not keep it in conversation context.
 - API key stored in VS Code Secret Storage.
@@ -42,28 +50,20 @@ https://platform.deepseek.com/api_keys
 - `Yar's DeepSeek Copilot: Open Chat`
 - `Yar's DeepSeek Copilot: New Chat`
 - `Yar's DeepSeek Copilot: Add File to Chat`
-- `Yar's DeepSeek Copilot: Add Folder to Chat`
 - `Yar's DeepSeek Copilot: Add Selection to Chat`
 - `Yar's DeepSeek Copilot: Review Changes`
 
 ## Extension Settings
 
-This extension contributes the following settings:
+Settings are managed from the extension UI and stored globally in:
 
-- `yrs-dpsk-copilot.model`: DeepSeek model ID to use.
-- `yrs-dpsk-copilot.thinkingMode`: Enable DeepSeek thinking mode.
-- `yrs-dpsk-copilot.reasoningEffort`: Reasoning effort level, `high` or `max`.
-- `yrs-dpsk-copilot.temperature`: Sampling temperature.
-- `yrs-dpsk-copilot.topP`: Top P sampling.
-- `yrs-dpsk-copilot.maxTokens`: Maximum tokens for responses.
-- `yrs-dpsk-copilot.responseFormat`: Response format, `text` or `json_object`.
-- `yrs-dpsk-copilot.permissionMode`: Global tool permission mode, from chat-only to full access.
-- `yrs-dpsk-copilot.autoContext`: Automatically include active-editor and Git context.
-- `yrs-dpsk-copilot.toolExecutionModes`: Per-tool execution modes.
-- `yrs-dpsk-copilot.baseUrl`: DeepSeek API base URL.
-- `yrs-dpsk-copilot.projectInstructions.includeHomeAgents`: Allow reading `~/.yrs-dpsk-copilot/AGENTS.md`.
+```text
+~/.yrs-dpsk-copilot/settings.json
+```
 
-The API key is not stored in VS Code settings. It is stored with VS Code Secret Storage.
+This includes the model, reasoning options, limits, permission mode, per-tool execution modes, history retention, automatic context and global `AGENTS.md` access. Existing VS Code settings are copied to this file once and then removed from VS Code configuration.
+
+The API key is never written to this file. It remains in VS Code Secret Storage.
 
 ## Tools and Safety
 
@@ -71,8 +71,8 @@ Yar's DeepSeek Copilot can execute workspace tools when enabled. Tool access is 
 
 - `chat`: no tools.
 - `read-only`: read, list, and search workspace files.
-- `workspace`: read-only tools plus workspace file creation.
-- `full-access`: all tools. Dangerous commands still require confirmation.
+- `workspace`: read-only tools plus file creation, editing, and patches.
+- `full-access`: all tools, including terminal execution. Dangerous commands still require confirmation.
 
 Tool execution is then controlled per tool:
 
@@ -82,9 +82,36 @@ Tool execution is then controlled per tool:
 
 Dangerous operations, such as overwriting files or running risky terminal commands, require confirmation before execution.
 
+Tool calls have one visible lifecycle: awaiting confirmation, running, then completed, rejected, cancelled, or error. Calls within a round execute sequentially, identical repeated calls are skipped, and the configured round limit stops loops.
+
+Terminal commands are non-interactive. Results include stdout, stderr, exit code, signal, timeout and cancellation state, effective working directory, shell, and truncation state. Stopping generation cancels the complete spawned process tree.
+
+## History and Privacy
+
+- History is stored globally as one JSON file per conversation under `~/.yrs-dpsk-copilot/history/`.
+- The history list is rebuilt from those files, so it cannot become detached from a separate index.
+- Conversations show their source workspace and can be searched by title or workspace.
+- Storage is capped at 100 conversations and 24 MiB and uses the configured retention period.
+- Deleting one conversation or all visible conversations uses native VS Code confirmation and offers Undo.
+- Deleting the active conversation also clears Chat view; deleting another conversation leaves it untouched.
+- Interrupted pending or running tool calls are restored as cancelled. Corrupt records are isolated under `~/.yrs-dpsk-copilot/history/corrupt/`.
+
+## Context and Chat Commands
+
+Context is size-bounded before each API request. Large reasoning blocks, tool results, files, Git changes, and `AGENTS.md` instructions are trimmed or rejected at defined limits. Referenced content is labeled with workspace-relative paths and delimited as untrusted data.
+
+Available slash commands:
+
+- `/status`, `/context`, `/tools`
+- `/mode chat|read-only|workspace|full-access`
+- `/auto-context on|off`
+- `/review`, `/goal [text]`
+- `/summarize`, `/clear-context`
+
 ## Documentation
 
-- Visual documentation: `web-doc` with English, Spanish, and Chinese routes.
+- Visual documentation source: [`web-doc`](web-doc) with English, Spanish, and Chinese routes.
+- Generated GitHub Pages site: [`docs`](docs).
 - Technical documentation: https://github.com/YarCrasy/deepseek-copilot/wiki
 - DeepSeek API reference: https://api-docs.deepseek.com/
 
@@ -98,6 +125,14 @@ npm run build
 npm test
 ```
 
+Build the GitHub Pages documentation:
+
+```bash
+cd web-doc
+npm install
+npm run build
+```
+
 Useful scripts:
 
 - `npm run build:extension`: build the VS Code extension bundle.
@@ -108,6 +143,7 @@ Useful scripts:
 
 - DeepSeek is the only supported AI provider.
 - Tool execution depends on workspace permissions and user confirmation.
+- Terminal tools are deliberately non-interactive and cannot answer prompts or provide a TTY.
 - FIM support follows DeepSeek beta API behavior and may require the beta base URL.
 - This is a beta release. Review tool permissions before using it on important workspaces.
 

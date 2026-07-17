@@ -1,5 +1,6 @@
 import type { DangerConfirmationData } from "@webview/views/chatView/ChatViewTypes";
 import "./ToolCallDangerConfirmation.css";
+import { t } from "@webview/i18n";
 
 interface DangerConfirmationProps {
   toolCallId: string;
@@ -17,42 +18,52 @@ function DangerConfirmation({ toolCallId, dangerConfirmation, onConfirm, onCance
   return (
     <div className={`dangerConfirmation ${severityClass}`}>
       {dangerConfirmation.command && (
-        <div className="dangerCommandPreview">
+        <pre className="dangerCommandPreview" tabIndex={0} aria-label={t("Complete command")}>
           <code>{dangerConfirmation.command}</code>
-        </div>
+        </pre>
       )}
-      {dangerConfirmation.cwd ? <div className="dangerExecutionContext"><strong>Working directory:</strong> <code>{dangerConfirmation.cwd}</code></div> : null}
-      {dangerConfirmation.shell ? <div className="dangerExecutionContext"><strong>Shell:</strong> <code>{dangerConfirmation.shell}</code></div> : null}
+      {dangerConfirmation.cwd ? <div className="dangerExecutionContext"><strong>{t("Working directory:")}</strong> <code>{dangerConfirmation.cwd}</code></div> : null}
+      {dangerConfirmation.shell ? <div className="dangerExecutionContext"><strong>{t("Shell:")}</strong> <code>{dangerConfirmation.shell}</code></div> : null}
+
+      <p className="dangerTrustExplanation">
+        {isDestructive
+          ? t("This destructive operation is approved once only. Destructive actions always require a separate confirmation.")
+          : t("Execute once approves only this operation. Trust for this session approves matching safe operations until this VS Code session ends.")}
+      </p>
 
       <div className="toolCallDecisionRow">
         <button
+          type="button"
           className="toolCallDecisionOption primary dangerPrimaryAction dangerConfirmBtn"
           onClick={(event) => {
             event.stopPropagation();
             onConfirm(toolCallId, { trustForSession: false });
           }}
         >
-          {isDestructive ? "Yes, execute" : "Execute"}
+          {isDestructive ? t("Yes, execute once") : t("Execute once")}
         </button>
         {canTrustForSession && (
           <button
+            type="button"
             className="toolCallDecisionOption dangerPrimaryAction dangerRememberBtn"
             onClick={(event) => {
               event.stopPropagation();
               onConfirm(toolCallId, { trustForSession: true });
             }}
           >
-            Remember for this session
+            {t("Trust matching operations this session")}
           </button>
         )}
         <button
+          type="button"
           className="toolCallDecisionOption dangerCancelBtn"
+          data-dialog-initial-focus
           onClick={(event) => {
             event.stopPropagation();
             onCancel(toolCallId);
           }}
         >
-          Cancel
+          {t("Cancel")}
         </button>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import type { VsCodeApi } from "@webview/VsCodeApi";
-import type { StructuredToolResult } from "@webview/views/chatView/utils/FilePreview";
+import type { StructuredToolResult, TerminalCommandResult } from "@webview/views/chatView/utils/FilePreview";
 import { detectFileType, detectLanguage, extractFilename, formatSize, looksBinary, parseSearchResults } from "@webview/views/chatView/utils/FilePreview";
+import { t } from "@webview/i18n";
 
 type StructuredFileResult = Extract<StructuredToolResult, { type: "file" }>;
 type SearchResult = { file: string; line: number; text: string };
@@ -20,7 +21,7 @@ export function renderFilePreview(argsStr: string, result: string) {
   const isBinary = fileType === "binary" || looksBinary(result);
 
   if (isBinary) {
-    return renderBinaryHeader(filename, result.length, "Binary content cannot be previewed as text.");
+    return renderBinaryHeader(filename, result.length, t("Binary content cannot be previewed as text."));
   }
 
   if (fileType === "code") {
@@ -49,8 +50,8 @@ export function renderSearchResults(results: SearchResult[], vscode: VsCodeApi |
   return (
     <div className="filePreview searchPreview">
       <div className="filePreviewHeader">
-        <span className="filePreviewName">Search results</span>
-        <span className="filePreviewSize">{results.length} results</span>
+        <span className="filePreviewName">{t("Search results")}</span>
+        <span className="filePreviewSize">{t("{count} results", { count: results.length })}</span>
       </div>
       <div className="searchResultsList">
         {results.slice(0, 30).map((resultItem, index) => (
@@ -58,7 +59,7 @@ export function renderSearchResults(results: SearchResult[], vscode: VsCodeApi |
             key={index}
             className="searchResultItem"
             onClick={() => vscode?.postMessage({ type: "openFile", path: resultItem.file, line: resultItem.line })}
-            data-tooltip={`Click to open ${resultItem.file}:${resultItem.line}`}
+            data-tooltip={t("Click to open {path}:{line}", { path: resultItem.file, line: resultItem.line })}
             data-tooltip-align="start"
           >
             <span className="searchResultFile">{resultItem.file}</span>
@@ -66,7 +67,7 @@ export function renderSearchResults(results: SearchResult[], vscode: VsCodeApi |
             <span className="searchResultText">{resultItem.text}</span>
           </button>
         ))}
-        {(results.length > 30 || truncated) && <div className="searchResultMore">... and {Math.max(results.length - 30, 0)} more results</div>}
+        {(results.length > 30 || truncated) && <div className="searchResultMore">{t("... and {count} more results", { count: Math.max(results.length - 30, 0) })}</div>}
       </div>
     </div>
   );
@@ -75,7 +76,7 @@ export function renderSearchResults(results: SearchResult[], vscode: VsCodeApi |
 export function renderStructuredFilePreview(result: StructuredFileResult) {
   const filename = extractFilename(result.path);
   if (result.binary) {
-    return renderBinaryHeader(filename, result.size, "Binary file detected. Text preview is unavailable.");
+    return renderBinaryHeader(filename, result.size, t("Binary file detected. Text preview is unavailable."));
   }
 
   const language = detectLanguage(filename);
@@ -93,11 +94,11 @@ export function renderToolCallArgumentsPreview(toolName: string, argumentsJson: 
   const content = getPreviewContent(toolName, parsed);
 
   if (toolName === "read_file") {
-    return renderToolCallSummaryPreview(`reading: ${formatRelativePath(path || "file")}`);
+    return renderToolCallSummaryPreview(t("reading: {path}", { path: formatRelativePath(path || "file") }));
   }
 
   if (toolName === "list_directory") {
-    return renderToolCallSummaryPreview(`listed: ${formatRelativePath(path || ".")}`);
+    return renderToolCallSummaryPreview(t("listing: {path}", { path: formatRelativePath(path || ".") }));
   }
 
   if (content) {
@@ -114,12 +115,12 @@ export function renderWriteSummary(summary: string, path: string, metadata: Writ
     <div className="filePreview writePreview">
       <div className="filePreviewHeader">
         <span className="filePreviewName">{path}</span>
-        {metadata.beforeSize !== undefined && <span className="filePreviewSize">before {formatSize(metadata.beforeSize)}</span>}
-        {metadata.afterSize !== undefined && <span className="filePreviewSize">after {formatSize(metadata.afterSize)}</span>}
-        {metadata.binary && <span className="filePreviewType">binary source</span>}
+        {metadata.beforeSize !== undefined && <span className="filePreviewSize">{t("before {size}", { size: formatSize(metadata.beforeSize) })}</span>}
+        {metadata.afterSize !== undefined && <span className="filePreviewSize">{t("after {size}", { size: formatSize(metadata.afterSize) })}</span>}
+        {metadata.binary && <span className="filePreviewType">{t("binary source")}</span>}
       </div>
       <div className="writeSummary">{summary}</div>
-      {metadata.binary && <div className="filePreviewNotice">Previous file was binary, so no text diff is available.</div>}
+      {metadata.binary && <div className="filePreviewNotice">{t("Previous file was binary, so no text diff is available.")}</div>}
     </div>
   );
 }
@@ -132,7 +133,7 @@ export function renderDiffPreview(result: string, options: DiffPreviewOptions | 
   const normalizedOptions: DiffPreviewOptions = typeof options === "string" ? { summary: options } : options;
   const parsed = parseDiff(result);
   const stats = normalizedOptions.stats || parsed.stats;
-  const summary = normalizedOptions.summary || normalizedOptions.path || "File changed";
+  const summary = normalizedOptions.summary || normalizedOptions.path || t("File changed");
 
   return (
     <div className="filePreview diffPreview">
@@ -141,10 +142,10 @@ export function renderDiffPreview(result: string, options: DiffPreviewOptions | 
         <span className="filePreviewSize">+{stats.additions}</span>
         <span className="filePreviewSize">-{stats.deletions}</span>
         {normalizedOptions.afterSize !== undefined && <span className="filePreviewSize">{formatSize(normalizedOptions.afterSize)}</span>}
-        {(normalizedOptions.truncated || parsed.truncated) && <span className="filePreviewType">truncated</span>}
+        {(normalizedOptions.truncated || parsed.truncated) && <span className="filePreviewType">{t("truncated")}</span>}
       </div>
       <div className="diffContent">{parsed.lines.map(renderDiffLine)}</div>
-      {(normalizedOptions.truncated || parsed.truncated) && <div className="filePreviewNotice">Diff preview is truncated. The file operation still completed.</div>}
+      {(normalizedOptions.truncated || parsed.truncated) && <div className="filePreviewNotice">{t("Diff preview is truncated. The file operation still completed.")}</div>}
     </div>
   );
 }
@@ -153,9 +154,45 @@ export function renderPlainResult(result: string, status: string) {
   const isError = status === "error";
   return (
     <details className="toolCallResult" open={isError}>
-      <summary>{isError ? "Error" : "Result"}</summary>
+      <summary>{isError ? t("Error") : t("Result")}</summary>
       <pre className={isError ? "errorText" : ""}>{truncate(result, 1000)}</pre>
     </details>
+  );
+}
+
+export function renderTerminalResult(result: TerminalCommandResult) {
+  const duration = result.durationMs < 1000 ? `${Math.round(result.durationMs)} ms` : `${(result.durationMs / 1000).toFixed(1)} s`;
+  const outcome = result.cancelled
+    ? t("cancelled")
+    : result.timedOut
+      ? t("timed out")
+      : t("exit {code}", { code: result.exitCode ?? t("unknown") });
+  const stdoutPreviewTruncated = result.stdout.length > 16_000;
+  const stderrPreviewTruncated = result.stderr.length > 16_000;
+  return (
+    <div className="terminalResult">
+      <div className="terminalMetadata" aria-label={t("Terminal command metadata")}>
+        <span className={`terminalOutcome ${result.exitCode === 0 && !result.timedOut && !result.cancelled ? "success" : "failure"}`}>{outcome}</span>
+        <span>{duration}</span>
+        <span title={result.cwd}>{t("cwd: {cwd}", { cwd: result.cwd })}</span>
+        <span title={result.shell}>{t("shell: {shell}", { shell: result.shell })}</span>
+        {result.signal ? <span>{t("signal: {signal}", { signal: result.signal })}</span> : null}
+        {result.truncated.stdout || result.truncated.stderr ? <span>{t("output truncated")}</span> : null}
+      </div>
+      {result.stdout ? (
+        <details className="terminalStream" open>
+          <summary>stdout{result.truncated.stdout || stdoutPreviewTruncated ? t(" (truncated preview)") : ""}</summary>
+          <pre>{truncate(result.stdout, 16_000)}</pre>
+        </details>
+      ) : null}
+      {result.stderr ? (
+        <details className="terminalStream terminalStderr" open>
+          <summary>stderr{result.truncated.stderr || stderrPreviewTruncated ? t(" (truncated preview)") : ""}</summary>
+          <pre>{truncate(result.stderr, 16_000)}</pre>
+        </details>
+      ) : null}
+      {!result.stdout && !result.stderr ? <div className="filePreviewNotice">{t("Command completed without output.")}</div> : null}
+    </div>
   );
 }
 
@@ -215,7 +252,7 @@ function renderBinaryHeader(filename: string, size: number, message: string) {
       <div className="filePreviewHeader">
         <span className="filePreviewName">{filename}</span>
         <span className="filePreviewSize">{formatSize(size)}</span>
-        <span className="filePreviewType">binary</span>
+        <span className="filePreviewType">{t("binary")}</span>
       </div>
       <div className="filePreviewNotice">{message}</div>
     </div>
@@ -231,12 +268,12 @@ function renderCodePreview(options: { filename: string; language?: string; size:
         {showMetadata && language && <span className="filePreviewLang">{language}</span>}
         {showMetadata && <span className="filePreviewSize">{formatSize(size)}</span>}
         {truncated && <span className="filePreviewType">preview {formatSize(previewSize || content.length)}</span>}
-        {truncated && <span className="filePreviewType">truncated</span>}
+        {truncated && <span className="filePreviewType">{t("truncated")}</span>}
       </div>
       <pre className="filePreviewCode">
         <code className={`language-${language || "text"}`}>{renderHighlightedCode(content, language)}</code>
       </pre>
-      {truncated && <div className="filePreviewNotice">Only the first {formatSize(previewSize || content.length)} is shown.</div>}
+      {truncated && <div className="filePreviewNotice">{t("Only the first {size} is shown.", { size: formatSize(previewSize || content.length) })}</div>}
     </div>
   );
 }
@@ -264,27 +301,27 @@ function renderHighlightedLine(line: string, index: number, language?: string) {
 }
 
 function tokenizeLine(line: string, language?: string): Array<{ text: string; className?: string }> {
-  if (!language) return [{ text: line }];
+  if (!language) {return [{ text: line }];}
   const pattern =
     /("(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\b(?:const|let|var|function|return|import|export|from|if|else|for|while|class|interface|type|async|await|try|catch|new|true|false|null|undefined)\b|\b\d+(?:\.\d+)?\b|\/\/.*$|#.*$)/g;
   const tokens: Array<{ text: string; className?: string }> = [];
   let cursor = 0;
 
   for (const match of line.matchAll(pattern)) {
-    if (match.index === undefined) continue;
-    if (match.index > cursor) tokens.push({ text: line.slice(cursor, match.index) });
+    if (match.index === undefined) {continue;}
+    if (match.index > cursor) {tokens.push({ text: line.slice(cursor, match.index) });}
     tokens.push({ text: match[0], className: getTokenClass(match[0]) });
     cursor = match.index + match[0].length;
   }
 
-  if (cursor < line.length) tokens.push({ text: line.slice(cursor) });
+  if (cursor < line.length) {tokens.push({ text: line.slice(cursor) });}
   return tokens;
 }
 
 function getTokenClass(token: string): string {
-  if (token.startsWith("//") || token.startsWith("#")) return "syntaxComment";
-  if (/^["'`]/.test(token)) return "syntaxString";
-  if (/^\d/.test(token)) return "syntaxNumber";
+  if (token.startsWith("//") || token.startsWith("#")) {return "syntaxComment";}
+  if (/^["'`]/.test(token)) {return "syntaxString";}
+  if (/^\d/.test(token)) {return "syntaxNumber";}
   return "syntaxKeyword";
 }
 
@@ -353,10 +390,10 @@ function renderDiffLine(line: ParsedDiffLine, index: number) {
 }
 
 function getDiffLineClass(kind: ParsedDiffLine["kind"]): string {
-  if (kind === "add") return "diffAdd";
-  if (kind === "remove") return "diffRemove";
-  if (kind === "header") return "diffHeader";
-  if (kind === "hunk") return "diffHunk";
-  if (kind === "note") return "diffNote";
+  if (kind === "add") {return "diffAdd";}
+  if (kind === "remove") {return "diffRemove";}
+  if (kind === "header") {return "diffHeader";}
+  if (kind === "hunk") {return "diffHunk";}
+  if (kind === "note") {return "diffNote";}
   return "diffContext";
 }

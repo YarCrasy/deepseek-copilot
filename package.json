@@ -36,7 +36,6 @@
     "theme": "dark"
   },
   "main": "./dist/extension.js",
-  "activationEvents": [],
   "contributes": {
     "commands": [
       {
@@ -47,12 +46,6 @@
       {
         "command": "yrs-dpsk-copilot.addFileToChat",
         "title": "Yar's DeepSeek Copilot: Add File to Chat",
-        "category": "Yar's DeepSeek Copilot",
-        "icon": "$(add)"
-      },
-      {
-        "command": "yrs-dpsk-copilot.addFolderToChat",
-        "title": "Yar's DeepSeek Copilot: Add Folder to Chat",
         "category": "Yar's DeepSeek Copilot",
         "icon": "$(add)"
       },
@@ -81,11 +74,6 @@
           "command": "yrs-dpsk-copilot.addFileToChat",
           "when": "resourceScheme == file && !explorerResourceIsFolder",
           "group": "navigation@50"
-        },
-        {
-          "command": "yrs-dpsk-copilot.addFolderToChat",
-          "when": "resourceScheme == file && explorerResourceIsFolder",
-          "group": "navigation@51"
         }
       ],
       "editor/context": [
@@ -126,149 +114,6 @@
           "visibility": "visible"
         }
       ]
-    },
-    "configuration": {
-      "type": "object",
-      "title": "Yar's DeepSeek Copilot",
-      "properties": {
-        "yrs-dpsk-copilot.model": {
-          "type": "string",
-          "default": "deepseek-v4-flash",
-          "scope": "application",
-          "description": "DeepSeek model ID to use"
-        },
-        "yrs-dpsk-copilot.thinkingMode": {
-          "type": "boolean",
-          "default": true,
-          "scope": "application",
-          "description": "Enable DeepSeek thinking mode for reasoning models"
-        },
-        "yrs-dpsk-copilot.reasoningEffort": {
-          "type": "string",
-          "default": "high",
-          "scope": "application",
-          "enum": [
-            "high",
-            "max"
-          ],
-          "description": "DeepSeek reasoning effort level"
-        },
-        "yrs-dpsk-copilot.temperature": {
-          "type": "number",
-          "default": 1,
-          "minimum": 0,
-          "maximum": 2,
-          "scope": "application",
-          "description": "Sampling temperature"
-        },
-        "yrs-dpsk-copilot.topP": {
-          "type": "number",
-          "default": 1,
-          "minimum": 0,
-          "maximum": 1,
-          "scope": "application",
-          "description": "Top P sampling"
-        },
-        "yrs-dpsk-copilot.maxTokens": {
-          "type": "number",
-          "default": 8192,
-          "minimum": 1,
-          "maximum": 65536,
-          "scope": "application",
-          "description": "Maximum tokens for responses"
-        },
-        "yrs-dpsk-copilot.maxToolRounds": {
-          "type": "number",
-          "default": 6,
-          "minimum": 1,
-          "maximum": 20,
-          "scope": "application",
-          "description": "Maximum tool-call rounds per turn"
-        },
-        "yrs-dpsk-copilot.responseFormat": {
-          "type": "string",
-          "default": "text",
-          "scope": "application",
-          "enum": [
-            "text",
-            "json_object"
-          ],
-          "description": "Response format"
-        },
-        "yrs-dpsk-copilot.permissionMode": {
-          "type": "string",
-          "default": "read-only",
-          "scope": "application",
-          "enum": [
-            "chat",
-            "read-only",
-            "workspace",
-            "full-access"
-          ],
-          "enumDescriptions": [
-            "Chat only; no tools are available.",
-            "Allow read-only workspace tools.",
-            "Allow read-only tools plus workspace file creation, edits, and patches.",
-            "Allow all tools. Dangerous commands still require confirmation."
-          ],
-          "description": "Global permission mode for tool access"
-        },
-        "yrs-dpsk-copilot.enableBetaFeatures": {
-          "type": "boolean",
-          "default": false,
-          "scope": "application",
-          "description": "Enable DeepSeek beta features, including strict tool-call schemas."
-        },
-        "yrs-dpsk-copilot.autoContext": {
-          "type": "boolean",
-          "default": false,
-          "scope": "application",
-          "description": "Automatically include the active editor and git status/diff context with chat requests."
-        },
-        "yrs-dpsk-copilot.historyEnabled": {
-          "type": "boolean",
-          "default": true,
-          "scope": "window",
-          "description": "Store chat history for this workspace."
-        },
-        "yrs-dpsk-copilot.historyRetentionDays": {
-          "type": "number",
-          "default": 30,
-          "minimum": 0,
-          "maximum": 3650,
-          "scope": "window",
-          "description": "History retention in days. Use 0 to keep history until manually deleted."
-        },
-        "yrs-dpsk-copilot.projectInstructions.includeHomeAgents": {
-          "type": "boolean",
-          "default": false,
-          "scope": "application",
-          "description": "Allow Yar's DeepSeek Copilot to read ~/.yrs-dpsk-copilot/AGENTS.md as a global instruction source."
-        },
-        "yrs-dpsk-copilot.toolExecutionModes": {
-          "type": "object",
-          "default": {},
-          "scope": "application",
-          "patternProperties": {
-            "^[a-zA-Z0-9_-]+$": {
-              "type": "string",
-              "enum": [
-                "disabled",
-                "enabled",
-                "auto_approve"
-              ]
-            }
-          },
-          "additionalProperties": false,
-          "description": "Per-tool execution modes"
-        },
-        "yrs-dpsk-copilot.baseUrl": {
-          "type": "string",
-          "default": "https://api.deepseek.com",
-          "scope": "application",
-          "description": "DeepSeek API base URL"
-        }
-      }
     }
   },
   "scripts": {
@@ -283,7 +128,7 @@
     "lint": "eslint src",
     "test": "npm run test:unit && npm run test:integration",
     "test:unit": "node scripts/run-unit-tests.mjs",
-    "test:integration": "npm run build && esbuild src/test/Extension.test.ts --bundle --platform=node --format=cjs --external:vscode --outfile=out/test/Extension.test.js && vscode-test"
+    "test:integration": "npm run build && node ./node_modules/esbuild/bin/esbuild src/test/Extension.test.ts --bundle --platform=node --format=cjs --external:vscode --outfile=out/test/Extension.test.js && vscode-test"
   },
   "dependencies": {
     "@vscode/codicons": "^0.0.45",
@@ -312,7 +157,9 @@
     "vite": "^8.1.4"
   },
   "allowScripts": {
-    "esbuild@0.28.1": true
+    "esbuild@0.28.1": true,
+    "@vscode/vsce-sign@2.0.9": true,
+    "keytar@7.9.0": true
   },
   "overrides": {
     "diff": "9.0.0",

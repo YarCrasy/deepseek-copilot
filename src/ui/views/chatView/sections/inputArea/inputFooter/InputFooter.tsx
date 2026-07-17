@@ -4,6 +4,7 @@ import { MODEL_OPTIONS } from "@/adapters/deepseek/Models";
 import ReferencedFilesChips from "./ReferencedFilesChips";
 import type { ReferencedFile } from "./Types";
 import type { PermissionMode } from "@/adapters";
+import { t } from "@webview/i18n";
 
 type Props = {
   reasoning: string;
@@ -18,6 +19,12 @@ type Props = {
   onRemoveReferencedFile?: (index: number) => void;
 };
 
+const PERMISSION_MODES: readonly PermissionMode[] = ["chat", "read-only", "workspace", "full-access"];
+
+function parsePermissionMode(value: string): PermissionMode | undefined {
+  return PERMISSION_MODES.find((mode) => mode === value);
+}
+
 function InputFooter({
   reasoning,
   selectedModel,
@@ -29,7 +36,7 @@ function InputFooter({
   onRemoveReferencedFile,
 }: Props) {
   const reasoningOptions = useMemo(() => {
-    return [{ value: "off", label: "Off" }, { value: "high", label: "High" }, { value: "max", label: "Max" }];
+    return [{ value: "off", label: t("Off") }, { value: "high", label: t("High") }, { value: "max", label: t("Max") }];
   }, []);
 
   const modelOptions = useMemo(() => {
@@ -40,10 +47,10 @@ function InputFooter({
   }, [selectedModel]);
 
   const permissionOptions: Array<{ value: PermissionMode; label: string }> = [
-    { value: "chat", label: "Chat" },
-    { value: "read-only", label: "Read only" },
-    { value: "workspace", label: "Workspace" },
-    { value: "full-access", label: "Full access" },
+    { value: "chat", label: t("Chat") },
+    { value: "read-only", label: t("Read only") },
+    { value: "workspace", label: t("Workspace") },
+    { value: "full-access", label: t("Full access") },
   ];
 
   return (
@@ -51,23 +58,34 @@ function InputFooter({
       <ReferencedFilesChips files={referencedFiles} onRemove={onRemoveReferencedFile ?? (() => undefined)} />
       <div className="inputFooterControls">
         <div className="inputFooterPrimaryControls">
-          <span className="selectTooltipWrapper" data-tooltip="Model Selector">
-            <select name="ModelSelector" id="ModelSelector" aria-label="Model Selector" value={selectedModel} onChange={(event) => onModelChange(event.target.value)}>
+          <span className="selectTooltipWrapper" data-tooltip={t("Model Selector")}>
+            <select name="ModelSelector" id="ModelSelector" aria-label={t("Model Selector")} value={selectedModel} onChange={(event) => onModelChange(event.target.value)}>
             {modelOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
             </select>
           </span>
-          <span className="selectTooltipWrapper" data-tooltip="Reasoning">
-            <select name="Reasoning" id="Reasoning" aria-label="Reasoning" value={reasoning} onChange={(event) => onReasoningChange(event.target.value)}>
+          <span className="selectTooltipWrapper" data-tooltip={t("Reasoning")}>
+            <select name="Reasoning" id="Reasoning" aria-label={t("Reasoning")} value={reasoning} onChange={(event) => onReasoningChange(event.target.value)}>
             {reasoningOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
             </select>
           </span>
         </div>
-        <span className="selectTooltipWrapper" data-tooltip="Permission mode">
-          <select name="PermissionMode" id="PermissionMode" aria-label="Permission mode" value={permissionMode} onChange={(event) => onPermissionModeChange(event.target.value as PermissionMode)}>
+        <span className="selectTooltipWrapper" data-tooltip={t("Permission mode")}>
+          <select
+            name="PermissionMode"
+            id="PermissionMode"
+            aria-label={t("Permission mode")}
+            value={permissionMode}
+            onChange={(event) => {
+              const nextPermissionMode = parsePermissionMode(event.target.value);
+              if (nextPermissionMode) {
+                onPermissionModeChange(nextPermissionMode);
+              }
+            }}
+          >
             {permissionOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}

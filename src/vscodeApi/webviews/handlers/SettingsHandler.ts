@@ -13,16 +13,16 @@ export class SettingsHandler {
   handle(message: SettingsMessage, webviewView: vscode.WebviewView): void {
     switch (message.type) {
       case "getConfig":
-        this.postCurrentConfig(webviewView);
+        void this.postCurrentConfig(webviewView);
         break;
       case "saveConfig":
-        this._saveConfig(message.config, webviewView);
+        void this._saveConfig(message.config, webviewView);
         break;
       case "resetConfig":
-        this._resetConfig(webviewView);
+        void this._resetConfig(webviewView);
         break;
       case "testConnection":
-        this._testConnection(message, webviewView);
+        void this._testConnection(message, webviewView);
         break;
       default:
         logWarning("[SettingsHandler] Unknown message");
@@ -30,66 +30,59 @@ export class SettingsHandler {
   }
 
   async postCurrentConfig(webviewView: vscode.WebviewView): Promise<void> {
-    const config = SettingsManager.load();
-    const apiKey = await SecretsManager.getApiKey(this.context);
-
-    webviewView.webview.postMessage({
-      type: "configLoaded",
-      config: { ...config, apiKey: apiKey || "" },
-    });
-
-    webviewView.webview.postMessage({
-      type: "apiKeyStatusSettings",
-      status: apiKey ? "configured" : "missing",
-      keyPreview: apiKey ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : undefined,
-    });
-
-    webviewView.webview.postMessage({
-      type: "apiKeyStatus",
-      status: apiKey ? "configured" : "missing",
-      keyPreview: apiKey ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : undefined,
-    });
+    try {
+      await this._postConfigAndApiKeyStatus(webviewView, "configLoaded");
+    } catch (error: unknown) {
+      logWarning(`[SettingsHandler] Failed to load settings: ${getErrorMessage(error)}`);
+      await webviewView.webview.postMessage({ type: "configSaved", success: false });
+    }
   }
 
   private async _saveConfig(config: Partial<AppConfig>, webviewView: vscode.WebviewView): Promise<void> {
-    // apiKey is stored only in SecretStorage, never in synchronized settings.
-    if (Object.prototype.hasOwnProperty.call(config, "apiKey")) {
-      if (config.apiKey) {
-        await SecretsManager.setApiKey(this.context, config.apiKey);
-      } else {
-        await SecretsManager.deleteApiKey(this.context);
+    try {
+      // apiKey is stored only in SecretStorage, never in synchronized settings.
+      if (Object.prototype.hasOwnProperty.call(config, "apiKey")) {
+        if (config.apiKey) {
+          await SecretsManager.setApiKey(this.context, config.apiKey);
+        } else {
+          await SecretsManager.deleteApiKey(this.context);
+        }
       }
+      await SettingsManager.save(config);
+      await this._postConfigAndApiKeyStatus(webviewView, "configLoaded");
+      await webviewView.webview.postMessage({ type: "configSaved", success: true });
+    } catch (error: unknown) {
+      logWarning(`[SettingsHandler] Failed to save settings: ${getErrorMessage(error)}`);
+      await webviewView.webview.postMessage({ type: "configSaved", success: false });
     }
-    await SettingsManager.save(config);
-
-    const freshConfig = SettingsManager.load();
-    const apiKey = await SecretsManager.getApiKey(this.context);
-    const apiKeyStatus = apiKey ? ("configured" as const) : ("missing" as const);
-
-    webviewView.webview.postMessage({
-      type: "configLoaded",
-      config: { ...freshConfig, apiKey: apiKey || "" },
-    });
-
-    webviewView.webview.postMessage({
-      type: "apiKeyStatus",
-      status: apiKeyStatus,
-      keyPreview: apiKey ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : undefined,
-    });
-
-    webviewView.webview.postMessage({
-      type: "configSaved",
-      success: true,
-    });
   }
 
   private async _resetConfig(webviewView: vscode.WebviewView): Promise<void> {
-    await SettingsManager.reset();
+    const confirmation = await vscode.window.showWarningMessage(
+      "Reset all extension settings to their defaults?",
+      { modal: true, detail: "Your API key is stored separately and will be preserved." },
+      "Reset settings",
+    );
+    if (confirmation !== "Reset settings") {return;}
+
+    try {
+      await SettingsManager.reset();
+      await this._postConfigAndApiKeyStatus(webviewView, "configReset");
+    } catch (error: unknown) {
+      logWarning(`[SettingsHandler] Failed to reset settings: ${getErrorMessage(error)}`);
+      await webviewView.webview.postMessage({ type: "configSaved", success: false });
+    }
+  }
+
+  private async _postConfigAndApiKeyStatus(webviewView: vscode.WebviewView, type: "configLoaded" | "configReset"): Promise<void> {
     const config = SettingsManager.load();
-    webviewView.webview.postMessage({
-      type: "configReset",
-      config,
-    });
+    const apiKey = (await SecretsManager.getApiKey(this.context)) || "";
+    const status = apiKey ? "configured" : "missing";
+    const keyPreview = apiKey ? `${apiKey.slice(0, 4)}...${apiKey.slice(-4)}` : undefined;
+
+    await webviewView.webview.postMessage({ type, config: { ...config, apiKey } });
+    await webviewView.webview.postMessage({ type: "apiKeyStatusSettings", status, keyPreview });
+    await webviewView.webview.postMessage({ type: "apiKeyStatus", status, keyPreview });
   }
 
   private async _testConnection(payload: TestConnectionMessage, webviewView: vscode.WebviewView): Promise<void> {

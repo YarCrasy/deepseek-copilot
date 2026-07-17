@@ -17,6 +17,8 @@ suite("shell execution", () => {
     assert.ok(result.stderr.endsWith("TAIL"));
     assert.ok(result.cwd);
     assert.ok(result.shell);
+    assert.ok(Number.isInteger(result.durationMs));
+    assert.ok(result.durationMs >= 0);
   });
 
   test("aborts a running command promptly", async () => {

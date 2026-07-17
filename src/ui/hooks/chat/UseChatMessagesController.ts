@@ -53,6 +53,15 @@ export function useChatMessagesController({
         const { wasStreamed, ...rest } = message;
         setMessages((current) => {
           if (wasStreamed && rest.role === "assistant") {
+            if (!streamingMessageIdRef.current) {
+              return [...current, {
+                id: nextMessageId(),
+                role: "assistant",
+                content: rest.content,
+                toolCalls: rest.toolCalls as StoredToolCall[] | undefined,
+                timeline: rest.timeline,
+              }];
+            }
             return updateStreamedAssistant(current, streamingMessageIdRef.current, rest.toolCalls, rest.timeline);
           }
 
@@ -182,5 +191,5 @@ function updateStreamedAssistant(
     }
   }
 
-  return current.map((message, index) => (index === current.length - 1 && message.role === "assistant" ? patch(message) : message));
+  return current;
 }

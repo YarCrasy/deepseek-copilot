@@ -83,3 +83,56 @@
 .searchResultLine {
   color: var(--text-secondary);
 }
+.terminalResult {
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 70%, transparent);
+  min-width: 0;
+}
+.terminalMetadata {
+  color: var(--text-secondary);
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 7px 9px;
+  font-size: 10px;
+  display: flex;
+
+  span {
+    border: 1px solid color-mix(in srgb, var(--border-color) 75%, transparent);
+    border-radius: 999px;
+    min-width: 0;
+    max-width: 100%;
+    padding: 2px 6px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+}
+.terminalOutcome.success {
+  color: var(--success-color, #4caf50);
+}
+.terminalOutcome.failure {
+  color: #ffb6b6;
+}
+.terminalStream {
+  border-top: 1px solid color-mix(in srgb, var(--border-color) 55%, transparent);
+
+  summary {
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 6px 9px;
+    font-size: 10px;
+  }
+
+  pre {
+    max-height: 260px;
+    margin: 0;
+    padding: 8px 9px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    overflow: auto;
+  }
+}
+.terminalStderr pre {
+  color: #ffb6b6;
+}

@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { KeyboardEvent } from "react";
 import "@vscode/codicons/dist/codicon.css";
 import "./SettingsView.css";
 import { ProvidersTab, ToolsTab } from "./tabs";
 import { getVsCodeApi } from "../../VsCodeApi";
 import { DEFAULT_CONFIG, MODEL_OPTIONS, REASONING_EFFORT_OPTIONS, type SettingsConfig } from "./settingsDataModels";
 import type { AvailableToolInfo, HandlerToWebviewMessage, ToolExecutionModes } from "@/adapters";
+import { t } from "@webview/i18n";
 
 type SettingsTab = "deepseek" | "tools";
+type Notification = { type: "error" | "success"; message: string };
 
 function SettingsView() {
   const vscode = useMemo(() => getVsCodeApi(), []);
@@ -14,7 +17,10 @@ function SettingsView() {
   const [tools, setTools] = useState<AvailableToolInfo[]>([]);
   const [activeTab, setActiveTab] = useState<SettingsTab>("deepseek");
   const [hasLoadedConfig, setHasLoadedConfig] = useState(false);
-  const [notification, setNotification] = useState<{ type: "error"; message: string } | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [notification, setNotification] = useState<Notification | null>(null);
+  const loadedRef = useRef(false);
+  const tabRefs = useRef<Record<SettingsTab, HTMLButtonElement | null>>({ deepseek: null, tools: null });
   const effectiveToolExecutionModes = useMemo(() => normalizeToolExecutionModes(config.toolExecutionModes, tools), [config.toolExecutionModes, tools]);
 
   const applyConfig = useCallback((nextConfig: Partial<SettingsConfig>) => {
@@ -22,20 +28,6 @@ function SettingsView() {
       ...current,
       ...nextConfig,
       apiKey: nextConfig.apiKey ?? current.apiKey ?? DEFAULT_CONFIG.apiKey,
-      model: nextConfig.model ?? current.model ?? DEFAULT_CONFIG.model,
-      thinkingMode: nextConfig.thinkingMode ?? current.thinkingMode ?? DEFAULT_CONFIG.thinkingMode,
-      reasoningEffort: nextConfig.reasoningEffort ?? current.reasoningEffort ?? DEFAULT_CONFIG.reasoningEffort,
-      temperature: nextConfig.temperature ?? current.temperature ?? DEFAULT_CONFIG.temperature,
-      topP: nextConfig.topP ?? current.topP ?? DEFAULT_CONFIG.topP,
-      maxTokens: nextConfig.maxTokens ?? current.maxTokens ?? DEFAULT_CONFIG.maxTokens,
-      maxToolRounds: nextConfig.maxToolRounds ?? current.maxToolRounds ?? DEFAULT_CONFIG.maxToolRounds,
-      baseUrl: nextConfig.baseUrl ?? current.baseUrl ?? DEFAULT_CONFIG.baseUrl,
-      responseFormat: nextConfig.responseFormat ?? current.responseFormat ?? DEFAULT_CONFIG.responseFormat,
-      permissionMode: nextConfig.permissionMode ?? current.permissionMode ?? DEFAULT_CONFIG.permissionMode,
-      toolExecutionModes: nextConfig.toolExecutionModes ?? current.toolExecutionModes ?? DEFAULT_CONFIG.toolExecutionModes,
-      enableBetaFeatures: nextConfig.enableBetaFeatures ?? current.enableBetaFeatures ?? DEFAULT_CONFIG.enableBetaFeatures,
-      historyEnabled: nextConfig.historyEnabled ?? current.historyEnabled ?? DEFAULT_CONFIG.historyEnabled,
-      historyRetentionDays: nextConfig.historyRetentionDays ?? current.historyRetentionDays ?? DEFAULT_CONFIG.historyRetentionDays,
     }));
   }, []);
 
@@ -45,53 +37,66 @@ function SettingsView() {
 
   const saveOnBlur = useCallback(
     <K extends keyof SettingsConfig>(key: K, value: SettingsConfig[K]) => {
-      if (vscode) {
-        vscode.postMessage({
-          type: "saveConfig",
-          config: { [key]: value } as Partial<SettingsConfig>,
-        });
-      }
+      vscode?.postMessage({ type: "saveConfig", config: { [key]: value } });
     },
     [vscode],
   );
 
-  const updateConfigSimple = useCallback(
-    (key: string, value: unknown) => {
-      updateConfig(key as keyof SettingsConfig, value as SettingsConfig[keyof SettingsConfig]);
-    },
-    [updateConfig],
-  );
-
-  const saveOnBlurSimple = useCallback(
-    (key: string, value: unknown) => {
-      saveOnBlur(key as keyof SettingsConfig, value as SettingsConfig[keyof SettingsConfig]);
-    },
-    [saveOnBlur],
-  );
-
-  const handleReset = useCallback(() => {
-    vscode?.postMessage({ type: "resetConfig" });
+  const requestConfig = useCallback(() => {
+    setLoadError(null);
+    if (!loadedRef.current) {setHasLoadedConfig(false);}
+    vscode?.postMessage({ type: "getConfig" });
   }, [vscode]);
+
+  const selectTab = useCallback((tab: SettingsTab) => {
+    setActiveTab(tab);
+    tabRefs.current[tab]?.focus();
+  }, []);
+
+  const handleTabKeyDown = useCallback(
+    (event: KeyboardEvent<HTMLButtonElement>) => {
+      const order: SettingsTab[] = ["deepseek", "tools"];
+      const currentIndex = order.indexOf(activeTab);
+      let nextTab: SettingsTab | undefined;
+      if (event.key === "ArrowRight" || event.key === "ArrowDown") {nextTab = order[(currentIndex + 1) % order.length];}
+      if (event.key === "ArrowLeft" || event.key === "ArrowUp") {nextTab = order[(currentIndex - 1 + order.length) % order.length];}
+      if (event.key === "Home") {nextTab = order[0];}
+      if (event.key === "End") {nextTab = order[order.length - 1];}
+      if (!nextTab) {return;}
+      event.preventDefault();
+      selectTab(nextTab);
+    },
+    [activeTab, selectTab],
+  );
 
   useEffect(() => {
     if (!vscode) {
+      setLoadError(t("Settings are unavailable outside VS Code."));
       return;
     }
 
     const handleMessage = (event: MessageEvent<HandlerToWebviewMessage>) => {
       const message = event.data;
-
       switch (message.type) {
         case "configLoaded":
+          applyConfig(message.config);
+          loadedRef.current = true;
+          setHasLoadedConfig(true);
+          setLoadError(null);
+          break;
         case "configReset":
           applyConfig(message.config);
+          loadedRef.current = true;
           setHasLoadedConfig(true);
+          setLoadError(null);
+          setNotification({ type: "success", message: t("Settings reset to defaults. API key preserved.") });
           break;
         case "configSaved":
-          if (!message.success) {
-            setNotification({ type: "error", message: "Error saving settings" });
+          if (message.success) {
+            setNotification({ type: "success", message: t("Settings saved.") });
           } else {
-            setNotification(null);
+            setNotification({ type: "error", message: t("Settings could not be saved. Try again.") });
+            if (!loadedRef.current) {setLoadError(t("Settings could not be loaded."));}
           }
           break;
         case "availableTools":
@@ -101,42 +106,25 @@ function SettingsView() {
     };
 
     window.addEventListener("message", handleMessage);
-    vscode.postMessage({ type: "getConfig" });
+    requestConfig();
     vscode.postMessage({ type: "getAvailableTools" });
-
     return () => window.removeEventListener("message", handleMessage);
-  }, [vscode, applyConfig]);
-
-  useEffect(() => {
-    if (!notification) {
-      return;
-    }
-
-    const timer = window.setTimeout(() => setNotification(null), 4000);
-    return () => window.clearTimeout(timer);
-  }, [notification]);
-
-  useEffect(() => {
-    if (!hasLoadedConfig || tools.length === 0) {
-      return;
-    }
-
-    if (areToolExecutionModesEqual(config.toolExecutionModes, effectiveToolExecutionModes)) {
-      return;
-    }
-
-    saveOnBlur("toolExecutionModes", effectiveToolExecutionModes);
-  }, [config.toolExecutionModes, effectiveToolExecutionModes, hasLoadedConfig, saveOnBlur, tools]);
+  }, [vscode, applyConfig, requestConfig]);
 
   return (
     <div className="settingsView">
-      <div className="settingsTabs" role="tablist" aria-label="Settings sections">
+      <div className="settingsTabs" role="tablist" aria-label={t("Settings sections")}>
         <button
           type="button"
           className={`settingsTab ${activeTab === "deepseek" ? "active" : ""}`}
           role="tab"
+          id="settings-tab-deepseek"
+          aria-controls="settings-panel-deepseek"
           aria-selected={activeTab === "deepseek"}
-          onClick={() => setActiveTab("deepseek")}
+          tabIndex={activeTab === "deepseek" ? 0 : -1}
+          ref={(element) => { tabRefs.current.deepseek = element; }}
+          onClick={() => selectTab("deepseek")}
+          onKeyDown={handleTabKeyDown}
         >
           DeepSeek
         </button>
@@ -144,39 +132,63 @@ function SettingsView() {
           type="button"
           className={`settingsTab ${activeTab === "tools" ? "active" : ""}`}
           role="tab"
+          id="settings-tab-tools"
+          aria-controls="settings-panel-tools"
           aria-selected={activeTab === "tools"}
-          onClick={() => setActiveTab("tools")}
+          tabIndex={activeTab === "tools" ? 0 : -1}
+          ref={(element) => { tabRefs.current.tools = element; }}
+          onClick={() => selectTab("tools")}
+          onKeyDown={handleTabKeyDown}
         >
-          Tools
+          {t("Tools")}
         </button>
       </div>
 
-      <div className="settingsTabPanel" role="tabpanel">
-        {activeTab === "deepseek" ? (
+      <div
+        className="settingsTabPanel"
+        role="tabpanel"
+        id={`settings-panel-${activeTab}`}
+        aria-labelledby={`settings-tab-${activeTab}`}
+        tabIndex={0}
+      >
+        {!hasLoadedConfig && !loadError ? <div className="settingsState" role="status">{t("Loading settings…")}</div> : null}
+        {loadError ? (
+          <div className="settingsState settingsError" role="alert">
+            <span>{loadError}</span>
+            <button type="button" className="btn-secondary" onClick={requestConfig}>{t("Retry")}</button>
+          </div>
+        ) : null}
+        {hasLoadedConfig && activeTab === "deepseek" ? (
           <ProvidersTab
             config={config}
-            updateConfig={updateConfigSimple}
-            saveOnBlur={saveOnBlurSimple}
+            updateConfig={updateConfig}
+            saveOnBlur={saveOnBlur}
             modelOptions={MODEL_OPTIONS}
             reasoningEffortOptions={REASONING_EFFORT_OPTIONS}
           />
-        ) : (
+        ) : null}
+        {hasLoadedConfig && activeTab === "tools" ? (
           <ToolsTab
             config={{ ...config, toolExecutionModes: effectiveToolExecutionModes }}
             tools={tools}
-            updateConfig={updateConfigSimple}
-            saveOnBlur={saveOnBlurSimple}
+            updateConfig={updateConfig}
+            saveOnBlur={saveOnBlur}
           />
-        )}
+        ) : null}
       </div>
 
-      <button type="button" className="btn-secondary" onClick={handleReset}>
-        Reset to Defaults
+      <button type="button" className="btn-secondary" onClick={() => vscode?.postMessage({ type: "resetConfig" })} disabled={!hasLoadedConfig}>
+        {t("Reset to Defaults")}
       </button>
 
-      <div className={`notification ${notification ? notification.type : "hidden"}`} aria-live="polite">
-        {notification?.message}
-      </div>
+      {notification ? (
+        <div className={`notification ${notification.type}`} role={notification.type === "error" ? "alert" : "status"}>
+          <span>{notification.message}</span>
+          <button type="button" className="btn-icon" aria-label={t("Dismiss notification")} onClick={() => setNotification(null)}>
+            <span className="codicon codicon-close" aria-hidden="true" />
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -185,10 +197,4 @@ export default SettingsView;
 
 function normalizeToolExecutionModes(currentModes: ToolExecutionModes, tools: AvailableToolInfo[]): ToolExecutionModes {
   return Object.fromEntries(tools.map((tool) => [tool.name, currentModes[tool.name] ?? "enabled"]));
-}
-
-function areToolExecutionModesEqual(left: ToolExecutionModes, right: ToolExecutionModes): boolean {
-  const leftKeys = Object.keys(left);
-  const rightKeys = Object.keys(right);
-  return leftKeys.length === rightKeys.length && rightKeys.every((key) => left[key] === right[key]);
 }

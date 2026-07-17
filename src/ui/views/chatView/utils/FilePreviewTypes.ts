@@ -7,6 +7,21 @@ export interface FilePreview {
   metadata?: Record<string, string>;
 }
 
+export interface TerminalCommandResult {
+  kind: "command_result";
+  command: string;
+  cwd: string;
+  shell: string;
+  stdout: string;
+  stderr: string;
+  exitCode: number | null;
+  signal: string | null;
+  timedOut: boolean;
+  cancelled: boolean;
+  durationMs: number;
+  truncated: { stdout: boolean; stderr: boolean };
+}
+
 export type StructuredToolResult =
   | {
       toolResultVersion: number;

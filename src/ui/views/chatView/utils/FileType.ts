@@ -1,4 +1,4 @@
-import type { FilePreviewType, StructuredToolResult } from "./FilePreviewTypes";
+import type { FilePreviewType, StructuredToolResult, TerminalCommandResult } from "./FilePreviewTypes";
 
 const CODE_EXTENSIONS = new Set([
   "ts",
@@ -54,6 +54,27 @@ export function parseStructuredToolResult(content: string): StructuredToolResult
   try {
     const parsed = JSON.parse(content) as Partial<StructuredToolResult>;
     return typeof parsed.toolResultVersion === "number" && typeof parsed.type === "string" ? (parsed as StructuredToolResult) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function parseTerminalCommandResult(content: string): TerminalCommandResult | null {
+  try {
+    const parsed = JSON.parse(content) as Partial<TerminalCommandResult>;
+    return parsed.kind === "command_result"
+      && typeof parsed.command === "string"
+      && typeof parsed.cwd === "string"
+      && typeof parsed.shell === "string"
+      && typeof parsed.stdout === "string"
+      && typeof parsed.stderr === "string"
+      && (typeof parsed.exitCode === "number" || parsed.exitCode === null)
+      && typeof parsed.durationMs === "number"
+      && typeof parsed.timedOut === "boolean"
+      && typeof parsed.cancelled === "boolean"
+      && Boolean(parsed.truncated)
+      ? parsed as TerminalCommandResult
+      : null;
   } catch {
     return null;
   }

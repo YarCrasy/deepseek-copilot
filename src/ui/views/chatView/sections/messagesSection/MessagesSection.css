@@ -8,6 +8,28 @@
   display: flex;
   overflow: hidden auto;
 }
+.jumpToLatest {
+  z-index: 10;
+  border: 1px solid var(--border-color);
+  background: var(--button-secondary-bg);
+  color: var(--text-primary);
+  cursor: pointer;
+  font: inherit;
+  border-radius: 999px;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  position: absolute;
+  right: 14px;
+  bottom: 92px;
+  display: inline-flex;
+  box-shadow: 0 4px 14px #0006;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--button-secondary-hover);
+  }
+}
 .typingIndicator {
   border: 1px solid var(--border-color);
   background: color-mix(in srgb, var(--bg-secondary) 80%, transparent);

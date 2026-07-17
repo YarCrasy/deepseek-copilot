@@ -6,8 +6,9 @@ import remarkGfm from "remark-gfm";
 import { normalizeAssistantMarkdown } from "@/shared/utils";
 import type { AssistantTimelineEvent } from "@/adapters";
 import type { ChatMessage, ToolCallGroup } from "@webview/views/chatView/ChatViewTypes";
-import CollapsiblePanel from "../../shared/collapsiblePanel/CollapsiblePanel";
+import "../../shared/collapsiblePanel/CollapsiblePanel.css";
 import "./ChatMessages.css";
+import { t } from "@webview/i18n";
 
 interface ChatMessagesProps {
   messages: ChatMessage[];
@@ -67,7 +68,7 @@ function AssistantTimeline({ timeline, toolCallGroups, renderToolCallGroups }: {
           return group ? <React.Fragment key={event.id}>{renderToolCallGroups?.([group])}</React.Fragment> : null;
         }
         if (event.type === "reasoning") {
-          return event.content ? <ReasoningPanel key={event.id} content={event.content} /> : null;
+          return event.content ? <ReasoningPanel key={event.id} eventId={event.id} content={event.content} /> : null;
         }
         return event.content ? <MarkdownMessage key={event.id} content={event.content} role="assistant" /> : null;
       })}
@@ -75,8 +76,37 @@ function AssistantTimeline({ timeline, toolCallGroups, renderToolCallGroups }: {
   );
 }
 
-function ReasoningPanel({ content }: { content: string }) {
-  return <CollapsiblePanel title="Think process" className="reasoning-block" bodyClassName="reasoning-content">{content}</CollapsiblePanel>;
+function ReasoningPanel({ eventId, content }: { eventId: string; content: string }) {
+  const storageKey = `deepseek.reasoning.expanded.${eventId}`;
+  const [open, setOpen] = React.useState(() => {
+    try {
+      return window.localStorage.getItem(storageKey) === "true";
+    } catch {
+      return false;
+    }
+  });
+
+  const handleToggle = (event: React.SyntheticEvent<HTMLDetailsElement>) => {
+    const isOpen = event.currentTarget.open;
+    setOpen(isOpen);
+    try {
+      window.localStorage.setItem(storageKey, String(isOpen));
+    } catch {
+      // The panel still works when webview storage is unavailable.
+    }
+  };
+
+  return (
+    <details className="collapsiblePanel reasoning-block" open={open} onToggle={handleToggle}>
+      <summary className="collapsiblePanelSummary">
+        <span className="collapsiblePanelTitle">{t("Reasoning")}</span>
+        <span className="collapsiblePanelChevron" aria-hidden="true" />
+      </summary>
+      <div className="collapsiblePanelBody reasoning-content">
+        <div>{content}</div>
+      </div>
+    </details>
+  );
 }
 
 function findTimelineToolGroup(
@@ -133,11 +163,11 @@ function MarkdownMessage({ content, role }: { content: string; role: ChatMessage
                 <span className="lang-label">{languageLabel}</span>
                 <span className="code-actions">
                   <button type="button" className="code-action-btn" data-code-action="copy">
-                    Copy
+                    {t("Copy")}
                   </button>
                   {role === "assistant" ? (
                     <button type="button" className="code-action-btn" data-code-action="insert">
-                      Insert
+                      {t("Insert")}
                     </button>
                   ) : null}
                 </span>
@@ -251,10 +281,11 @@ function buildMessageToolCallGroups(message: ChatMessage): ToolCallGroup[] {
   }
 
   const grouped = new Map<number, ToolCallGroup>();
-  let fallbackRound = 1;
-
-  message.toolCalls.forEach((toolCall, index) => {
-    const round = toolCall.round && toolCall.round > 0 ? toolCall.round : fallbackRound;
+  message.toolCalls.forEach((toolCall) => {
+    if (!toolCall.round || toolCall.round <= 0 || !toolCall.toolCallId) {
+      return;
+    }
+    const round = toolCall.round;
     if (!grouped.has(round)) {
       grouped.set(round, {
         id: `tool-message-${message.id}-round-${round}`,
@@ -262,13 +293,10 @@ function buildMessageToolCallGroups(message: ChatMessage): ToolCallGroup[] {
         expanded: false,
         toolCalls: [],
       });
-      if (!toolCall.round || toolCall.round <= 0) {
-        fallbackRound += 1;
-      }
     }
 
     grouped.get(round)!.toolCalls.push({
-      toolCallId: toolCall.toolCallId || `${message.id}-${index}`,
+      toolCallId: toolCall.toolCallId,
       toolName: toolCall.toolName,
       arguments: toolCall.arguments,
       status: toolCall.status,

@@ -2,21 +2,24 @@ import { PERMISSION_MODE_ALLOWED_TOOLS } from "@/adapters";
 import type { PermissionMode, ToolExecutionMode, ToolExecutionModes } from "@/adapters";
 import type { ToolsSectionProps } from "..";
 import "./ToolsSection.css";
+import { t } from "@webview/i18n";
 
-const PERMISSION_MODE_OPTIONS: Array<{ value: PermissionMode; label: string }> = [
-  { value: "chat", label: "Chat" },
-  { value: "read-only", label: "Read only" },
-  { value: "workspace", label: "Workspace" },
-  { value: "full-access", label: "Full access" },
+const PERMISSION_MODE_OPTIONS: Array<{ value: PermissionMode; label: string; description: string }> = [
+  { value: "chat", label: t("Chat"), description: t("No tools. The model can only answer in chat.") },
+  { value: "read-only", label: t("Read only"), description: t("Read files, list directories, and search workspace content.") },
+  { value: "workspace", label: t("Workspace"), description: t("Read-only tools plus file creation, edits, and patches in this workspace.") },
+  { value: "full-access", label: t("Full access"), description: t("All tools, including terminal commands. Dangerous operations still require confirmation.") },
 ];
 
 const TOOL_MODE_OPTIONS: Array<{ value: ToolExecutionMode; label: string }> = [
-  { value: "disabled", label: "Disabled" },
-  { value: "enabled", label: "Enabled" },
-  { value: "auto_approve", label: "Auto approve" },
+  { value: "disabled", label: t("Disabled") },
+  { value: "enabled", label: t("Enabled") },
+  { value: "auto_approve", label: t("Auto approve") },
 ];
 
 function ToolsSection({ config, tools, updateConfig, saveOnBlur }: ToolsSectionProps) {
+  const selectedPermission = PERMISSION_MODE_OPTIONS.find((option) => option.value === config.permissionMode) ?? PERMISSION_MODE_OPTIONS[0];
+
   const updatePermissionMode = (permissionMode: PermissionMode) => {
     updateConfig("permissionMode", permissionMode);
     saveOnBlur("permissionMode", permissionMode);
@@ -34,18 +37,22 @@ function ToolsSection({ config, tools, updateConfig, saveOnBlur }: ToolsSectionP
 
   return (
     <section className="settingsSection toolsSection">
-      <h3 className="sectionTitle">Tools</h3>
+      <h3 className="sectionTitle">{t("Tools")}</h3>
 
       <div className="permissionModeRow">
         <label className="permissionModeLabel" htmlFor="permissionMode">
-          Permission mode
+          {t("Permission mode")}
         </label>
         <select
           id="permissionMode"
           className="permissionModeSelect"
-          aria-label="Permission mode"
+          aria-label={t("Permission mode")}
+          aria-describedby="permissionModeDescription permissionModeScope"
           value={config.permissionMode}
-          onChange={(event) => updatePermissionMode(event.target.value as PermissionMode)}
+          onChange={(event) => {
+            const permissionMode = parsePermissionMode(event.target.value);
+            if (permissionMode) {updatePermissionMode(permissionMode);}
+          }}
         >
           {PERMISSION_MODE_OPTIONS.map((option) => (
             <option key={option.value} value={option.value}>
@@ -53,24 +60,34 @@ function ToolsSection({ config, tools, updateConfig, saveOnBlur }: ToolsSectionP
             </option>
           ))}
         </select>
+        <small id="permissionModeDescription" className="permissionModeDescription">{selectedPermission.description}</small>
+        <small id="permissionModeScope" className="permissionModeScope">{t("Saved globally for all workspaces.")}</small>
       </div>
 
-      <div className="toolsList">
-        {tools.filter((tool) => isToolAllowedByPermissionMode(config.permissionMode, tool.name)).map((tool) => {
+      <div className="toolsList" aria-label={t("Tool permissions")}>
+        {tools.length === 0 ? <div className="toolsEmptyState" role="status">{t("No tools are available.")}</div> : null}
+        {tools.map((tool) => {
           const mode = config.toolExecutionModes[tool.name] ?? "enabled";
+          const isAllowed = isToolAllowedByPermissionMode(config.permissionMode, tool.name);
           return (
             <div className="toolSettingRow" key={tool.name}>
               <span className="toolSettingInfo">
                 <span className="toolSettingName" data-tooltip={tool.description} data-tooltip-position="bottom" data-tooltip-align="start" aria-label={`${tool.name}: ${tool.description}`}>
                   {tool.name}
                 </span>
+                {!isAllowed ? <small className="toolBlockedReason">{t("Blocked by {mode} permission mode", { mode: selectedPermission.label })}</small> : null}
               </span>
 
               <select
                 className="toolModeSelect"
-                aria-label={`${tool.name} mode`}
+                aria-label={t("{name} mode", { name: tool.name })}
+                aria-disabled={!isAllowed}
+                disabled={!isAllowed}
                 value={mode}
-                onChange={(event) => updateToolMode(tool.name, event.target.value as ToolExecutionMode)}
+                onChange={(event) => {
+                  const toolMode = parseToolExecutionMode(event.target.value);
+                  if (toolMode) {updateToolMode(tool.name, toolMode);}
+                }}
               >
                 {TOOL_MODE_OPTIONS.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -91,4 +108,12 @@ export default ToolsSection;
 function isToolAllowedByPermissionMode(permissionMode: PermissionMode, toolName: string): boolean {
   const allowedToolNames = PERMISSION_MODE_ALLOWED_TOOLS[permissionMode];
   return allowedToolNames === null || allowedToolNames.includes(toolName);
+}
+
+function parsePermissionMode(value: string): PermissionMode | undefined {
+  return PERMISSION_MODE_OPTIONS.find((option) => option.value === value)?.value;
+}
+
+function parseToolExecutionMode(value: string): ToolExecutionMode | undefined {
+  return TOOL_MODE_OPTIONS.find((option) => option.value === value)?.value;
 }

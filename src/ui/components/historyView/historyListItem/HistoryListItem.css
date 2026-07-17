@@ -1,6 +1,5 @@
 .historyListItem {
   box-sizing: border-box;
-  cursor: pointer;
   border-left: 3px solid #0000;
   border-radius: 6px;
   outline: none;
@@ -9,19 +8,28 @@
   align-items: center;
   gap: 10px;
   width: 100%;
-  padding: 10px;
+  padding: 2px 6px;
   transition: border-left-color .2s ease-in-out, box-shadow .2s ease-in-out;
   display: flex;
   &:hover {
     border-left-color: var(--accent-color);
     box-shadow: 0 2px 8px #0000004d;
   }
-  &:active {
-    border-left-color: var(--accent-color);
-  }
-  &:focus-visible {
-    outline: 1px solid var(--accent-color);
-    outline-offset: 2px;
+  .openConversationBtn {
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    background: none;
+    border: 0;
+    border-radius: 4px;
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 8px 4px;
+    display: flex;
+    &:focus-visible {
+      outline: 1px solid var(--accent-color);
+      outline-offset: 1px;
+    }
   }
   .historyContent {
     flex-direction: column;
@@ -42,6 +50,13 @@
   .metadata {
     color: var(--text-secondary);
     font-size: 12px;
+  }
+  .workspace {
+    color: var(--text-secondary);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    font-size: 11px;
   }
   .deleteConversationBtn {
     width: 28px;
