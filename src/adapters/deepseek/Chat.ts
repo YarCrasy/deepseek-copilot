@@ -86,7 +86,6 @@ export interface ChatCompletionRequest {
   top_p?: number;
   thinking?: { type: "enabled" | "disabled" };
   reasoning_effort?: "high" | "max";
-  response_format?: { type: "text" | "json_object" };
   stop?: string[];
   tools?: ToolDefinition[];
   tool_choice?: ToolChoice;

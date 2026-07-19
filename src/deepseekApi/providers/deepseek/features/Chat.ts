@@ -54,11 +54,6 @@ export function buildChatBody(request: Partial<ChatRequest>, config: AppConfig):
   if (request.tool_choice) {
     body.tool_choice = request.tool_choice;
   }
-  if (request.response_format) {
-    body.response_format = request.response_format;
-  } else if (config.responseFormat) {
-    body.response_format = { type: config.responseFormat };
-  }
   if (request.user_id) {
     body.user_id = request.user_id;
   } else if (config.userId) {

@@ -7,7 +7,9 @@ import { SettingsManager } from "@/vscodeApi/storage";
 import { createVsCodeToolWorkspace } from "@/vscodeApi/tools/VsCodeToolWorkspace";
 import { WebviewProvider } from "@/vscodeApi/webviews/WebviewProvider";
 
-const LEGACY_SETTING_KEYS: ReadonlyArray<Exclude<keyof AppConfig, "apiKey" | "userId" | "includeHomeAgents">> = [
+type LegacySettingKey = Exclude<keyof AppConfig, "apiKey" | "userId" | "includeHomeAgents" | "interfaceLanguage"> | "responseFormat";
+
+const LEGACY_SETTING_KEYS: ReadonlyArray<LegacySettingKey> = [
   "baseUrl",
   "model",
   "thinkingMode",

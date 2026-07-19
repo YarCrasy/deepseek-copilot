@@ -1,0 +1,32 @@
+import type { TranslationCatalog } from "../Types";
+
+export const chat = {
+  "API key missing": "API key missing",
+  "Ask anything about your code...": "Ask anything about your code...",
+  "Configure your API key in settings first...": "Configure your API key in settings first...",
+  "Ask about code, generate snippets, or stream reasoning directly into the editor.": "Ask about code, generate snippets, or stream reasoning directly into the editor.",
+  "send": "send",
+  "new line": "new line",
+  "Model Selector": "Model Selector",
+  "Reasoning": "Reasoning",
+  "Off": "Off",
+  "High": "High",
+  "Max": "Max",
+  "Remove file": "Remove file",
+  "Large": "Large",
+  "folder": "folder",
+  "reading: {path}": "reading: {path}",
+  "listing: {path}": "listing: {path}",
+  "File changed": "File changed",
+  "Chat message": "Chat message",
+  "Stop generation": "Stop generation",
+  "Send message": "Send message",
+  "Workspace path suggestions": "Workspace path suggestions",
+  "{count} path suggestions available.": "{count} path suggestions available.",
+  "No files or folders found.": "No files or folders found.",
+  "DeepSeek is thinking...": "DeepSeek is thinking...",
+  "Jump to the latest response block": "Jump to the latest response block",
+  "Latest": "Latest",
+  "DeepSeek response is streaming.": "DeepSeek response is streaming.",
+  "Response generation finished.": "Response generation finished."
+} satisfies TranslationCatalog;

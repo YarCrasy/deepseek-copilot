@@ -2,25 +2,25 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import "@vscode/codicons/dist/codicon.css";
 import "./SettingsView.css";
-import { ProvidersTab, ToolsTab } from "./tabs";
+import { GeneralTab, ToolsTab } from "./tabs";
 import { getVsCodeApi } from "../../VsCodeApi";
 import { DEFAULT_CONFIG, MODEL_OPTIONS, REASONING_EFFORT_OPTIONS, type SettingsConfig } from "./settingsDataModels";
 import type { AvailableToolInfo, HandlerToWebviewMessage, ToolExecutionModes } from "@/adapters";
-import { t } from "@webview/i18n";
+import { setInterfaceLanguage, t } from "@webview/i18n";
 
-type SettingsTab = "deepseek" | "tools";
+type SettingsTab = "general" | "tools";
 type Notification = { type: "error" | "success"; message: string };
 
 function SettingsView() {
   const vscode = useMemo(() => getVsCodeApi(), []);
   const [config, setConfig] = useState<SettingsConfig>(DEFAULT_CONFIG);
   const [tools, setTools] = useState<AvailableToolInfo[]>([]);
-  const [activeTab, setActiveTab] = useState<SettingsTab>("deepseek");
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
   const [hasLoadedConfig, setHasLoadedConfig] = useState(false);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [notification, setNotification] = useState<Notification | null>(null);
   const loadedRef = useRef(false);
-  const tabRefs = useRef<Record<SettingsTab, HTMLButtonElement | null>>({ deepseek: null, tools: null });
+  const tabRefs = useRef<Record<SettingsTab, HTMLButtonElement | null>>({ general: null, tools: null });
   const effectiveToolExecutionModes = useMemo(() => normalizeToolExecutionModes(config.toolExecutionModes, tools), [config.toolExecutionModes, tools]);
 
   const applyConfig = useCallback((nextConfig: Partial<SettingsConfig>) => {
@@ -32,6 +32,7 @@ function SettingsView() {
   }, []);
 
   const updateConfig = useCallback(<K extends keyof SettingsConfig>(key: K, value: SettingsConfig[K]) => {
+    if (key === "interfaceLanguage") {setInterfaceLanguage(value as SettingsConfig["interfaceLanguage"]);}
     setConfig((current) => ({ ...current, [key]: value }));
   }, []);
 
@@ -55,7 +56,7 @@ function SettingsView() {
 
   const handleTabKeyDown = useCallback(
     (event: KeyboardEvent<HTMLButtonElement>) => {
-      const order: SettingsTab[] = ["deepseek", "tools"];
+      const order: SettingsTab[] = ["general", "tools"];
       const currentIndex = order.indexOf(activeTab);
       let nextTab: SettingsTab | undefined;
       if (event.key === "ArrowRight" || event.key === "ArrowDown") {nextTab = order[(currentIndex + 1) % order.length];}
@@ -79,12 +80,14 @@ function SettingsView() {
       const message = event.data;
       switch (message.type) {
         case "configLoaded":
+          if (message.config.interfaceLanguage) {setInterfaceLanguage(message.config.interfaceLanguage);}
           applyConfig(message.config);
           loadedRef.current = true;
           setHasLoadedConfig(true);
           setLoadError(null);
           break;
         case "configReset":
+          if (message.config.interfaceLanguage) {setInterfaceLanguage(message.config.interfaceLanguage);}
           applyConfig(message.config);
           loadedRef.current = true;
           setHasLoadedConfig(true);
@@ -116,17 +119,17 @@ function SettingsView() {
       <div className="settingsTabs" role="tablist" aria-label={t("Settings sections")}>
         <button
           type="button"
-          className={`settingsTab ${activeTab === "deepseek" ? "active" : ""}`}
+          className={`settingsTab ${activeTab === "general" ? "active" : ""}`}
           role="tab"
-          id="settings-tab-deepseek"
-          aria-controls="settings-panel-deepseek"
-          aria-selected={activeTab === "deepseek"}
-          tabIndex={activeTab === "deepseek" ? 0 : -1}
-          ref={(element) => { tabRefs.current.deepseek = element; }}
-          onClick={() => selectTab("deepseek")}
+          id="settings-tab-general"
+          aria-controls="settings-panel-general"
+          aria-selected={activeTab === "general"}
+          tabIndex={activeTab === "general" ? 0 : -1}
+          ref={(element) => { tabRefs.current.general = element; }}
+          onClick={() => selectTab("general")}
           onKeyDown={handleTabKeyDown}
         >
-          DeepSeek
+          {t("General")}
         </button>
         <button
           type="button"
@@ -158,8 +161,8 @@ function SettingsView() {
             <button type="button" className="btn-secondary" onClick={requestConfig}>{t("Retry")}</button>
           </div>
         ) : null}
-        {hasLoadedConfig && activeTab === "deepseek" ? (
-          <ProvidersTab
+        {hasLoadedConfig && activeTab === "general" ? (
+          <GeneralTab
             config={config}
             updateConfig={updateConfig}
             saveOnBlur={saveOnBlur}

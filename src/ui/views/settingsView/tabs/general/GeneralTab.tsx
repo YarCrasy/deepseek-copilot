@@ -1,8 +1,8 @@
-import { AdvancedSection, ApiSection } from "./sections";
+import { AdvancedSection, ApiSection, GeneralSection } from "./sections";
 import type { SettingsConfig, UpdateConfigFn, SaveOnBlurFn } from "../../settingsDataModels";
 import type { AppConfig } from "@/adapters";
 
-interface ProvidersTabProps {
+interface GeneralTabProps {
   config: SettingsConfig;
   updateConfig: UpdateConfigFn;
   saveOnBlur: SaveOnBlurFn;
@@ -10,9 +10,11 @@ interface ProvidersTabProps {
   reasoningEffortOptions: ReadonlyArray<{ value: NonNullable<AppConfig["reasoningEffort"]>; label: string }>;
 }
 
-function ProvidersTab({ config, updateConfig, saveOnBlur, modelOptions, reasoningEffortOptions }: ProvidersTabProps) {
+function GeneralTab({ config, updateConfig, saveOnBlur, modelOptions, reasoningEffortOptions }: GeneralTabProps) {
   return (
     <>
+      <GeneralSection config={config} updateConfig={updateConfig} saveOnBlur={saveOnBlur} />
+
       <ApiSection
         config={config}
         updateConfig={updateConfig}
@@ -26,4 +28,4 @@ function ProvidersTab({ config, updateConfig, saveOnBlur, modelOptions, reasonin
   );
 }
 
-export default ProvidersTab;
+export default GeneralTab;

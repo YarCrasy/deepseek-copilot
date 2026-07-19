@@ -20,7 +20,6 @@ export interface ToolCallCycleOptions {
   thinkingMode?: boolean;
   reasoningEffort?: "high" | "max";
   maxTokens?: number;
-  responseFormat?: "text" | "json_object";
   userId?: string;
 }
 

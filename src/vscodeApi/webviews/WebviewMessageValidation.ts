@@ -108,6 +108,7 @@ function isSelectionRange(value: unknown): boolean {
 }
 
 const APP_CONFIG_KEYS = [
+  "interfaceLanguage",
   "apiKey",
   "baseUrl",
   "model",
@@ -117,12 +118,12 @@ const APP_CONFIG_KEYS = [
   "topP",
   "maxTokens",
   "maxToolRounds",
-  "responseFormat",
   "permissionMode",
   "toolExecutionModes",
   "autoContext",
   "historyEnabled",
   "historyRetentionDays",
+  "includeHomeAgents",
   "enableBetaFeatures",
   "userId",
 ] as const satisfies readonly (keyof AppConfig)[];
@@ -133,6 +134,7 @@ function isAppConfigPatch(value: unknown): value is Partial<AppConfig> {
   }
 
   return (
+    (value.interfaceLanguage === undefined || value.interfaceLanguage === "auto" || value.interfaceLanguage === "en" || value.interfaceLanguage === "es" || value.interfaceLanguage === "zh") &&
     isOptionalBoundedString(value.apiKey, 16_384) &&
     (value.baseUrl === undefined || isHttpUrl(value.baseUrl)) &&
     (value.model === undefined || isNonEmptyBoundedString(value.model, 256)) &&
@@ -142,12 +144,12 @@ function isAppConfigPatch(value: unknown): value is Partial<AppConfig> {
     isOptionalNumberInRange(value.topP, 0, 1) &&
     (value.maxTokens === undefined || (Number.isSafeInteger(value.maxTokens) && (value.maxTokens as number) >= 1 && (value.maxTokens as number) <= MAX_OUTPUT_TOKENS)) &&
     (value.maxToolRounds === undefined || (Number.isSafeInteger(value.maxToolRounds) && (value.maxToolRounds as number) >= 1 && (value.maxToolRounds as number) <= 20)) &&
-    (value.responseFormat === undefined || value.responseFormat === "text" || value.responseFormat === "json_object") &&
     (value.permissionMode === undefined || ["chat", "read-only", "workspace", "full-access"].includes(value.permissionMode as string)) &&
     (value.toolExecutionModes === undefined || isToolExecutionModes(value.toolExecutionModes)) &&
     isOptionalBoolean(value.autoContext) &&
     isOptionalBoolean(value.historyEnabled) &&
     (value.historyRetentionDays === undefined || (Number.isSafeInteger(value.historyRetentionDays) && (value.historyRetentionDays as number) >= 0 && (value.historyRetentionDays as number) <= 3650)) &&
+    isOptionalBoolean(value.includeHomeAgents) &&
     isOptionalBoolean(value.enableBetaFeatures) &&
     isOptionalBoundedString(value.userId, 256)
   );

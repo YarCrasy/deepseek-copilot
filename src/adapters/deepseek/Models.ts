@@ -1,7 +1,5 @@
 export type DeepSeekModelId = "deepseek-v4-flash" | "deepseek-v4-pro";
 export type ReasoningEffort = "high" | "max";
-export type ResponseFormatType = "text" | "json_object";
-
 /** DeepSeek V4's documented maximum generated output (384K tokens). */
 export const MAX_OUTPUT_TOKENS = 384_000;
 

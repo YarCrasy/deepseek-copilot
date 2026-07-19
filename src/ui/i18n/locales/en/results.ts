@@ -1,0 +1,30 @@
+import type { TranslationCatalog } from "../Types";
+
+export const results = {
+  "Search results": "Search results",
+  "Binary content cannot be previewed as text.": "Binary content cannot be previewed as text.",
+  "Binary file detected. Text preview is unavailable.": "Binary file detected. Text preview is unavailable.",
+  "Click to open {path}:{line}": "Click to open {path}:{line}",
+  "before {size}": "before {size}",
+  "after {size}": "after {size}",
+  "binary source": "binary source",
+  "Previous file was binary, so no text diff is available.": "Previous file was binary, so no text diff is available.",
+  "binary": "binary",
+  "truncated": "truncated",
+  "{count} results": "{count} results",
+  "... and {count} more results": "... and {count} more results",
+  "Result": "Result",
+  "Terminal command metadata": "Terminal command metadata",
+  "cancelled": "cancelled",
+  "timed out": "timed out",
+  "exit {code}": "exit {code}",
+  "unknown": "unknown",
+  "cwd: {cwd}": "cwd: {cwd}",
+  "shell: {shell}": "shell: {shell}",
+  "signal: {signal}": "signal: {signal}",
+  " (truncated preview)": " (truncated preview)",
+  "output truncated": "output truncated",
+  "Command completed without output.": "Command completed without output.",
+  "Diff preview is truncated. The file operation still completed.": "Diff preview is truncated. The file operation still completed.",
+  "Only the first {size} is shown.": "Only the first {size} is shown."
+} satisfies TranslationCatalog;

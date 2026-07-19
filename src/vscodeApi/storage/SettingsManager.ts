@@ -1,5 +1,5 @@
 import { existsSync, readFileSync } from "node:fs";
-import type { AppConfig, PermissionMode, ToolExecutionMode, ToolExecutionModes } from "@/adapters";
+import type { AppConfig, InterfaceLanguage, PermissionMode, ToolExecutionMode, ToolExecutionModes } from "@/adapters";
 import { MAX_OUTPUT_TOKENS } from "@/adapters";
 import { DEEPSEEK_DEFAULTS } from "@/deepseekApi";
 import { writeJsonFileAtomic } from "./JsonFileStorage";
@@ -9,6 +9,7 @@ type StoredSettingKey = Exclude<keyof AppConfig, "apiKey" | "userId">;
 type StoredSettings = Pick<AppConfig, StoredSettingKey>;
 
 const STORED_SETTING_KEYS = new Set<StoredSettingKey>([
+  "interfaceLanguage",
   "baseUrl",
   "model",
   "thinkingMode",
@@ -17,7 +18,6 @@ const STORED_SETTING_KEYS = new Set<StoredSettingKey>([
   "topP",
   "maxTokens",
   "maxToolRounds",
-  "responseFormat",
   "permissionMode",
   "toolExecutionModes",
   "autoContext",
@@ -81,6 +81,7 @@ function readStoredSettings(): unknown {
 function normalizeConfig(value: unknown): AppConfig {
   const config = isRecord(value) ? value : {};
   return {
+    interfaceLanguage: normalizeInterfaceLanguage(config.interfaceLanguage),
     apiKey: "",
     baseUrl: normalizeBaseUrl(config.baseUrl),
     model: normalizeNonEmptyString(config.model, DEEPSEEK_DEFAULTS.model),
@@ -90,7 +91,6 @@ function normalizeConfig(value: unknown): AppConfig {
     topP: clampNumber(config.topP, 0, 1, DEEPSEEK_DEFAULTS.topP),
     maxTokens: clampInteger(config.maxTokens, 1, MAX_OUTPUT_TOKENS, DEEPSEEK_DEFAULTS.maxTokens),
     maxToolRounds: clampInteger(config.maxToolRounds, 1, 20, DEEPSEEK_DEFAULTS.maxToolRounds),
-    responseFormat: normalizeResponseFormat(config.responseFormat),
     permissionMode: normalizePermissionMode(config.permissionMode),
     toolExecutionModes: normalizeToolExecutionModes(config.toolExecutionModes),
     autoContext: normalizeBoolean(config.autoContext, DEEPSEEK_DEFAULTS.autoContext),
@@ -103,6 +103,7 @@ function normalizeConfig(value: unknown): AppConfig {
 
 function toStoredSettings(config: AppConfig): StoredSettings {
   return {
+    interfaceLanguage: config.interfaceLanguage,
     baseUrl: config.baseUrl,
     model: config.model,
     thinkingMode: config.thinkingMode,
@@ -111,7 +112,6 @@ function toStoredSettings(config: AppConfig): StoredSettings {
     topP: config.topP,
     maxTokens: config.maxTokens,
     maxToolRounds: config.maxToolRounds,
-    responseFormat: config.responseFormat,
     permissionMode: config.permissionMode,
     toolExecutionModes: config.toolExecutionModes,
     autoContext: config.autoContext,
@@ -127,10 +127,10 @@ function isStoredSettingKey(key: string): key is StoredSettingKey {
 }
 
 function normalizeSettingValue(key: StoredSettingKey, value: unknown): unknown {
+  if (key === "interfaceLanguage") {return normalizeInterfaceLanguage(value);}
   if (key === "toolExecutionModes") {return normalizeToolExecutionModes(value);}
   if (key === "permissionMode") {return normalizePermissionMode(value);}
   if (key === "reasoningEffort") {return normalizeReasoningEffort(value);}
-  if (key === "responseFormat") {return normalizeResponseFormat(value);}
   if (key === "thinkingMode" || key === "autoContext" || key === "historyEnabled" || key === "includeHomeAgents" || key === "enableBetaFeatures") {
     return normalizeBoolean(value, DEEPSEEK_DEFAULTS[key]);
   }
@@ -142,6 +142,10 @@ function normalizeSettingValue(key: StoredSettingKey, value: unknown): unknown {
   if (key === "maxToolRounds") {return clampInteger(value, 1, 20, DEEPSEEK_DEFAULTS.maxToolRounds);}
   if (key === "historyRetentionDays") {return clampInteger(value, 0, 3650, DEEPSEEK_DEFAULTS.historyRetentionDays);}
   return value;
+}
+
+function normalizeInterfaceLanguage(value: unknown): InterfaceLanguage {
+  return value === "auto" || value === "en" || value === "es" || value === "zh" ? value : DEEPSEEK_DEFAULTS.interfaceLanguage;
 }
 
 function normalizeBaseUrl(value: unknown): string {
@@ -187,10 +191,6 @@ function normalizeNonEmptyString(value: unknown, fallback: string): string {
 
 function normalizeReasoningEffort(value: unknown): AppConfig["reasoningEffort"] {
   return value === "high" || value === "max" ? value : DEEPSEEK_DEFAULTS.reasoningEffort;
-}
-
-function normalizeResponseFormat(value: unknown): AppConfig["responseFormat"] {
-  return value === "text" || value === "json_object" ? value : DEEPSEEK_DEFAULTS.responseFormat;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

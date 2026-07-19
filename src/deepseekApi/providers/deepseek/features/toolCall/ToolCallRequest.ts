@@ -19,7 +19,6 @@ export function buildToolCallRequest(options: BuildToolCallRequestOptions): Chat
     stream,
     ...(tools.length > 0 ? { tools } : {}),
     ...(cycleOptions.maxTokens !== undefined ? { max_tokens: cycleOptions.maxTokens } : {}),
-    ...(cycleOptions.responseFormat ? { response_format: { type: cycleOptions.responseFormat } } : {}),
     ...(cycleOptions.userId ? { user_id: cycleOptions.userId } : {}),
   };
 
@@ -29,7 +28,6 @@ export function buildToolCallRequest(options: BuildToolCallRequestOptions): Chat
     thinkingMode: cycleOptions.thinkingMode ?? true,
     reasoningEffort: cycleOptions.reasoningEffort,
     maxTokens: cycleOptions.maxTokens ?? DEEPSEEK_DEFAULTS.maxTokens,
-    responseFormat: cycleOptions.responseFormat ?? DEEPSEEK_DEFAULTS.responseFormat,
     userId: cycleOptions.userId,
   };
 

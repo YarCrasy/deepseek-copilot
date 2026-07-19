@@ -1,0 +1,32 @@
+import type { TranslationCatalog } from "../Types";
+
+export const chat = {
+  "API key missing": "缺少 API key",
+  "Ask anything about your code...": "询问任何代码问题...",
+  "Configure your API key in settings first...": "请先在设置中配置 API key...",
+  "Ask about code, generate snippets, or stream reasoning directly into the editor.": "询问代码、生成片段或在编辑器中接收推理。",
+  "send": "发送",
+  "new line": "换行",
+  "Model Selector": "模型选择器",
+  "Reasoning": "推理",
+  "Off": "关闭",
+  "High": "高",
+  "Max": "最大",
+  "Remove file": "移除文件",
+  "Large": "大文件",
+  "folder": "文件夹",
+  "reading: {path}": "正在读取：{path}",
+  "listing: {path}": "正在列出：{path}",
+  "File changed": "文件已更改",
+  "Chat message": "聊天消息",
+  "Stop generation": "停止生成",
+  "Send message": "发送消息",
+  "Workspace path suggestions": "工作区路径建议",
+  "{count} path suggestions available.": "有 {count} 个路径建议。",
+  "No files or folders found.": "未找到文件或文件夹。",
+  "DeepSeek is thinking...": "DeepSeek 正在思考...",
+  "Jump to the latest response block": "跳到最新响应块",
+  "Latest": "最新",
+  "DeepSeek response is streaming.": "DeepSeek 响应正在传输。",
+  "Response generation finished.": "响应生成已完成。"
+} satisfies TranslationCatalog;

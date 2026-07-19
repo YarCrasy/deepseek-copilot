@@ -52,7 +52,6 @@ export class ToolCallSession {
           thinkingMode: options.providerConfig.thinkingMode,
           reasoningEffort: options.providerConfig.reasoningEffort as "high" | "max" | undefined,
           maxTokens: options.providerConfig.maxTokens,
-          responseFormat: options.providerConfig.responseFormat,
           userId: options.providerConfig.userId,
           onRoundStart: async (round, toolCalls) => {
             stream.toolGroup(round, toolCalls.map((toolCall) => toolCall.id));

@@ -1,4 +1,4 @@
-export type { AppConfig, PermissionMode, ToolExecutionMode, ToolExecutionModes } from "./Config";
+export type { AppConfig, InterfaceLanguage, PermissionMode, ToolExecutionMode, ToolExecutionModes } from "./Config";
 export { PERMISSION_MODE_ALLOWED_TOOLS } from "./Config";
 export type {
   WebviewToHandlerMessage,
@@ -22,5 +22,5 @@ export type {
   StreamChunk,
   MessageRole,
 } from "./deepseek/Chat";
-export type { DeepSeekModelId, DeepSeekModelInfo, ReasoningEffort, ResponseFormatType, ModelOption } from "./deepseek/Models";
+export type { DeepSeekModelId, DeepSeekModelInfo, ReasoningEffort, ModelOption } from "./deepseek/Models";
 export { MAX_OUTPUT_TOKENS } from "./deepseek/Models";

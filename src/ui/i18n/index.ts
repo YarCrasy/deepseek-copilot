@@ -1,1 +1,1 @@
-export { detectUiLocale, formatUiDate, t, translateForLocale, uiLocale, type UiLocale } from "./I18n";
+export { detectUiLocale, formatUiDate, getUiLocale, setInterfaceLanguage, subscribeUiLocale, t, translateForLocale, uiLocale, type UiLocale } from "./I18n";

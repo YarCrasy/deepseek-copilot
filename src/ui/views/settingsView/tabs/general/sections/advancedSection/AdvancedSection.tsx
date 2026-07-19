@@ -71,7 +71,7 @@ function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionPr
           </div>
         )}
 
-        <div className="settingRow formatAndTokens">
+        <div className="settingRow tokenLimits">
           <div className="numInput">
             <label htmlFor="maxTokensInput">{t("Max Tokens")}</label>
             <input
@@ -97,57 +97,7 @@ function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionPr
               onBlur={(event) => updateBoundedInteger(event.currentTarget, 1, 20, (value) => saveOnBlur("maxToolRounds", value))}
             />
           </div>
-
-          <div className="formatSelect">
-            <label htmlFor="responseFormat">{t("Response Format")}</label>
-            <select
-              id="responseFormat"
-              value={config.responseFormat}
-              onChange={(event) => {
-                const format = parseResponseFormat(event.target.value);
-                if (!format) {return;}
-                updateConfig("responseFormat", format);
-                saveOnBlur("responseFormat", format);
-              }}
-            >
-              <option value="text">{t("Text")}</option>
-              <option value="json_object">{t("JSON Object")}</option>
-            </select>
-          </div>
         </div>
-
-        <Toggle
-          label={t("Store chat history")}
-          id="historyEnabled"
-          checked={config.historyEnabled}
-          onToggle={(checked) => {
-            updateConfig("historyEnabled", checked);
-            saveOnBlur("historyEnabled", checked);
-          }}
-        />
-        <div className="settingRow">
-          <label htmlFor="historyRetentionDays">{t("History retention days (0 = unlimited)")}</label>
-          <input
-            id="historyRetentionDays"
-            type="number"
-            min={0}
-            max={3650}
-            value={config.historyRetentionDays}
-            disabled={!config.historyEnabled}
-            onChange={(event) => updateBoundedInteger(event.currentTarget, 0, 3650, (value) => updateConfig("historyRetentionDays", value))}
-            onBlur={(event) => updateBoundedInteger(event.currentTarget, 0, 3650, (value) => saveOnBlur("historyRetentionDays", value))}
-          />
-        </div>
-
-        <Toggle
-          label={t("Use global AGENTS.md instructions")}
-          id="includeHomeAgents"
-          checked={config.includeHomeAgents}
-          onToggle={(checked) => {
-            updateConfig("includeHomeAgents", checked);
-            saveOnBlur("includeHomeAgents", checked);
-          }}
-        />
 
         <Toggle
           label={t("Enable Beta Features")}
@@ -168,8 +118,4 @@ export default AdvancedSection;
 function updateBoundedInteger(input: HTMLInputElement, min: number, max: number, update: (value: number) => void): void {
   const value = input.valueAsNumber;
   if (Number.isInteger(value) && value >= min && value <= max) {update(value);}
-}
-
-function parseResponseFormat(value: string): "text" | "json_object" | undefined {
-  return value === "text" || value === "json_object" ? value : undefined;
 }

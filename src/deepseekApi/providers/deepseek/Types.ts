@@ -1,4 +1,4 @@
-export type { DeepSeekModelId, DeepSeekModelInfo, ReasoningEffort, ResponseFormatType } from "@/adapters/deepseek/Models";
+export type { DeepSeekModelId, DeepSeekModelInfo, ReasoningEffort } from "@/adapters/deepseek/Models";
 
 export type ThinkingModeType = "enabled" | "disabled";
 export interface ThinkingConfig {

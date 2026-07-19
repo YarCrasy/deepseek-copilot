@@ -68,7 +68,6 @@ export class DeepSeekProvider extends BaseProvider {
       top_p: req.top_p,
       thinking: req.thinking,
       reasoning_effort: req.reasoning_effort,
-      response_format: req.response_format,
       stop: req.stop,
       tools: req.tools,
       tool_choice: req.tool_choice,

@@ -1,2 +1,2 @@
-export { ProvidersTab } from "./providers";
+export { GeneralTab } from "./general";
 export { ToolsTab } from "./tools";

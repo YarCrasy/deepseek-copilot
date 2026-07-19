@@ -1,9 +1,9 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import App from "./App.tsx";
-import { uiLocale } from "./i18n";
+import { getUiLocale } from "./i18n";
 
-document.documentElement.lang = uiLocale;
+document.documentElement.lang = getUiLocale();
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

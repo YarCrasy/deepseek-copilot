@@ -1,6 +1,7 @@
 export type ToolExecutionMode = "disabled" | "enabled" | "auto_approve";
 export type ToolExecutionModes = Record<string, ToolExecutionMode>;
 export type PermissionMode = "chat" | "read-only" | "workspace" | "full-access";
+export type InterfaceLanguage = "auto" | "en" | "es" | "zh";
 export type PermissionModeAllowedTools = readonly string[] | null;
 
 export const PERMISSION_MODE_ALLOWED_TOOLS: Record<PermissionMode, PermissionModeAllowedTools> = {
@@ -11,6 +12,7 @@ export const PERMISSION_MODE_ALLOWED_TOOLS: Record<PermissionMode, PermissionMod
 };
 
 export interface AppConfig {
+  interfaceLanguage: InterfaceLanguage;
   apiKey: string;
   baseUrl: string;
 
@@ -24,8 +26,6 @@ export interface AppConfig {
 
   maxTokens: number;
   maxToolRounds: number;
-  responseFormat: "text" | "json_object";
-
   permissionMode: PermissionMode;
   toolExecutionModes: ToolExecutionModes;
 
@@ -39,6 +39,7 @@ export interface AppConfig {
 }
 
 export const DEFAULT_CONFIG: AppConfig = {
+  interfaceLanguage: "auto",
   apiKey: "",
   baseUrl: "https://api.deepseek.com",
   model: "deepseek-v4-flash",
@@ -48,7 +49,6 @@ export const DEFAULT_CONFIG: AppConfig = {
   topP: 1.0,
   maxTokens: 8192,
   maxToolRounds: 6,
-  responseFormat: "text",
   permissionMode: "read-only",
   toolExecutionModes: {},
   autoContext: false,

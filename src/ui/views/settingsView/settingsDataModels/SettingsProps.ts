@@ -10,7 +10,13 @@ export type ApiSectionProps = {
 };
 
 export type AdvancedSectionProps = {
-  config: Pick<AppConfig, "temperature" | "topP" | "maxTokens" | "maxToolRounds" | "baseUrl" | "responseFormat" | "thinkingMode" | "enableBetaFeatures" | "historyEnabled" | "historyRetentionDays" | "includeHomeAgents">;
+  config: Pick<AppConfig, "temperature" | "topP" | "maxTokens" | "maxToolRounds" | "baseUrl" | "thinkingMode" | "enableBetaFeatures">;
+  updateConfig: UpdateConfigFn;
+  saveOnBlur: SaveOnBlurFn;
+};
+
+export type GeneralSectionProps = {
+  config: Pick<AppConfig, "interfaceLanguage" | "historyEnabled" | "historyRetentionDays" | "includeHomeAgents">;
   updateConfig: UpdateConfigFn;
   saveOnBlur: SaveOnBlurFn;
 };

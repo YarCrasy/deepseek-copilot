@@ -1,14 +1,16 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useSyncExternalStore } from "react";
 import "./App.css";
 import { Header } from "@webview/components/shared";
 import { ChatView, SettingsView, HistoryView } from "./views";
 import { VsCodeProvider } from "./views/chatView/contexts";
 import type { Conversation, HandlerToWebviewMessage } from "@/adapters";
 import { getVsCodeApi } from "./VsCodeApi";
+import { getUiLocale, subscribeUiLocale } from "./i18n";
 
 type ViewType = "chat" | "settings" | "history";
 
 function App() {
+  useSyncExternalStore(subscribeUiLocale, getUiLocale, getUiLocale);
   const [currentView, setCurrentView] = useState<ViewType>("chat");
   const [loadedConversation, setLoadedConversation] = useState<Conversation | null>(null);
   const [chatRevision, setChatRevision] = useState(0);

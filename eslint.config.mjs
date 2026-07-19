@@ -24,4 +24,9 @@ export default [{
         "no-throw-literal": "warn",
         semi: "warn",
     },
+}, {
+    files: ["src/ui/i18n/locales/{en,es,zh}/*.ts"],
+    rules: {
+        "quote-props": ["warn", "always"],
+    },
 }];

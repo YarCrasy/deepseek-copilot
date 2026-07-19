@@ -5,7 +5,7 @@ suite("webview message validation", () => {
   test("accepts every valid message shape", () => {
     const messages = [
       { type: "getConfig" },
-      { type: "saveConfig", config: { permissionMode: "read-only", temperature: 1, maxTokens: 384_000, toolExecutionModes: { read_file: "enabled" } } },
+      { type: "saveConfig", config: { interfaceLanguage: "es", permissionMode: "read-only", temperature: 1, maxTokens: 384_000, toolExecutionModes: { read_file: "enabled" } } },
       { type: "resetConfig" },
       { type: "testConnection", apiKey: "secret", baseUrl: "https://api.deepseek.com", model: "deepseek-v4-flash" },
       { type: "sendMessage", text: "hello", modelId: "deepseek-v4-flash", reasoning: "high", referencedFiles: [{ path: "README.md", content: "text", type: "file" }] },
@@ -37,6 +37,8 @@ suite("webview message validation", () => {
       { type: "saveConfig", config: { permissionMode: "root" } },
       { type: "saveConfig", config: { temperature: Number.NaN } },
       { type: "saveConfig", config: { maxTokens: 384_001 } },
+      { type: "saveConfig", config: { interfaceLanguage: "fr" } },
+      { type: "saveConfig", config: { responseFormat: "json_object" } },
       { type: "testConnection", apiKey: "key", baseUrl: "file:///etc/passwd", model: "model" },
       { type: "executeToolCall", toolCallId: "call", action: "force" },
       { type: "openFile", path: "file", line: 0 },

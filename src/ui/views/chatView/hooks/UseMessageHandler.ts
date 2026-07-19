@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import type { VsCodeApi } from "@webview/VsCodeApi";
 import type { AssistantTimelineEvent, HandlerToWebviewMessage, AppConfig, StoredToolCall, ToolCall } from "@/adapters";
 import type { ApiKeyStatus, DangerConfirmationData, ToolCallStatus } from "../ChatViewTypes";
+import { setInterfaceLanguage } from "@webview/i18n";
 
 /**
  * Additional streamDone event data.
@@ -109,6 +110,7 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
           break;
 
         case "configLoaded":
+          if (message.config.interfaceLanguage) {setInterfaceLanguage(message.config.interfaceLanguage);}
           onConfigLoaded?.(message.config);
           break;
 

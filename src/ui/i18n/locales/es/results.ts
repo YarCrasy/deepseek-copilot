@@ -1,0 +1,30 @@
+import type { TranslationCatalog } from "../Types";
+
+export const results = {
+  "Search results": "Resultados de búsqueda",
+  "Binary content cannot be previewed as text.": "El contenido binario no puede previsualizarse como texto.",
+  "Binary file detected. Text preview is unavailable.": "Se detectó un archivo binario. La vista previa de texto no está disponible.",
+  "Click to open {path}:{line}": "Abrir {path}:{line}",
+  "before {size}": "antes {size}",
+  "after {size}": "después {size}",
+  "binary source": "origen binario",
+  "Previous file was binary, so no text diff is available.": "El archivo anterior era binario, por lo que no hay diff de texto disponible.",
+  "binary": "binario",
+  "truncated": "truncado",
+  "{count} results": "{count} resultados",
+  "... and {count} more results": "... y {count} resultados más",
+  "Result": "Resultado",
+  "Terminal command metadata": "Metadatos del comando de terminal",
+  "cancelled": "cancelado",
+  "timed out": "tiempo agotado",
+  "exit {code}": "salida {code}",
+  "unknown": "desconocida",
+  "cwd: {cwd}": "directorio: {cwd}",
+  "shell: {shell}": "shell: {shell}",
+  "signal: {signal}": "señal: {signal}",
+  " (truncated preview)": " (vista previa truncada)",
+  "output truncated": "salida truncada",
+  "Command completed without output.": "El comando terminó sin salida.",
+  "Diff preview is truncated. The file operation still completed.": "La vista previa del diff está truncada. La operación de archivo terminó correctamente.",
+  "Only the first {size} is shown.": "Solo se muestran los primeros {size}."
+} satisfies TranslationCatalog;
