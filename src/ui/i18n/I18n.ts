@@ -1,23 +1,38 @@
 import type { InterfaceLanguage } from "@/adapters";
+import { en } from "./locales/en";
 import { localeCatalogs } from "./locales";
+import type { TranslationCatalog, TranslationKey as CatalogKey } from "./locales/Types";
 
 export type UiLocale = keyof typeof localeCatalogs;
 
 type Values = Record<string, string | number>;
+export type TranslationKey = CatalogKey<typeof en>;
 
 const localeListeners = new Set<() => void>();
 
 export let uiLocale: UiLocale = detectUiLocale(getSystemLanguage());
 
-export function t(source: string, values: Values = {}): string {
+export function t(source: TranslationKey, values: Values = {}): string {
   return translateForLocale(uiLocale, source, values);
 }
 
 export function translateForLocale(locale: UiLocale, source: string, values: Values = {}): string {
-  const template = localeCatalogs[locale][source] ?? localeCatalogs.en[source] ?? source;
+  const template = findTranslation(localeCatalogs[locale], source) ?? findTranslation(localeCatalogs.en, source) ?? source;
   return template.replace(/\{([a-zA-Z][a-zA-Z0-9]*)\}/g, (match, key: string) =>
     Object.prototype.hasOwnProperty.call(values, key) ? String(values[key]) : match,
   );
+}
+
+function findTranslation(catalog: TranslationCatalog, key: string): string | undefined {
+  const direct = catalog[key];
+  if (typeof direct === "string") {return direct;}
+  let current: string | TranslationCatalog | undefined = catalog;
+  for (const segment of key.split(".")) {
+    if (typeof current === "string") {return undefined;}
+    current = current[segment];
+    if (current === undefined) {return undefined;}
+  }
+  return typeof current === "string" ? current : undefined;
 }
 
 export function formatUiDate(value: Date): string {

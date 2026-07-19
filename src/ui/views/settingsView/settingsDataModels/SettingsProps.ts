@@ -1,12 +1,13 @@
 import type { UpdateConfigFn, SaveOnBlurFn } from "./SettingsType";
 import type { AppConfig, AvailableToolInfo } from "@/adapters";
+import type { TranslationKey } from "@webview/i18n/I18n";
 
 export type ApiSectionProps = {
   config: Pick<AppConfig, "apiKey" | "model" | "baseUrl" | "thinkingMode" | "reasoningEffort">;
   updateConfig: UpdateConfigFn;
   saveOnBlur: SaveOnBlurFn;
   modelOptions: Array<{ value: string; label: string }>;
-  reasoningEffortOptions: ReadonlyArray<{ value: NonNullable<AppConfig["reasoningEffort"]>; label: string }>;
+  reasoningEffortOptions: ReadonlyArray<{ value: NonNullable<AppConfig["reasoningEffort"]>; label: TranslationKey }>;
 };
 
 export type AdvancedSectionProps = {

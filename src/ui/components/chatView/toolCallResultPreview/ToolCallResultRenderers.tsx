@@ -21,7 +21,7 @@ export function renderFilePreview(argsStr: string, result: string) {
   const isBinary = fileType === "binary" || looksBinary(result);
 
   if (isBinary) {
-    return renderBinaryHeader(filename, result.length, t("Binary content cannot be previewed as text."));
+    return renderBinaryHeader(filename, result.length, t("results.binaryContentCannotBePreviewedAsText"));
   }
 
   if (fileType === "code") {
@@ -50,8 +50,8 @@ export function renderSearchResults(results: SearchResult[], vscode: VsCodeApi |
   return (
     <div className="filePreview searchPreview">
       <div className="filePreviewHeader">
-        <span className="filePreviewName">{t("Search results")}</span>
-        <span className="filePreviewSize">{t("{count} results", { count: results.length })}</span>
+        <span className="filePreviewName">{t("results.searchResults")}</span>
+        <span className="filePreviewSize">{t("results.countResults", { count: results.length })}</span>
       </div>
       <div className="searchResultsList">
         {results.slice(0, 30).map((resultItem, index) => (
@@ -59,7 +59,7 @@ export function renderSearchResults(results: SearchResult[], vscode: VsCodeApi |
             key={index}
             className="searchResultItem"
             onClick={() => vscode?.postMessage({ type: "openFile", path: resultItem.file, line: resultItem.line })}
-            data-tooltip={t("Click to open {path}:{line}", { path: resultItem.file, line: resultItem.line })}
+            data-tooltip={t("results.clickToOpenPathLine", { path: resultItem.file, line: resultItem.line })}
             data-tooltip-align="start"
           >
             <span className="searchResultFile">{resultItem.file}</span>
@@ -67,7 +67,7 @@ export function renderSearchResults(results: SearchResult[], vscode: VsCodeApi |
             <span className="searchResultText">{resultItem.text}</span>
           </button>
         ))}
-        {(results.length > 30 || truncated) && <div className="searchResultMore">{t("... and {count} more results", { count: Math.max(results.length - 30, 0) })}</div>}
+        {(results.length > 30 || truncated) && <div className="searchResultMore">{t("results.andCountMoreResults", { count: Math.max(results.length - 30, 0) })}</div>}
       </div>
     </div>
   );
@@ -76,7 +76,7 @@ export function renderSearchResults(results: SearchResult[], vscode: VsCodeApi |
 export function renderStructuredFilePreview(result: StructuredFileResult) {
   const filename = extractFilename(result.path);
   if (result.binary) {
-    return renderBinaryHeader(filename, result.size, t("Binary file detected. Text preview is unavailable."));
+    return renderBinaryHeader(filename, result.size, t("results.binaryPreviewUnavailable"));
   }
 
   const language = detectLanguage(filename);
@@ -94,11 +94,11 @@ export function renderToolCallArgumentsPreview(toolName: string, argumentsJson: 
   const content = getPreviewContent(toolName, parsed);
 
   if (toolName === "read_file") {
-    return renderToolCallSummaryPreview(t("reading: {path}", { path: formatRelativePath(path || "file") }));
+    return renderToolCallSummaryPreview(t("chat.readingPath", { path: formatRelativePath(path || "file") }));
   }
 
   if (toolName === "list_directory") {
-    return renderToolCallSummaryPreview(t("listing: {path}", { path: formatRelativePath(path || ".") }));
+    return renderToolCallSummaryPreview(t("chat.listingPath", { path: formatRelativePath(path || ".") }));
   }
 
   if (content) {
@@ -115,12 +115,12 @@ export function renderWriteSummary(summary: string, path: string, metadata: Writ
     <div className="filePreview writePreview">
       <div className="filePreviewHeader">
         <span className="filePreviewName">{path}</span>
-        {metadata.beforeSize !== undefined && <span className="filePreviewSize">{t("before {size}", { size: formatSize(metadata.beforeSize) })}</span>}
-        {metadata.afterSize !== undefined && <span className="filePreviewSize">{t("after {size}", { size: formatSize(metadata.afterSize) })}</span>}
-        {metadata.binary && <span className="filePreviewType">{t("binary source")}</span>}
+        {metadata.beforeSize !== undefined && <span className="filePreviewSize">{t("results.beforeSize", { size: formatSize(metadata.beforeSize) })}</span>}
+        {metadata.afterSize !== undefined && <span className="filePreviewSize">{t("results.afterSize", { size: formatSize(metadata.afterSize) })}</span>}
+        {metadata.binary && <span className="filePreviewType">{t("results.binarySource")}</span>}
       </div>
       <div className="writeSummary">{summary}</div>
-      {metadata.binary && <div className="filePreviewNotice">{t("Previous file was binary, so no text diff is available.")}</div>}
+      {metadata.binary && <div className="filePreviewNotice">{t("results.binaryDiffUnavailable")}</div>}
     </div>
   );
 }
@@ -133,7 +133,7 @@ export function renderDiffPreview(result: string, options: DiffPreviewOptions | 
   const normalizedOptions: DiffPreviewOptions = typeof options === "string" ? { summary: options } : options;
   const parsed = parseDiff(result);
   const stats = normalizedOptions.stats || parsed.stats;
-  const summary = normalizedOptions.summary || normalizedOptions.path || t("File changed");
+  const summary = normalizedOptions.summary || normalizedOptions.path || t("chat.fileChanged");
 
   return (
     <div className="filePreview diffPreview">
@@ -142,10 +142,10 @@ export function renderDiffPreview(result: string, options: DiffPreviewOptions | 
         <span className="filePreviewSize">+{stats.additions}</span>
         <span className="filePreviewSize">-{stats.deletions}</span>
         {normalizedOptions.afterSize !== undefined && <span className="filePreviewSize">{formatSize(normalizedOptions.afterSize)}</span>}
-        {(normalizedOptions.truncated || parsed.truncated) && <span className="filePreviewType">{t("truncated")}</span>}
+        {(normalizedOptions.truncated || parsed.truncated) && <span className="filePreviewType">{t("results.truncated")}</span>}
       </div>
       <div className="diffContent">{parsed.lines.map(renderDiffLine)}</div>
-      {(normalizedOptions.truncated || parsed.truncated) && <div className="filePreviewNotice">{t("Diff preview is truncated. The file operation still completed.")}</div>}
+      {(normalizedOptions.truncated || parsed.truncated) && <div className="filePreviewNotice">{t("results.truncatedDiffNotice")}</div>}
     </div>
   );
 }
@@ -154,7 +154,7 @@ export function renderPlainResult(result: string, status: string) {
   const isError = status === "error";
   return (
     <details className="toolCallResult" open={isError}>
-      <summary>{isError ? t("Error") : t("Result")}</summary>
+      <summary>{isError ? t("tools.error") : t("results.result")}</summary>
       <pre className={isError ? "errorText" : ""}>{truncate(result, 1000)}</pre>
     </details>
   );
@@ -163,35 +163,35 @@ export function renderPlainResult(result: string, status: string) {
 export function renderTerminalResult(result: TerminalCommandResult) {
   const duration = result.durationMs < 1000 ? `${Math.round(result.durationMs)} ms` : `${(result.durationMs / 1000).toFixed(1)} s`;
   const outcome = result.cancelled
-    ? t("cancelled")
+    ? t("results.cancelled")
     : result.timedOut
-      ? t("timed out")
-      : t("exit {code}", { code: result.exitCode ?? t("unknown") });
+      ? t("results.timedOut")
+      : t("results.exitCode", { code: result.exitCode ?? t("results.unknown") });
   const stdoutPreviewTruncated = result.stdout.length > 16_000;
   const stderrPreviewTruncated = result.stderr.length > 16_000;
   return (
     <div className="terminalResult">
-      <div className="terminalMetadata" aria-label={t("Terminal command metadata")}>
+      <div className="terminalMetadata" aria-label={t("results.terminalCommandMetadata")}>
         <span className={`terminalOutcome ${result.exitCode === 0 && !result.timedOut && !result.cancelled ? "success" : "failure"}`}>{outcome}</span>
         <span>{duration}</span>
-        <span title={result.cwd}>{t("cwd: {cwd}", { cwd: result.cwd })}</span>
-        <span title={result.shell}>{t("shell: {shell}", { shell: result.shell })}</span>
-        {result.signal ? <span>{t("signal: {signal}", { signal: result.signal })}</span> : null}
-        {result.truncated.stdout || result.truncated.stderr ? <span>{t("output truncated")}</span> : null}
+        <span title={result.cwd}>{t("results.cwdCwd", { cwd: result.cwd })}</span>
+        <span title={result.shell}>{t("results.shellShell", { shell: result.shell })}</span>
+        {result.signal ? <span>{t("results.signalSignal", { signal: result.signal })}</span> : null}
+        {result.truncated.stdout || result.truncated.stderr ? <span>{t("results.outputTruncated")}</span> : null}
       </div>
       {result.stdout ? (
         <details className="terminalStream" open>
-          <summary>stdout{result.truncated.stdout || stdoutPreviewTruncated ? t(" (truncated preview)") : ""}</summary>
+          <summary>stdout{result.truncated.stdout || stdoutPreviewTruncated ? t("results.truncatedPreview") : ""}</summary>
           <pre>{truncate(result.stdout, 16_000)}</pre>
         </details>
       ) : null}
       {result.stderr ? (
         <details className="terminalStream terminalStderr" open>
-          <summary>stderr{result.truncated.stderr || stderrPreviewTruncated ? t(" (truncated preview)") : ""}</summary>
+          <summary>stderr{result.truncated.stderr || stderrPreviewTruncated ? t("results.truncatedPreview") : ""}</summary>
           <pre>{truncate(result.stderr, 16_000)}</pre>
         </details>
       ) : null}
-      {!result.stdout && !result.stderr ? <div className="filePreviewNotice">{t("Command completed without output.")}</div> : null}
+      {!result.stdout && !result.stderr ? <div className="filePreviewNotice">{t("results.commandCompletedWithoutOutput")}</div> : null}
     </div>
   );
 }
@@ -252,7 +252,7 @@ function renderBinaryHeader(filename: string, size: number, message: string) {
       <div className="filePreviewHeader">
         <span className="filePreviewName">{filename}</span>
         <span className="filePreviewSize">{formatSize(size)}</span>
-        <span className="filePreviewType">{t("binary")}</span>
+        <span className="filePreviewType">{t("results.binary")}</span>
       </div>
       <div className="filePreviewNotice">{message}</div>
     </div>
@@ -268,12 +268,12 @@ function renderCodePreview(options: { filename: string; language?: string; size:
         {showMetadata && language && <span className="filePreviewLang">{language}</span>}
         {showMetadata && <span className="filePreviewSize">{formatSize(size)}</span>}
         {truncated && <span className="filePreviewType">preview {formatSize(previewSize || content.length)}</span>}
-        {truncated && <span className="filePreviewType">{t("truncated")}</span>}
+        {truncated && <span className="filePreviewType">{t("results.truncated")}</span>}
       </div>
       <pre className="filePreviewCode">
         <code className={`language-${language || "text"}`}>{renderHighlightedCode(content, language)}</code>
       </pre>
-      {truncated && <div className="filePreviewNotice">{t("Only the first {size} is shown.", { size: formatSize(previewSize || content.length) })}</div>}
+      {truncated && <div className="filePreviewNotice">{t("results.onlyTheFirstSizeIsShown", { size: formatSize(previewSize || content.length) })}</div>}
     </div>
   );
 }

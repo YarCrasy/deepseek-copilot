@@ -1,13 +1,14 @@
 import { AdvancedSection, ApiSection, GeneralSection } from "./sections";
 import type { SettingsConfig, UpdateConfigFn, SaveOnBlurFn } from "../../settingsDataModels";
 import type { AppConfig } from "@/adapters";
+import type { TranslationKey } from "@webview/i18n/I18n";
 
 interface GeneralTabProps {
   config: SettingsConfig;
   updateConfig: UpdateConfigFn;
   saveOnBlur: SaveOnBlurFn;
   modelOptions: Array<{ value: string; label: string }>;
-  reasoningEffortOptions: ReadonlyArray<{ value: NonNullable<AppConfig["reasoningEffort"]>; label: string }>;
+  reasoningEffortOptions: ReadonlyArray<{ value: NonNullable<AppConfig["reasoningEffort"]>; label: TranslationKey }>;
 }
 
 function GeneralTab({ config, updateConfig, saveOnBlur, modelOptions, reasoningEffortOptions }: GeneralTabProps) {

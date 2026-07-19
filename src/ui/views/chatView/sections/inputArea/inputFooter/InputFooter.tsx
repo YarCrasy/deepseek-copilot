@@ -36,7 +36,7 @@ function InputFooter({
   onRemoveReferencedFile,
 }: Props) {
   const reasoningOptions = useMemo(() => {
-    return [{ value: "off", label: t("Off") }, { value: "high", label: t("High") }, { value: "max", label: t("Max") }];
+    return [{ value: "off", label: t("chat.off") }, { value: "high", label: t("chat.high") }, { value: "max", label: t("chat.max") }];
   }, []);
 
   const modelOptions = useMemo(() => {
@@ -47,10 +47,10 @@ function InputFooter({
   }, [selectedModel]);
 
   const permissionOptions: Array<{ value: PermissionMode; label: string }> = [
-    { value: "chat", label: t("Chat") },
-    { value: "read-only", label: t("Read only") },
-    { value: "workspace", label: t("Workspace") },
-    { value: "full-access", label: t("Full access") },
+    { value: "chat", label: t("tools.chat") },
+    { value: "read-only", label: t("tools.readOnly") },
+    { value: "workspace", label: t("tools.workspace") },
+    { value: "full-access", label: t("tools.fullAccess") },
   ];
 
   return (
@@ -58,26 +58,26 @@ function InputFooter({
       <ReferencedFilesChips files={referencedFiles} onRemove={onRemoveReferencedFile ?? (() => undefined)} />
       <div className="inputFooterControls">
         <div className="inputFooterPrimaryControls">
-          <span className="selectTooltipWrapper" data-tooltip={t("Model Selector")}>
-            <select name="ModelSelector" id="ModelSelector" aria-label={t("Model Selector")} value={selectedModel} onChange={(event) => onModelChange(event.target.value)}>
+          <span className="selectTooltipWrapper" data-tooltip={t("chat.modelSelector")}>
+            <select name="ModelSelector" id="ModelSelector" aria-label={t("chat.modelSelector")} value={selectedModel} onChange={(event) => onModelChange(event.target.value)}>
             {modelOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
             </select>
           </span>
-          <span className="selectTooltipWrapper" data-tooltip={t("Reasoning")}>
-            <select name="Reasoning" id="Reasoning" aria-label={t("Reasoning")} value={reasoning} onChange={(event) => onReasoningChange(event.target.value)}>
+          <span className="selectTooltipWrapper" data-tooltip={t("chat.reasoning")}>
+            <select name="Reasoning" id="Reasoning" aria-label={t("chat.reasoning")} value={reasoning} onChange={(event) => onReasoningChange(event.target.value)}>
             {reasoningOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
             </select>
           </span>
         </div>
-        <span className="selectTooltipWrapper" data-tooltip={t("Permission mode")}>
+        <span className="selectTooltipWrapper" data-tooltip={t("tools.permissionMode")}>
           <select
             name="PermissionMode"
             id="PermissionMode"
-            aria-label={t("Permission mode")}
+            aria-label={t("tools.permissionMode")}
             value={permissionMode}
             onChange={(event) => {
               const nextPermissionMode = parsePermissionMode(event.target.value);

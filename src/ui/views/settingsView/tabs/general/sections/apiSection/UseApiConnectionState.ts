@@ -27,12 +27,12 @@ export function useApiConnectionState({ config, updateConfig, saveOnBlur }: ApiC
   }, [config.apiKey, isTesting, lastTestResult, statusOverride]);
 
   const apiKeyPreview = useMemo(() => {
-    if (isTesting) {return t("Testing...");}
-    if (!config.apiKey) {return t("Not configured");}
+    if (isTesting) {return t("settings.api.testing");}
+    if (!config.apiKey) {return t("settings.api.notConfigured");}
     if (statusPreviewOverride) {return statusPreviewOverride;}
-    if (lastTestResult === "success") {return t("Connection OK");}
-    if (lastTestResult === "failed") {return t("Connection failed");}
-    return t("Configured");
+    if (lastTestResult === "success") {return t("settings.api.connection.ok");}
+    if (lastTestResult === "failed") {return t("settings.api.connection.failed");}
+    return t("settings.api.configured");
   }, [config.apiKey, isTesting, lastTestResult, statusPreviewOverride]);
 
   const resetTransientStatus = useCallback(() => {
@@ -85,7 +85,7 @@ export function useApiConnectionState({ config, updateConfig, saveOnBlur }: ApiC
         setIsTesting(false);
         setLastTestResult(null);
         setStatusOverride(message.status);
-        setStatusPreviewOverride(message.status === "configured" ? (message.keyPreview ?? t("Configured")) : t("Not configured"));
+        setStatusPreviewOverride(message.status === "configured" ? (message.keyPreview ?? t("settings.api.configured")) : t("settings.api.notConfigured"));
       }
 
       if (message.type === "connectionTestResult") {

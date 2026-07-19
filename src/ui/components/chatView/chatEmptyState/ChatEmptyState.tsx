@@ -7,11 +7,11 @@ function ChatEmptyState() {
     <div className="emptyState">
       <img src={DeepSeekLogo} alt="DeepSeek" />
       <h2>Yar's DeepSeek Copilot</h2>
-      <p>{t("Ask about code, generate snippets, or stream reasoning directly into the editor.")}</p>
+      <p>{t("chat.emptyDescription")}</p>
       <div className="emptyHints">
-        <kbd>Enter</kbd> {t("send")}
+        <kbd>Enter</kbd> {t("chat.send")}
         <span> &middot; </span>
-        <kbd>Shift+Enter</kbd> {t("new line")}
+        <kbd>Shift+Enter</kbd> {t("chat.newLine")}
       </div>
     </div>
   );

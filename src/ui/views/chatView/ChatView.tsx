@@ -138,7 +138,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
         onFocusInput={focusInput}
         onGenerationCancelled={handleGenerationCancelled}
       />
-      {apiKeyStatus === "missing" ? <div className="statusMessage warning">{t("API key missing")}</div> : null}
+      {apiKeyStatus === "missing" ? <div className="statusMessage warning">{t("chat.apiKeyMissing")}</div> : null}
 
       <div className="inputArea">
         <InputCtrls
@@ -149,7 +149,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
           canSend={canSend}
           selectedModelRef={selectedModelRef}
           reasoningRef={reasoningRef}
-          placeholder={apiKeyStatus === "configured" ? t("Ask anything about your code...") : t("Configure your API key in settings first...")}
+          placeholder={apiKeyStatus === "configured" ? t("chat.askAnythingAboutYourCode") : t("chat.configureApiKey")}
           rows={1}
           referencedFiles={referencedFiles}
           onSend={handleSend}

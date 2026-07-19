@@ -19,7 +19,7 @@ function ToolCallTimeline({ groups, vscode }: ToolCallTimelineProps) {
   }
 
   return (
-    <div className="toolCallTimeline" aria-label={t("Tool calls")}>
+    <div className="toolCallTimeline" aria-label={t("tools.toolCalls")}>
       {groups.map((group) => (
         <div className="toolCallGroup" key={group.id}>
           {group.toolCalls.map((toolCall) => (
@@ -45,7 +45,7 @@ function ToolCallItem({ toolCall, vscode }: ToolCallItemProps) {
     } catch {
       vscode?.postMessage({ type: "copyCode", code: value });
     }
-    setCopyStatus(t("{label} copied.", { label }));
+    setCopyStatus(t("tools.labelCopied", { label }));
     window.setTimeout(() => setCopyStatus(""), 1800);
   };
 
@@ -56,10 +56,10 @@ function ToolCallItem({ toolCall, vscode }: ToolCallItemProps) {
       className={`toolCallItem ${toolCall.status}`}
       bodyClassName="toolCallItemBody"
     >
-      <div className="toolCallCopyActions" aria-label={t("Copy {tool} data", { tool: toolCall.toolName })}>
-        <button type="button" onClick={() => void copy(t("Tool call"), formatToolCallForCopy(toolCall))}>{t("Copy call")}</button>
-        {toolCall.arguments ? <button type="button" onClick={() => void copy(t("Copy arguments"), toolCall.arguments)}>{t("Copy arguments")}</button> : null}
-        {toolCall.result ? <button type="button" onClick={() => void copy(t("Result"), toolCall.result ?? "")}>{t("Copy result")}</button> : null}
+      <div className="toolCallCopyActions" aria-label={t("tools.copyToolData", { tool: toolCall.toolName })}>
+        <button type="button" onClick={() => void copy(t("tools.toolCall"), formatToolCallForCopy(toolCall))}>{t("tools.copyCall")}</button>
+        {toolCall.arguments ? <button type="button" onClick={() => void copy(t("tools.copyArguments"), toolCall.arguments)}>{t("tools.copyArguments")}</button> : null}
+        {toolCall.result ? <button type="button" onClick={() => void copy(t("results.result"), toolCall.result ?? "")}>{t("tools.copyResult")}</button> : null}
       </div>
       <span className="srOnly" role="status" aria-live="polite">{copyStatus}</span>
       {toolCall.arguments ? <div className="toolCallArgs">{renderToolCallArgumentsPreview(toolCall.toolName, toolCall.arguments)}</div> : null}
@@ -71,19 +71,19 @@ function ToolCallItem({ toolCall, vscode }: ToolCallItemProps) {
 function formatStatus(status: ToolCallState["status"]): string {
   switch (status) {
     case "pending":
-      return t("Pending");
+      return t("tools.pending");
     case "awaiting_confirmation":
-      return t("Awaiting confirmation");
+      return t("tools.awaitingConfirmation");
     case "running":
-      return t("Running");
+      return t("tools.running");
     case "completed":
-      return t("Completed");
+      return t("tools.completed");
     case "error":
-      return t("Error");
+      return t("tools.error");
     case "rejected":
-      return t("Rejected");
+      return t("tools.rejected");
     case "cancelled":
-      return t("Cancelled");
+      return t("tools.cancelled");
   }
 }
 

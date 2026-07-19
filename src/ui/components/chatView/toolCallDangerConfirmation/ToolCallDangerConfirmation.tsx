@@ -18,17 +18,17 @@ function DangerConfirmation({ toolCallId, dangerConfirmation, onConfirm, onCance
   return (
     <div className={`dangerConfirmation ${severityClass}`}>
       {dangerConfirmation.command && (
-        <pre className="dangerCommandPreview" tabIndex={0} aria-label={t("Complete command")}>
+        <pre className="dangerCommandPreview" tabIndex={0} aria-label={t("confirmations.completeCommand")}>
           <code>{dangerConfirmation.command}</code>
         </pre>
       )}
-      {dangerConfirmation.cwd ? <div className="dangerExecutionContext"><strong>{t("Working directory:")}</strong> <code>{dangerConfirmation.cwd}</code></div> : null}
-      {dangerConfirmation.shell ? <div className="dangerExecutionContext"><strong>{t("Shell:")}</strong> <code>{dangerConfirmation.shell}</code></div> : null}
+      {dangerConfirmation.cwd ? <div className="dangerExecutionContext"><strong>{t("confirmations.workingDirectory")}</strong> <code>{dangerConfirmation.cwd}</code></div> : null}
+      {dangerConfirmation.shell ? <div className="dangerExecutionContext"><strong>{t("confirmations.shell")}</strong> <code>{dangerConfirmation.shell}</code></div> : null}
 
       <p className="dangerTrustExplanation">
         {isDestructive
-          ? t("This destructive operation is approved once only. Destructive actions always require a separate confirmation.")
-          : t("Execute once approves only this operation. Trust for this session approves matching safe operations until this VS Code session ends.")}
+          ? t("confirmations.destructiveOnceDescription")
+          : t("confirmations.sessionTrustDescription")}
       </p>
 
       <div className="toolCallDecisionRow">
@@ -40,7 +40,7 @@ function DangerConfirmation({ toolCallId, dangerConfirmation, onConfirm, onCance
             onConfirm(toolCallId, { trustForSession: false });
           }}
         >
-          {isDestructive ? t("Yes, execute once") : t("Execute once")}
+          {isDestructive ? t("confirmations.yesExecuteOnce") : t("confirmations.executeOnce")}
         </button>
         {canTrustForSession && (
           <button
@@ -51,7 +51,7 @@ function DangerConfirmation({ toolCallId, dangerConfirmation, onConfirm, onCance
               onConfirm(toolCallId, { trustForSession: true });
             }}
           >
-            {t("Trust matching operations this session")}
+            {t("confirmations.trustMatchingOperationsThisSession")}
           </button>
         )}
         <button
@@ -63,7 +63,7 @@ function DangerConfirmation({ toolCallId, dangerConfirmation, onConfirm, onCance
             onCancel(toolCallId);
           }}
         >
-          {t("Cancel")}
+          {t("confirmations.cancel")}
         </button>
       </div>
     </div>

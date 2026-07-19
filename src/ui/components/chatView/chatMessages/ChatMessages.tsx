@@ -99,7 +99,7 @@ function ReasoningPanel({ eventId, content }: { eventId: string; content: string
   return (
     <details className="collapsiblePanel reasoning-block" open={open} onToggle={handleToggle}>
       <summary className="collapsiblePanelSummary">
-        <span className="collapsiblePanelTitle">{t("Reasoning")}</span>
+        <span className="collapsiblePanelTitle">{t("chat.reasoning")}</span>
         <span className="collapsiblePanelChevron" aria-hidden="true" />
       </summary>
       <div className="collapsiblePanelBody reasoning-content">
@@ -163,11 +163,11 @@ function MarkdownMessage({ content, role }: { content: string; role: ChatMessage
                 <span className="lang-label">{languageLabel}</span>
                 <span className="code-actions">
                   <button type="button" className="code-action-btn" data-code-action="copy">
-                    {t("Copy")}
+                    {t("tools.copy")}
                   </button>
                   {role === "assistant" ? (
                     <button type="button" className="code-action-btn" data-code-action="insert">
-                      {t("Insert")}
+                      {t("tools.insert")}
                     </button>
                   ) : null}
                 </span>

@@ -38,8 +38,8 @@ function ToolCallConfirmationModal({ pendingToolCalls, onExecute, onReject, onEx
     : activeToolCall.toolName;
   const subtitle = activeToolCall.dangerConfirmation
     ? filePath
-      ? t("File: {path}", { path: filePath })
-      : t("Review before executing.")
+      ? t("confirmations.filePath", { path: filePath })
+      : t("confirmations.reviewBeforeExecuting")
     : undefined;
 
   return (
@@ -64,13 +64,13 @@ function ToolCallConfirmationModal({ pendingToolCalls, onExecute, onReject, onEx
         {activeToolCall.arguments ? (
           <details className="toolCallModalDetails" open>
             <summary>
-              <span>{t("Review details")}</span>
+              <span>{t("confirmations.reviewDetails")}</span>
             </summary>
             <div className="toolCallModalArgs">
               <ArgumentsReview toolName={activeToolCall.toolName} argumentsJson={activeToolCall.arguments} />
               {filePath && canOpenToolPath(activeToolCall.toolName) ? (
                 <button type="button" className="toolCallOpenFile" onClick={() => getVsCodeApi()?.postMessage({ type: "openFile", path: filePath })}>
-                  {t("Open file in editor")}
+                  {t("confirmations.openFileInEditor")}
                 </button>
               ) : null}
             </div>
@@ -87,10 +87,10 @@ function ToolCallConfirmationModal({ pendingToolCalls, onExecute, onReject, onEx
         ) : (
           <div className="toolCallDecisionRow">
             <button type="button" className="toolCallDecisionOption primary" onClick={() => onExecute(activeToolCall.toolCallId)}>
-              {t("Execute once")}
+              {t("confirmations.executeOnce")}
             </button>
             <button type="button" className="toolCallDecisionOption" data-dialog-initial-focus onClick={() => onReject(activeToolCall.toolCallId)}>
-              {t("Reject")}
+              {t("confirmations.reject")}
             </button>
           </div>
         )}
@@ -98,10 +98,10 @@ function ToolCallConfirmationModal({ pendingToolCalls, onExecute, onReject, onEx
         {manualBatchCount > 1 ? (
           <div className="toolCallModalBatchActions">
             <button type="button" className="toolCallActionBtn" onClick={onExecuteAll}>
-              {t("Execute all manual tools once")}
+              {t("confirmations.executeAllManualToolsOnce")}
             </button>
             <button type="button" className="toolCallActionBtn secondary" onClick={onRejectAll}>
-              {t("Reject all manual tools")}
+              {t("confirmations.rejectAllManualTools")}
             </button>
           </div>
         ) : null}
@@ -120,7 +120,7 @@ function ArgumentsReview({ toolName, argumentsJson }: { toolName: string; argume
   const isDiff = toolName === "apply_patch" || reviewContent.includes("@@ ") || reviewContent.startsWith("*** Begin Patch");
 
   return (
-    <pre className={`toolCallFullReview${isDiff ? " diffReview" : ""}`} tabIndex={0} aria-label={t("Complete arguments for {tool}", { tool: toolName })}>
+    <pre className={`toolCallFullReview${isDiff ? " diffReview" : ""}`} tabIndex={0} aria-label={t("confirmations.completeArgumentsForTool", { tool: toolName })}>
       <code>{isDiff ? renderDiff(reviewContent) : reviewContent}</code>
     </pre>
   );
@@ -171,9 +171,9 @@ function getArgumentValue(argumentsJson: string | undefined, key: string): strin
 }
 
 function getDangerTitle(dangerLevel: string | undefined): string {
-  if (dangerLevel === "destructive") {return t("Destructive Action");}
-  if (dangerLevel === "dangerous") {return t("Potentially Dangerous Action");}
-  return t("Caution Required");
+  if (dangerLevel === "destructive") {return t("confirmations.destructiveAction");}
+  if (dangerLevel === "dangerous") {return t("confirmations.potentiallyDangerousAction");}
+  return t("confirmations.cautionRequired");
 }
 
 export default ToolCallConfirmationModal;

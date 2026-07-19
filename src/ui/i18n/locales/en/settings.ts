@@ -1,41 +1,84 @@
 import type { TranslationCatalog } from "../Types";
 
 export const settings = {
-  "Settings sections": "Settings sections",
-  "Loading settings…": "Loading settings…",
-  "Retry": "Retry",
-  "Reset to Defaults": "Reset to Defaults",
-  "Dismiss notification": "Dismiss notification",
-  "Settings are unavailable outside VS Code.": "Settings are unavailable outside VS Code.",
-  "Settings reset to defaults. API key preserved.": "Settings reset to defaults. API key preserved.",
-  "Settings saved.": "Settings saved.",
-  "Settings could not be saved. Try again.": "Settings could not be saved. Try again.",
-  "Settings could not be loaded.": "Settings could not be loaded.",
-  "API Configuration": "API Configuration",
-  "API Key": "API Key",
-  "Show or hide API key": "Show or hide API key",
-  "Show/Hide API Key": "Show/Hide API Key",
-  "Test Connection": "Test Connection",
-  "Testing...": "Testing...",
-  "Not configured": "Not configured",
-  "Connection OK": "Connection OK",
-  "Connection failed": "Connection failed",
-  "Configured": "Configured",
-  "Thinking Mode": "Thinking Mode",
-  "Advanced": "Advanced",
-  "Temperature": "Temperature",
-  "Top P": "Top P",
-  "Store chat history": "Store chat history",
-  "Use global AGENTS.md instructions": "Use global AGENTS.md instructions",
-  "Enable Beta Features": "Enable Beta Features",
-  "Interface language": "Interface language",
-  "Use VS Code language": "Use VS Code language",
-  "Warning: HTTP sends API credentials without transport encryption.": "Warning: HTTP sends API credentials without transport encryption.",
-  "Custom API host: verify that you trust its operator.": "Custom API host: verify that you trust its operator.",
-  "Model": "Model",
-  "Reasoning Effort": "Reasoning Effort",
-  "Base URL": "Base URL",
-  "Max Tokens": "Max Tokens",
-  "Max tool rounds": "Max tool rounds",
-  "History retention days (0 = unlimited)": "History retention days (0 = unlimited)"
+  settings: {
+    tab: {
+      tools: "Tools",
+      general: "General"
+    },
+    section: {
+      extension: "Extension"
+    },
+    tabs: {
+      label: "Settings sections"
+    },
+    loading: "Loading settings…",
+    retry: "Retry",
+    reset: {
+      label: "Reset to Defaults",
+      success: "Settings reset to defaults. API key preserved."
+    },
+    notification: {
+      dismiss: "Dismiss notification"
+    },
+    unavailable: "Settings are unavailable outside VS Code.",
+    save: {
+      success: "Settings saved.",
+      error: "Settings could not be saved. Try again."
+    },
+    load: {
+      error: "Settings could not be loaded."
+    },
+    api: {
+      title: "API Configuration",
+      key: "API Key",
+      keyVisibility: {
+        label: "Show or hide API key",
+        tooltip: "Show/Hide API Key"
+      },
+      testConnection: "Test Connection",
+      testing: "Testing...",
+      notConfigured: "Not configured",
+      connection: {
+        ok: "Connection OK",
+        failed: "Connection failed"
+      },
+      configured: "Configured",
+      httpWarning: "Warning: HTTP sends API credentials without transport encryption.",
+      customHostWarning: "Custom API host: verify that you trust its operator.",
+      baseUrl: "Base URL"
+    },
+    reasoning: {
+      mode: "Thinking Mode",
+      effort: "Reasoning Effort"
+    },
+    advanced: {
+      title: "Advanced"
+    },
+    sampling: {
+      temperature: "Temperature",
+      topP: "Top P"
+    },
+    history: {
+      store: "Store chat history",
+      retention: "History retention days (0 = unlimited)"
+    },
+    instructions: {
+      globalAgents: "Use global AGENTS.md instructions"
+    },
+    beta: {
+      enable: "Enable Beta Features"
+    },
+    language: {
+      label: "Interface language",
+      auto: "Use VS Code language"
+    },
+    model: {
+      label: "Model"
+    },
+    limits: {
+      maxTokens: "Max Tokens",
+      maxToolRounds: "Max tool rounds"
+    }
+  }
 } satisfies TranslationCatalog;

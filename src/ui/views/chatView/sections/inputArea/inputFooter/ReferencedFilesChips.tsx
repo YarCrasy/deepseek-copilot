@@ -17,9 +17,9 @@ function ReferencedFilesChips({ files, onRemove }: ReferencedFilesChipsProps) {
         <span key={index} className="fileChip" data-tooltip={file.path}>
           <span className="fileChipIcon">{file.type === "directory" ? "📁" : "📄"}</span>
           <span className="fileChipName">{file.name}</span>
-          {file.size && file.size > 1_048_576 && <span className="fileChipWarn">⚠️ {t("Large")}</span>}
-          {file.type === "directory" && <span className="fileChipLabel">{t("folder")}</span>}
-          <button className="fileChipRemove" onClick={() => onRemove(index)} aria-label={t("Remove file")}>
+          {file.size && file.size > 1_048_576 && <span className="fileChipWarn">⚠️ {t("chat.large")}</span>}
+          {file.type === "directory" && <span className="fileChipLabel">{t("chat.folder")}</span>}
+          <button className="fileChipRemove" onClick={() => onRemove(index)} aria-label={t("chat.removeFile")}>
             ✕
           </button>
         </span>

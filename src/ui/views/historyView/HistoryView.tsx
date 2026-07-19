@@ -26,7 +26,7 @@ function HistoryView() {
   useEffect(() => {
     if (!vscode) {
       setIsLoading(false);
-      setError(t("History is unavailable outside VS Code."));
+      setError(t("history.historyIsUnavailableOutsideVSCode"));
       return;
     }
 
@@ -38,7 +38,7 @@ function HistoryView() {
         setError(null);
       } else if (message.type === "historyError") {
         setIsLoading(false);
-        setError(message.error || t("History could not be loaded."));
+        setError(message.error || t("history.historyCouldNotBeLoaded"));
       } else if (message.type === "conversationDeleted") {
         setConversations((current) => current.filter((conversation) => conversation.id !== message.id));
       }
@@ -79,13 +79,13 @@ function HistoryView() {
 
   return (
     <div className="historyView">
-      <div className="historyToolbar" aria-label={t("History controls")}>
+      <div className="historyToolbar" aria-label={t("history.historyControls")}>
         <div className="searchBar">
-          <label className="srOnly" htmlFor="historySearch">{t("Search history")}</label>
-          <input type="search" id="historySearch" placeholder={t("Search history…")} value={query} onChange={(event) => setQuery(event.target.value)} />
+          <label className="srOnly" htmlFor="historySearch">{t("history.searchLabel")}</label>
+          <input type="search" id="historySearch" placeholder={t("history.searchPlaceholder")} value={query} onChange={(event) => setQuery(event.target.value)} />
           <span className="codicon codicon-search" aria-hidden="true" />
         </div>
-        <label className="srOnly" htmlFor="historySort">{t("Sort history")}</label>
+        <label className="srOnly" htmlFor="historySort">{t("history.sortHistory")}</label>
         <select
           className="sortBy"
           id="historySort"
@@ -95,15 +95,15 @@ function HistoryView() {
             if (order) {setSortBy(order);}
           }}
         >
-          <option value="date_desc">{t("Date (Newest)")}</option>
-          <option value="date_asc">{t("Date (Oldest)")}</option>
-          <option value="title_asc">{t("Title (A-Z)")}</option>
-          <option value="title_desc">{t("Title (Z-A)")}</option>
+          <option value="date_desc">{t("history.dateNewest")}</option>
+          <option value="date_asc">{t("history.dateOldest")}</option>
+          <option value="title_asc">{t("history.titleAZ")}</option>
+          <option value="title_desc">{t("history.titleZA")}</option>
         </select>
         <button
           className="clearBtn"
           type="button"
-          aria-label={t("Delete filtered history")}
+          aria-label={t("history.deleteFilteredHistory")}
           disabled={visibleConversations.length === 0 || isLoading}
           onClick={() => vscode?.postMessage({ type: "deleteConversations", ids: visibleConversations.map((conversation) => conversation.id) })}
         >
@@ -112,16 +112,16 @@ function HistoryView() {
       </div>
 
       <div className="historyList" aria-busy={isLoading} aria-live="polite">
-        {isLoading ? <div className="historyState" role="status">{t("Loading history…")}</div> : null}
+        {isLoading ? <div className="historyState" role="status">{t("history.loadingHistory")}</div> : null}
         {!isLoading && error ? (
           <div className="historyState historyError" role="alert">
-            <span>{t("History could not be loaded.")}</span>
+            <span>{t("history.historyCouldNotBeLoaded")}</span>
             <small>{error}</small>
-            <button type="button" className="btn-secondary" onClick={requestHistory}>{t("Retry")}</button>
+            <button type="button" className="btn-secondary" onClick={requestHistory}>{t("settings.retry")}</button>
           </div>
         ) : null}
         {!isLoading && !error && visibleConversations.length === 0 ? (
-          <div className="historyState">{query ? t("No conversations match your search.") : t("No history yet.")}</div>
+          <div className="historyState">{query ? t("history.noConversationsMatchYourSearch") : t("history.noHistoryYet")}</div>
         ) : null}
         {!isLoading && !error ? paginatedConversations.map((conversation) => (
           <HistoryListItem
@@ -137,10 +137,10 @@ function HistoryView() {
       </div>
 
       {!isLoading && !error && visibleConversations.length > PAGE_SIZE ? (
-        <nav className="historyPagination" aria-label={t("History pages")}>
-          <button type="button" className="btn-secondary" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>{t("Previous")}</button>
-          <span aria-live="polite">{t("Page {page} of {pages} · {count} conversations", { page: currentPage, pages: pageCount, count: visibleConversations.length })}</span>
-          <button type="button" className="btn-secondary" disabled={currentPage === pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>{t("Next")}</button>
+        <nav className="historyPagination" aria-label={t("history.historyPages")}>
+          <button type="button" className="btn-secondary" disabled={currentPage === 1} onClick={() => setPage((value) => Math.max(1, value - 1))}>{t("history.previous")}</button>
+          <span aria-live="polite">{t("history.pageSummary", { page: currentPage, pages: pageCount, count: visibleConversations.length })}</span>
+          <button type="button" className="btn-secondary" disabled={currentPage === pageCount} onClick={() => setPage((value) => Math.min(pageCount, value + 1))}>{t("history.next")}</button>
         </nav>
       ) : null}
     </div>
@@ -154,7 +154,7 @@ function parseSortOrder(value: string): SortOrder | undefined {
 }
 
 function formatWorkspaceName(workspaceUri: string): string {
-  if (workspaceUri === "workspace:unknown") {return t("Unknown workspace");}
+  if (workspaceUri === "workspace:unknown") {return t("history.unknownWorkspace");}
   try {
     const url = new URL(workspaceUri);
     const segments = decodeURIComponent(url.pathname).replace(/\/+$/, "").split("/");

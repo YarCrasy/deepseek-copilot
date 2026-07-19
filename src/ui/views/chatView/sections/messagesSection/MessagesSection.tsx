@@ -107,18 +107,18 @@ function MessagesSection({
             <div className="typingDots">
               <span /> <span /> <span />
             </div>
-            <span className="typingLabel">{t("DeepSeek is thinking...")}</span>
+            <span className="typingLabel">{t("chat.deepseekIsThinking")}</span>
           </div>
         ) : null}
       </div>
       {showJumpToLatest ? (
-        <button className="jumpToLatest" type="button" onClick={jumpToLatest} aria-label={t("Jump to the latest response block")}>
+        <button className="jumpToLatest" type="button" onClick={jumpToLatest} aria-label={t("chat.jumpToLatest")}>
           <span className="codicon codicon-arrow-down" aria-hidden="true" />
-          {t("Latest")}
+          {t("chat.latest")}
         </button>
       ) : null}
       <span className="streamStatus srOnly" role="status" aria-live="polite">
-        {isProcessing ? t("DeepSeek response is streaming.") : t("Response generation finished.")}
+        {isProcessing ? t("chat.streaming") : t("chat.finished")}
       </span>
       <ToolCallConfirmationModal
         pendingToolCalls={tools.pendingToolCalls}

@@ -5,10 +5,10 @@ import { t } from "@webview/i18n";
 function GeneralSection({ config, updateConfig, saveOnBlur }: GeneralSectionProps) {
   return (
     <section className="settingsSection generalSection">
-      <h3 className="sectionTitle">{t("Extension")}</h3>
+      <h3 className="sectionTitle">{t("settings.section.extension")}</h3>
 
       <div className="settingRow">
-        <label htmlFor="interfaceLanguage">{t("Interface language")}</label>
+        <label htmlFor="interfaceLanguage">{t("settings.language.label")}</label>
         <select
           id="interfaceLanguage"
           value={config.interfaceLanguage}
@@ -19,7 +19,7 @@ function GeneralSection({ config, updateConfig, saveOnBlur }: GeneralSectionProp
             saveOnBlur("interfaceLanguage", language);
           }}
         >
-          <option value="auto">{t("Use VS Code language")}</option>
+          <option value="auto">{t("settings.language.auto")}</option>
           <option value="en">English</option>
           <option value="es">Español</option>
           <option value="zh">中文</option>
@@ -27,7 +27,7 @@ function GeneralSection({ config, updateConfig, saveOnBlur }: GeneralSectionProp
       </div>
 
       <Toggle
-        label={t("Store chat history")}
+        label={t("settings.history.store")}
         id="historyEnabled"
         checked={config.historyEnabled}
         onToggle={(checked) => {
@@ -36,7 +36,7 @@ function GeneralSection({ config, updateConfig, saveOnBlur }: GeneralSectionProp
         }}
       />
       <div className="settingRow">
-        <label htmlFor="historyRetentionDays">{t("History retention days (0 = unlimited)")}</label>
+        <label htmlFor="historyRetentionDays">{t("settings.history.retention")}</label>
         <input
           id="historyRetentionDays"
           type="number"
@@ -50,7 +50,7 @@ function GeneralSection({ config, updateConfig, saveOnBlur }: GeneralSectionProp
       </div>
 
       <Toggle
-        label={t("Use global AGENTS.md instructions")}
+        label={t("settings.instructions.globalAgents")}
         id="includeHomeAgents"
         checked={config.includeHomeAgents}
         onToggle={(checked) => {

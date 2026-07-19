@@ -72,7 +72,7 @@ function SettingsView() {
 
   useEffect(() => {
     if (!vscode) {
-      setLoadError(t("Settings are unavailable outside VS Code."));
+      setLoadError(t("settings.unavailable"));
       return;
     }
 
@@ -92,14 +92,14 @@ function SettingsView() {
           loadedRef.current = true;
           setHasLoadedConfig(true);
           setLoadError(null);
-          setNotification({ type: "success", message: t("Settings reset to defaults. API key preserved.") });
+          setNotification({ type: "success", message: t("settings.reset.success") });
           break;
         case "configSaved":
           if (message.success) {
-            setNotification({ type: "success", message: t("Settings saved.") });
+            setNotification({ type: "success", message: t("settings.save.success") });
           } else {
-            setNotification({ type: "error", message: t("Settings could not be saved. Try again.") });
-            if (!loadedRef.current) {setLoadError(t("Settings could not be loaded."));}
+            setNotification({ type: "error", message: t("settings.save.error") });
+            if (!loadedRef.current) {setLoadError(t("settings.load.error"));}
           }
           break;
         case "availableTools":
@@ -116,7 +116,7 @@ function SettingsView() {
 
   return (
     <div className="settingsView">
-      <div className="settingsTabs" role="tablist" aria-label={t("Settings sections")}>
+      <div className="settingsTabs" role="tablist" aria-label={t("settings.tabs.label")}>
         <button
           type="button"
           className={`settingsTab ${activeTab === "general" ? "active" : ""}`}
@@ -129,7 +129,7 @@ function SettingsView() {
           onClick={() => selectTab("general")}
           onKeyDown={handleTabKeyDown}
         >
-          {t("General")}
+          {t("settings.tab.general")}
         </button>
         <button
           type="button"
@@ -143,7 +143,7 @@ function SettingsView() {
           onClick={() => selectTab("tools")}
           onKeyDown={handleTabKeyDown}
         >
-          {t("Tools")}
+          {t("settings.tab.tools")}
         </button>
       </div>
 
@@ -154,11 +154,11 @@ function SettingsView() {
         aria-labelledby={`settings-tab-${activeTab}`}
         tabIndex={0}
       >
-        {!hasLoadedConfig && !loadError ? <div className="settingsState" role="status">{t("Loading settings…")}</div> : null}
+        {!hasLoadedConfig && !loadError ? <div className="settingsState" role="status">{t("settings.loading")}</div> : null}
         {loadError ? (
           <div className="settingsState settingsError" role="alert">
             <span>{loadError}</span>
-            <button type="button" className="btn-secondary" onClick={requestConfig}>{t("Retry")}</button>
+            <button type="button" className="btn-secondary" onClick={requestConfig}>{t("settings.retry")}</button>
           </div>
         ) : null}
         {hasLoadedConfig && activeTab === "general" ? (
@@ -181,13 +181,13 @@ function SettingsView() {
       </div>
 
       <button type="button" className="btn-secondary" onClick={() => vscode?.postMessage({ type: "resetConfig" })} disabled={!hasLoadedConfig}>
-        {t("Reset to Defaults")}
+        {t("settings.reset.label")}
       </button>
 
       {notification ? (
         <div className={`notification ${notification.type}`} role={notification.type === "error" ? "alert" : "status"}>
           <span>{notification.message}</span>
-          <button type="button" className="btn-icon" aria-label={t("Dismiss notification")} onClick={() => setNotification(null)}>
+          <button type="button" className="btn-icon" aria-label={t("settings.notification.dismiss")} onClick={() => setNotification(null)}>
             <span className="codicon codicon-close" aria-hidden="true" />
           </button>
         </div>

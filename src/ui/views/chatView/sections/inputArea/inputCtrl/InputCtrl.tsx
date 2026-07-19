@@ -239,8 +239,8 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
         <span className="srOnly" role="status" aria-live="polite">
           {pathToken && hasCompletionResponse
             ? completions.length > 0
-              ? t("{count} path suggestions available.", { count: completions.length })
-              : t("No files or folders found.")
+              ? t("chat.pathSuggestionCount", { count: completions.length })
+              : t("chat.noFilesOrFoldersFound")
             : ""}
         </span>
 
@@ -253,7 +253,7 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
           onClick={handleCursorChange}
           onKeyDown={handleKeyDown}
           rows={rows}
-          aria-label={t("Chat message")}
+          aria-label={t("chat.chatMessage")}
           aria-autocomplete="list"
           aria-expanded={completions.length > 0 && Boolean(pathToken)}
           aria-controls={completions.length > 0 ? "path-completion-listbox" : undefined}
@@ -261,11 +261,11 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
           aria-busy={isProcessing}
         />
         {isProcessing ? (
-          <button className="stopBtn inside" type="button" onClick={handleCancel} aria-label={t("Stop generation")} data-tooltip={t("Stop generation")}>
+          <button className="stopBtn inside" type="button" onClick={handleCancel} aria-label={t("chat.stopGeneration")} data-tooltip={t("chat.stopGeneration")}>
             <span className="codicon codicon-debug-stop" aria-hidden="true" />
           </button>
         ) : (
-          <button className="sendBtn inside" type="button" onClick={handleSend} disabled={!canSend} aria-label={t("Send message")}>
+          <button className="sendBtn inside" type="button" onClick={handleSend} disabled={!canSend} aria-label={t("chat.sendMessage")}>
             <span className="codicon codicon-send" aria-hidden="true" />
           </button>
         )}

@@ -1,41 +1,84 @@
 import type { TranslationCatalog } from "../Types";
 
 export const settings = {
-  "Settings sections": "Secciones de ajustes",
-  "Loading settings…": "Cargando ajustes…",
-  "Retry": "Reintentar",
-  "Reset to Defaults": "Restablecer valores predeterminados",
-  "Dismiss notification": "Cerrar notificación",
-  "Settings are unavailable outside VS Code.": "Los ajustes no están disponibles fuera de VS Code.",
-  "Settings reset to defaults. API key preserved.": "Ajustes restablecidos. La API key se ha conservado.",
-  "Settings saved.": "Ajustes guardados.",
-  "Settings could not be saved. Try again.": "No se pudieron guardar los ajustes. Inténtalo de nuevo.",
-  "Settings could not be loaded.": "No se pudieron cargar los ajustes.",
-  "API Configuration": "Configuración de la API",
-  "API Key": "API key",
-  "Show or hide API key": "Mostrar u ocultar la API key",
-  "Show/Hide API Key": "Mostrar/ocultar API key",
-  "Test Connection": "Probar conexión",
-  "Testing...": "Probando...",
-  "Not configured": "Sin configurar",
-  "Connection OK": "Conexión correcta",
-  "Connection failed": "Conexión fallida",
-  "Configured": "Configurada",
-  "Thinking Mode": "Modo de razonamiento",
-  "Advanced": "Avanzado",
-  "Temperature": "Temperatura",
-  "Top P": "Top P",
-  "Store chat history": "Guardar historial del chat",
-  "Use global AGENTS.md instructions": "Usar las instrucciones globales de AGENTS.md",
-  "Enable Beta Features": "Activar funciones beta",
-  "Interface language": "Idioma de la interfaz",
-  "Use VS Code language": "Usar el idioma de VS Code",
-  "Warning: HTTP sends API credentials without transport encryption.": "Advertencia: HTTP envía las credenciales de la API sin cifrado de transporte.",
-  "Custom API host: verify that you trust its operator.": "Host de API personalizado: verifica que confías en su operador.",
-  "Model": "Modelo",
-  "Reasoning Effort": "Nivel de razonamiento",
-  "Base URL": "URL base",
-  "Max Tokens": "Tokens máximos",
-  "Max tool rounds": "Máximo de rondas de herramientas",
-  "History retention days (0 = unlimited)": "Días de retención del historial (0 = ilimitado)"
+  settings: {
+    tab: {
+      tools: "Herramientas",
+      general: "General"
+    },
+    section: {
+      extension: "Extensión"
+    },
+    tabs: {
+      label: "Secciones de ajustes"
+    },
+    loading: "Cargando ajustes…",
+    retry: "Reintentar",
+    reset: {
+      label: "Restablecer valores predeterminados",
+      success: "Ajustes restablecidos. La API key se ha conservado."
+    },
+    notification: {
+      dismiss: "Cerrar notificación"
+    },
+    unavailable: "Los ajustes no están disponibles fuera de VS Code.",
+    save: {
+      success: "Ajustes guardados.",
+      error: "No se pudieron guardar los ajustes. Inténtalo de nuevo."
+    },
+    load: {
+      error: "No se pudieron cargar los ajustes."
+    },
+    api: {
+      title: "Configuración de la API",
+      key: "API key",
+      keyVisibility: {
+        label: "Mostrar u ocultar la API key",
+        tooltip: "Mostrar/ocultar API key"
+      },
+      testConnection: "Probar conexión",
+      testing: "Probando...",
+      notConfigured: "Sin configurar",
+      connection: {
+        ok: "Conexión correcta",
+        failed: "Conexión fallida"
+      },
+      configured: "Configurada",
+      httpWarning: "Advertencia: HTTP envía las credenciales de la API sin cifrado de transporte.",
+      customHostWarning: "Host de API personalizado: verifica que confías en su operador.",
+      baseUrl: "URL base"
+    },
+    reasoning: {
+      mode: "Modo de razonamiento",
+      effort: "Nivel de razonamiento"
+    },
+    advanced: {
+      title: "Avanzado"
+    },
+    sampling: {
+      temperature: "Temperatura",
+      topP: "Top P"
+    },
+    history: {
+      store: "Guardar historial del chat",
+      retention: "Días de retención del historial (0 = ilimitado)"
+    },
+    instructions: {
+      globalAgents: "Usar las instrucciones globales de AGENTS.md"
+    },
+    beta: {
+      enable: "Activar funciones beta"
+    },
+    language: {
+      label: "Idioma de la interfaz",
+      auto: "Usar el idioma de VS Code"
+    },
+    model: {
+      label: "Modelo"
+    },
+    limits: {
+      maxTokens: "Tokens máximos",
+      maxToolRounds: "Máximo de rondas de herramientas"
+    }
+  }
 } satisfies TranslationCatalog;

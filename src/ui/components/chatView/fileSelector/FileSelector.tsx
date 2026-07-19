@@ -39,7 +39,7 @@ export function FileSelector({ activeIndex, completions, isOpen, onSelect, listb
       className="pathCompletionPopup"
       id={listboxId}
       role={completions.length > 0 ? "listbox" : "status"}
-      aria-label={t("Workspace path suggestions")}
+      aria-label={t("chat.workspacePathSuggestions")}
     >
       {completions.length > 0 ? (
         completions.map((completion, index) => (
@@ -66,7 +66,7 @@ export function FileSelector({ activeIndex, completions, isOpen, onSelect, listb
       ) : (
         <div className="pathCompletionEmpty">
           <span className="codicon codicon-folder-opened" aria-hidden="true" />
-          <span>{t("No files or folders found.")}</span>
+          <span>{t("chat.noFilesOrFoldersFound")}</span>
         </div>
       )}
     </div>

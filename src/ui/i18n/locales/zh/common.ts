@@ -1,11 +1,10 @@
 import type { TranslationCatalog } from "../Types";
 
 export const common = {
-  "History": "历史记录",
-  "Back": "返回",
-  "New Chat": "新建聊天",
-  "Settings": "设置",
-  "Tools": "工具",
-  "General": "常规",
-  "Extension": "扩展"
+  navigation: {
+    history: "历史记录",
+    back: "返回",
+    newChat: "新建聊天",
+    settings: "设置"
+  }
 } satisfies TranslationCatalog;
