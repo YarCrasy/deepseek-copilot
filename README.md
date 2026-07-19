@@ -112,7 +112,7 @@ Available slash commands:
 
 - Visual documentation source: [`web-doc`](web-doc) with English, Spanish, and Chinese routes.
 - Generated GitHub Pages site: [`docs`](docs).
-- Technical documentation: https://github.com/YarCrasy/deepseek-copilot/wiki
+- Technical documentation: [`wiki/`](wiki/INDEX.md)
 - DeepSeek API reference: https://api-docs.deepseek.com/
 
 ## Development
