@@ -1,4 +1,4 @@
-import type { AppConfig, WebviewToHandlerMessage } from "@/adapters";
+import { MAX_OUTPUT_TOKENS, type AppConfig, type WebviewToHandlerMessage } from "@/adapters";
 
 const MAX_CHAT_TEXT = 1024 * 1024;
 const MAX_CODE_TEXT = 2 * 1024 * 1024;
@@ -140,7 +140,7 @@ function isAppConfigPatch(value: unknown): value is Partial<AppConfig> {
     (value.reasoningEffort === undefined || value.reasoningEffort === "high" || value.reasoningEffort === "max") &&
     isOptionalNumberInRange(value.temperature, 0, 2) &&
     isOptionalNumberInRange(value.topP, 0, 1) &&
-    (value.maxTokens === undefined || (Number.isSafeInteger(value.maxTokens) && (value.maxTokens as number) >= 1 && (value.maxTokens as number) <= 65_536)) &&
+    (value.maxTokens === undefined || (Number.isSafeInteger(value.maxTokens) && (value.maxTokens as number) >= 1 && (value.maxTokens as number) <= MAX_OUTPUT_TOKENS)) &&
     (value.maxToolRounds === undefined || (Number.isSafeInteger(value.maxToolRounds) && (value.maxToolRounds as number) >= 1 && (value.maxToolRounds as number) <= 20)) &&
     (value.responseFormat === undefined || value.responseFormat === "text" || value.responseFormat === "json_object") &&
     (value.permissionMode === undefined || ["chat", "read-only", "workspace", "full-access"].includes(value.permissionMode as string)) &&

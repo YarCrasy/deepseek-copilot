@@ -1,5 +1,6 @@
 import { useState } from "react";
 import "./AdvancedSection.css";
+import { MAX_OUTPUT_TOKENS } from "@/adapters";
 import type { AdvancedSectionProps } from "../index";
 import { Slider, Toggle } from "@webview/components/settingsView";
 import { t } from "@webview/i18n";
@@ -77,11 +78,11 @@ function AdvancedSection({ config, updateConfig, saveOnBlur }: AdvancedSectionPr
               id="maxTokensInput"
               type="number"
               min="1"
-              max="65536"
+              max={MAX_OUTPUT_TOKENS}
               step="1"
               value={config.maxTokens}
-              onChange={(event) => updateBoundedInteger(event.currentTarget, 1, 65_536, (value) => updateConfig("maxTokens", value))}
-              onBlur={(event) => updateBoundedInteger(event.currentTarget, 1, 65_536, (value) => saveOnBlur("maxTokens", value))}
+              onChange={(event) => updateBoundedInteger(event.currentTarget, 1, MAX_OUTPUT_TOKENS, (value) => updateConfig("maxTokens", value))}
+              onBlur={(event) => updateBoundedInteger(event.currentTarget, 1, MAX_OUTPUT_TOKENS, (value) => saveOnBlur("maxTokens", value))}
             />
           </div>
           <div className="settingRow">

@@ -1,5 +1,6 @@
 import { existsSync, readFileSync } from "node:fs";
 import type { AppConfig, PermissionMode, ToolExecutionMode, ToolExecutionModes } from "@/adapters";
+import { MAX_OUTPUT_TOKENS } from "@/adapters";
 import { DEEPSEEK_DEFAULTS } from "@/deepseekApi";
 import { writeJsonFileAtomic } from "./JsonFileStorage";
 import { getSettingsFilePath } from "./UserDataPaths";
@@ -87,7 +88,7 @@ function normalizeConfig(value: unknown): AppConfig {
     reasoningEffort: normalizeReasoningEffort(config.reasoningEffort),
     temperature: clampNumber(config.temperature, 0, 2, DEEPSEEK_DEFAULTS.temperature),
     topP: clampNumber(config.topP, 0, 1, DEEPSEEK_DEFAULTS.topP),
-    maxTokens: clampInteger(config.maxTokens, 1, 65_536, DEEPSEEK_DEFAULTS.maxTokens),
+    maxTokens: clampInteger(config.maxTokens, 1, MAX_OUTPUT_TOKENS, DEEPSEEK_DEFAULTS.maxTokens),
     maxToolRounds: clampInteger(config.maxToolRounds, 1, 20, DEEPSEEK_DEFAULTS.maxToolRounds),
     responseFormat: normalizeResponseFormat(config.responseFormat),
     permissionMode: normalizePermissionMode(config.permissionMode),
@@ -137,7 +138,7 @@ function normalizeSettingValue(key: StoredSettingKey, value: unknown): unknown {
   if (key === "baseUrl") {return normalizeBaseUrl(value);}
   if (key === "temperature") {return clampNumber(value, 0, 2, DEEPSEEK_DEFAULTS.temperature);}
   if (key === "topP") {return clampNumber(value, 0, 1, DEEPSEEK_DEFAULTS.topP);}
-  if (key === "maxTokens") {return clampInteger(value, 1, 65_536, DEEPSEEK_DEFAULTS.maxTokens);}
+  if (key === "maxTokens") {return clampInteger(value, 1, MAX_OUTPUT_TOKENS, DEEPSEEK_DEFAULTS.maxTokens);}
   if (key === "maxToolRounds") {return clampInteger(value, 1, 20, DEEPSEEK_DEFAULTS.maxToolRounds);}
   if (key === "historyRetentionDays") {return clampInteger(value, 0, 3650, DEEPSEEK_DEFAULTS.historyRetentionDays);}
   return value;

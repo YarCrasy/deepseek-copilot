@@ -2,6 +2,9 @@ export type DeepSeekModelId = "deepseek-v4-flash" | "deepseek-v4-pro";
 export type ReasoningEffort = "high" | "max";
 export type ResponseFormatType = "text" | "json_object";
 
+/** DeepSeek V4's documented maximum generated output (384K tokens). */
+export const MAX_OUTPUT_TOKENS = 384_000;
+
 export interface DeepSeekModelInfo {
   id: DeepSeekModelId;
   name: string;
@@ -17,7 +20,7 @@ export const MODEL_REGISTRY: DeepSeekModelInfo[] = [
     id: "deepseek-v4-flash",
     name: "DeepSeek V4 Flash",
     contextLength: 1_000_000,
-    maxOutputTokens: 393_216,
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
     supportsThinking: true,
     supportsFIM: false,
     supportsTools: true,
@@ -26,7 +29,7 @@ export const MODEL_REGISTRY: DeepSeekModelInfo[] = [
     id: "deepseek-v4-pro",
     name: "DeepSeek V4 Pro",
     contextLength: 1_000_000,
-    maxOutputTokens: 393_216,
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
     supportsThinking: true,
     supportsFIM: true,
     supportsTools: true,

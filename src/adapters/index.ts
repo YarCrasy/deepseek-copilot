@@ -23,3 +23,4 @@ export type {
   MessageRole,
 } from "./deepseek/Chat";
 export type { DeepSeekModelId, DeepSeekModelInfo, ReasoningEffort, ResponseFormatType, ModelOption } from "./deepseek/Models";
+export { MAX_OUTPUT_TOKENS } from "./deepseek/Models";
