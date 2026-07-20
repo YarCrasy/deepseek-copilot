@@ -165,6 +165,7 @@ export class ChatHandler {
           exposeReasoning: providerConfig.thinkingMode,
           signal: this.abortController.signal,
           isCancelling: () => this.isCancelling,
+          approveForMe: config.permissionMode === "approve-for-me",
         });
         if (result) {
           if (!this.isCancelling) {
@@ -294,7 +295,7 @@ ${payload.text}`
         this.postCommandTurn(
           webviewView,
           payload.text,
-          `Unknown command: /${command.name}\n\nAvailable commands: /status, /context, /review, /goal [text], /tools, /mode chat|read-only|workspace|full-access, /auto-context on|off, /clear-context, /summarize.`,
+          `Unknown command: /${command.name}\n\nAvailable commands: /status, /context, /review, /goal [text], /tools, /mode chat|read-only|workspace|full-access|approve-for-me, /auto-context on|off, /clear-context, /summarize.`,
         );
         return true;
     }
@@ -331,7 +332,7 @@ ${payload.text}`
   private async handleModeCommand(args: string[], rawText: string, webviewView: vscode.WebviewView): Promise<void> {
     const mode = normalizePermissionMode(args[0]);
     if (!isPermissionMode(mode)) {
-      this.postCommandTurn(webviewView, rawText, "Usage: /mode chat|read|read-only|workspace|full|full-access");
+      this.postCommandTurn(webviewView, rawText, "Usage: /mode chat|read|read-only|workspace|full|full-access|approve-for-me");
       return;
     }
 
@@ -509,7 +510,9 @@ function appendToolAvailabilityContext(messages: ChatMessage[], permissionMode: 
   }
 
   const availableToolNames = tools.map((tool) => tool.function.name);
-  const delegatedTools = tools.filter((tool) => executionModes[tool.function.name] === "approve_for_me").map((tool) => tool.function.name);
+  const delegatedTools = permissionMode === "approve-for-me"
+    ? tools.filter((tool) => executionModes[tool.function.name] !== "disabled").map((tool) => tool.function.name)
+    : [];
   const capabilityNotice =
     permissionMode === "read-only"
       ? "This mode cannot create or modify files and cannot execute terminal commands. If the request requires those capabilities, explain the limitation immediately. Do not inspect the workspace first unless that inspection directly helps answer the request."
@@ -537,7 +540,7 @@ function parseSlashCommand(text: string): ParsedSlashCommand | null {
 }
 
 function isPermissionMode(value: unknown): value is PermissionMode {
-  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access";
+  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access" || value === "approve-for-me";
 }
 
 function normalizePermissionMode(value: string | undefined): string | undefined {

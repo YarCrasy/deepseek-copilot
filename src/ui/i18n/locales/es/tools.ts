@@ -18,7 +18,7 @@ export const tools = {
     enabled: "Habilitada",
     autoApprove: "Aprobación automática",
     approveForMe: "Aprobar por mí",
-    approveForMeDescription: "DeepSeek decide y ejecuta inmediatamente sin confirmación heurística. Úsalo solo en workspaces de confianza.",
+    approveForMeDescription: "Todas las herramientas no deshabilitadas están disponibles. DeepSeek decide y las ejecuta inmediatamente sin confirmación heurística. Úsalo solo en workspaces de confianza.",
     blockedByModePermissionMode: "Bloqueada por el modo de permisos {mode}",
     nameMode: "Modo de {name}",
     toolCalls: "Llamadas de herramientas",

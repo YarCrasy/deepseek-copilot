@@ -5,7 +5,7 @@ suite("webview message validation", () => {
   test("accepts every valid message shape", () => {
     const messages = [
       { type: "getConfig" },
-      { type: "saveConfig", config: { interfaceLanguage: "es", permissionMode: "read-only", temperature: 1, maxTokens: 384_000, toolExecutionModes: { read_file: "approve_for_me" } } },
+      { type: "saveConfig", config: { interfaceLanguage: "es", permissionMode: "approve-for-me", temperature: 1, maxTokens: 384_000, toolExecutionModes: { read_file: "auto_approve" } } },
       { type: "resetConfig" },
       { type: "testConnection", apiKey: "secret", baseUrl: "https://api.deepseek.com", model: "deepseek-v4-flash" },
       { type: "sendMessage", text: "hello", modelId: "deepseek-v4-flash", reasoning: "high", conversationId: "conversation-1", referencedFiles: [{ path: "README.md", content: "text", type: "file" }] },

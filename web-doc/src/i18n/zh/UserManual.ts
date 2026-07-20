@@ -18,8 +18,8 @@ export const userManual: PageContent = {
     {
       title: "权限和工具状态",
       items: [
-        "chat 不提供工作区工具；read-only 提供 read_file、list_directory 和 search_content；workspace 还允许创建和编辑文件；full-access 进一步允许执行终端命令。",
-        "每个工具都可设为禁用、手动批准、仅安全操作自动批准或“替我批准”。“替我批准”会将 DeepSeek 的工具调用视为批准并跳过启发式确认，因此仅应在受信任的工作区中使用。",
+        "chat 不提供工作区工具；read-only 提供 read_file、list_directory 和 search_content；workspace 还允许创建和编辑文件；full-access 进一步允许执行终端命令；approve-for-me 提供所有未禁用的工具并将批准委托给 DeepSeek。",
+        "每个工具都可设为禁用、手动批准或仅安全操作自动批准。全局“替我批准”权限模式会将 DeepSeek 的工具调用视为批准并跳过启发式确认，因此仅应在受信任的工作区中使用。",
         "工具调用依次经过 awaiting confirmation、running，并最终进入 completed、rejected、cancelled 或 error 中的一种状态。",
         "扩展宿主会先确认执行或拒绝操作，然后 webview 才会提交可见状态。",
         "同一轮内的工具调用按顺序执行。重复的同名同参数调用会被跳过，可配置的轮数上限会阻止执行循环。",

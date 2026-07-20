@@ -48,13 +48,9 @@
       font-size: 12px;
       font-weight: 700;
     }
-    .toolBlockedReason,
-    .toolApprovalWarning {
+    .toolBlockedReason {
       color: var(--text-secondary);
       line-height: 1.3;
-    }
-    .toolApprovalWarning {
-      color: var(--warning-color, var(--text-secondary));
     }
   }
   .toolModeSelect {

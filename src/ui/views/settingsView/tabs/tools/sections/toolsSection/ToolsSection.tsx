@@ -9,13 +9,13 @@ const PERMISSION_MODE_OPTIONS: Array<{ value: PermissionMode; label: string; des
   { value: "read-only", label: t("tools.readOnly"), description: t("tools.readOnlyDescription") },
   { value: "workspace", label: t("tools.workspace"), description: t("tools.workspaceDescription") },
   { value: "full-access", label: t("tools.fullAccess"), description: t("tools.fullAccessDescription") },
+  { value: "approve-for-me", label: t("tools.approveForMe"), description: t("tools.approveForMeDescription") },
 ];
 
 const TOOL_MODE_OPTIONS: Array<{ value: ToolExecutionMode; label: string }> = [
   { value: "disabled", label: t("tools.disabled") },
   { value: "enabled", label: t("tools.enabled") },
   { value: "auto_approve", label: t("tools.autoApprove") },
-  { value: "approve_for_me", label: t("tools.approveForMe") },
 ];
 
 function ToolsSection({ config, tools, updateConfig, saveOnBlur }: ToolsSectionProps) {
@@ -77,7 +77,6 @@ function ToolsSection({ config, tools, updateConfig, saveOnBlur }: ToolsSectionP
                   {tool.name}
                 </span>
                 {!isAllowed ? <small className="toolBlockedReason">{t("tools.blockedByModePermissionMode", { mode: selectedPermission.label })}</small> : null}
-                {isAllowed && mode === "approve_for_me" ? <small className="toolApprovalWarning">{t("tools.approveForMeDescription")}</small> : null}
               </span>
 
               <select

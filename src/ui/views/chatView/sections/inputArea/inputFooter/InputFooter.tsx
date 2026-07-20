@@ -19,7 +19,7 @@ type Props = {
   onRemoveReferencedFile?: (index: number) => void;
 };
 
-const PERMISSION_MODES: readonly PermissionMode[] = ["chat", "read-only", "workspace", "full-access"];
+const PERMISSION_MODES: readonly PermissionMode[] = ["chat", "read-only", "workspace", "full-access", "approve-for-me"];
 
 function parsePermissionMode(value: string): PermissionMode | undefined {
   return PERMISSION_MODES.find((mode) => mode === value);
@@ -51,6 +51,7 @@ function InputFooter({
     { value: "read-only", label: t("tools.readOnly") },
     { value: "workspace", label: t("tools.workspace") },
     { value: "full-access", label: t("tools.fullAccess") },
+    { value: "approve-for-me", label: t("tools.approveForMe") },
   ];
 
   return (

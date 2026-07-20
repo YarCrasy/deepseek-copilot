@@ -180,6 +180,7 @@ export class ToolCallSession {
       webviewView: options.webviewView,
       executedToolCalls,
       signal: options.signal,
+      approveForMe: options.approveForMe,
       getToolMode: (toolName: string) => getToolMode(options, toolName),
       getCurrentRound: () => this.currentRound,
       getPendingCycle: () => this.pendingToolCallCycle,
@@ -214,7 +215,7 @@ export class ToolCallSession {
     this.currentRound = round;
     options.webviewView.webview.postMessage({ type: "toolCallStarted", toolCalls, round });
 
-    const manualToolCalls = toolCalls.filter((toolCall) => getToolMode(options, toolCall.function.name) === "enabled");
+    const manualToolCalls = options.approveForMe ? [] : toolCalls.filter((toolCall) => getToolMode(options, toolCall.function.name) === "enabled");
     if (manualToolCalls.length === 0) {
       return;
     }
@@ -329,10 +330,7 @@ function getErrorMessage(err: unknown): string {
 }
 
 function hasAutoApprovedTools(options: ToolCallRunOptions, tools: ToolDefinition[]): boolean {
-  return tools.some((tool) => {
-    const mode = getToolMode(options, tool.function.name);
-    return mode === "auto_approve" || mode === "approve_for_me";
-  });
+  return options.approveForMe || tools.some((tool) => getToolMode(options, tool.function.name) === "auto_approve");
 }
 
 function getRunnableTools(options: ToolCallRunOptions): ToolDefinition[] {

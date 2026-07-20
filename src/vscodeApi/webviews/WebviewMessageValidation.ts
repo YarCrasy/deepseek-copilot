@@ -147,7 +147,7 @@ function isAppConfigPatch(value: unknown): value is Partial<AppConfig> {
     isOptionalNumberInRange(value.topP, 0, 1) &&
     (value.maxTokens === undefined || (Number.isSafeInteger(value.maxTokens) && (value.maxTokens as number) >= 1 && (value.maxTokens as number) <= MAX_OUTPUT_TOKENS)) &&
     (value.maxToolRounds === undefined || (Number.isSafeInteger(value.maxToolRounds) && (value.maxToolRounds as number) >= 1 && (value.maxToolRounds as number) <= 20)) &&
-    (value.permissionMode === undefined || ["chat", "read-only", "workspace", "full-access"].includes(value.permissionMode as string)) &&
+    (value.permissionMode === undefined || ["chat", "read-only", "workspace", "full-access", "approve-for-me"].includes(value.permissionMode as string)) &&
     (value.toolExecutionModes === undefined || isToolExecutionModes(value.toolExecutionModes)) &&
     isOptionalBoolean(value.autoContext) &&
     isOptionalBoolean(value.historyEnabled) &&
@@ -163,7 +163,7 @@ function isToolExecutionModes(value: unknown): boolean {
     return false;
   }
   return Object.entries(value).every(
-    ([name, mode]) => /^[a-zA-Z0-9_-]{1,128}$/.test(name) && (mode === "disabled" || mode === "enabled" || mode === "auto_approve" || mode === "approve_for_me"),
+    ([name, mode]) => /^[a-zA-Z0-9_-]{1,128}$/.test(name) && (mode === "disabled" || mode === "enabled" || mode === "auto_approve"),
   );
 }
 

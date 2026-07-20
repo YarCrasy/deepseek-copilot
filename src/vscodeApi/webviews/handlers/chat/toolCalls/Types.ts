@@ -56,6 +56,7 @@ export interface ToolCallRunOptions {
   exposeReasoning: boolean;
   signal?: AbortSignal;
   isCancelling: () => boolean;
+  approveForMe: boolean;
 }
 
 export interface ToolCallRunResult {
@@ -70,6 +71,7 @@ export interface ToolExecutionContext {
   webviewView: vscode.WebviewView;
   executedToolCalls: Map<string, StoredExecution>;
   signal?: AbortSignal;
+  approveForMe: boolean;
   getToolMode: (toolName: string) => ToolExecutionMode;
   getCurrentRound: () => number;
   getPendingCycle: () => PendingToolCallCycle | null;

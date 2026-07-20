@@ -18,7 +18,7 @@ export const tools = {
     enabled: "已启用",
     autoApprove: "自动批准",
     approveForMe: "替我批准",
-    approveForMeDescription: "DeepSeek 将自行决定并立即执行，不进行启发式确认。仅在受信任的工作区中使用。",
+    approveForMeDescription: "所有未禁用的工具均可用。DeepSeek 将自行决定并立即执行，不进行启发式确认。仅在受信任的工作区中使用。",
     blockedByModePermissionMode: "被 {mode} 权限模式阻止",
     nameMode: "{name} 模式",
     toolCalls: "工具调用",

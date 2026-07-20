@@ -169,16 +169,19 @@ function clampInteger(value: unknown, min: number, max: number, fallback: number
 }
 
 function normalizePermissionMode(value: unknown): PermissionMode {
-  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access" ? value : DEEPSEEK_DEFAULTS.permissionMode;
+  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access" || value === "approve-for-me" ? value : DEEPSEEK_DEFAULTS.permissionMode;
 }
 
 function normalizeToolExecutionModes(value: unknown): ToolExecutionModes {
   if (!isRecord(value)) {return DEEPSEEK_DEFAULTS.toolExecutionModes;}
-  return Object.fromEntries(Object.entries(value).filter((entry): entry is [string, ToolExecutionMode] => isToolExecutionMode(entry[1])));
+  return Object.fromEntries(Object.entries(value).flatMap(([name, mode]) => {
+    if (mode === "approve_for_me") {return [[name, "auto_approve" as const]];}
+    return isToolExecutionMode(mode) ? [[name, mode]] : [];
+  }));
 }
 
 function isToolExecutionMode(value: unknown): value is ToolExecutionMode {
-  return value === "disabled" || value === "enabled" || value === "auto_approve" || value === "approve_for_me";
+  return value === "disabled" || value === "enabled" || value === "auto_approve";
 }
 
 function normalizeBoolean(value: unknown, fallback: boolean): boolean {
