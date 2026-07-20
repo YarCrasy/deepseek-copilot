@@ -60,6 +60,7 @@ export class ChatHandler {
             text: message.text,
             modelId: message.modelId,
             reasoning: message.reasoning,
+            conversationId: message.conversationId,
             referencedFiles: message.referencedFiles,
           },
           webviewView,
@@ -108,6 +109,8 @@ export class ChatHandler {
     if (await this.handleSlashCommand(payload, config, webviewView)) {
       return;
     }
+
+    await this.restoreRequestedConversation(payload.conversationId);
 
     const requestedThinkingMode = payload.reasoning !== "off";
     const requestedModel = payload.modelId || config.model;
@@ -171,6 +174,7 @@ export class ChatHandler {
               timeline: result.timeline,
               model: toolProviderConfig.model,
               toolCalls: result.toolCalls as StoredToolCall[] | undefined,
+              webviewView,
             });
           }
         }
@@ -183,7 +187,7 @@ export class ChatHandler {
           webviewView,
           signal: this.abortController.signal,
         });
-        await this.saveAssistantResult({ userMessage, content: result.content, timeline: result.timeline, model: providerConfig.model });
+        await this.saveAssistantResult({ userMessage, content: result.content, timeline: result.timeline, model: providerConfig.model, webviewView });
       }
     } catch (err: unknown) {
       if (err instanceof PartialStreamError) {
@@ -193,6 +197,7 @@ export class ChatHandler {
             content: err.partial.content,
             timeline: err.partial.timeline,
             model: providerConfig.model,
+            webviewView,
           });
         }
         if (!this.isCancelling) {
@@ -404,7 +409,7 @@ ${payload.text}`
     return getToolsForPermissionMode(config.permissionMode, allTools).filter((tool) => toolExecutionModes[tool.function.name] !== "disabled");
   }
 
-  private async saveAssistantResult({ userMessage, content, timeline, model, toolCalls }: SaveAssistantResultOptions): Promise<void> {
+  private async saveAssistantResult({ userMessage, content, timeline, model, toolCalls, webviewView }: SaveAssistantResultOptions & { webviewView: vscode.WebviewView }): Promise<void> {
     await this.conversationState.saveMessages({
       messages: [
         userMessage,
@@ -415,6 +420,22 @@ ${payload.text}`
       ],
       model,
     });
+    const id = this.conversationState.getActiveConversationId();
+    if (id) {
+      await webviewView.webview.postMessage({ type: "activeConversationChanged", id });
+    }
+  }
+
+  private async restoreRequestedConversation(conversationId: string | undefined): Promise<void> {
+    if (!conversationId || this.conversationState.getActiveConversationId() === conversationId) {
+      return;
+    }
+    const conversation = await this.historyManager.getById(conversationId);
+    if (conversation) {
+      this.loadConversation(conversation);
+    } else {
+      this.conversationState.reset();
+    }
   }
 
   private handleSendError(err: unknown, stream: StreamEventEmitter): void {

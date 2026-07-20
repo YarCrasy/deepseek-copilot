@@ -17,13 +17,17 @@ interface ReferencedFile {
   size?: number;
 }
 
-type ChatCommandMessage = { type: "addReferencedFiles"; files: ReferencedFile[] } | { type: "setDraft"; text: string };
+type ChatCommandMessage =
+  | { type: "addReferencedFiles"; files: ReferencedFile[] }
+  | { type: "setDraft"; text: string }
+  | { type: "activeConversationChanged"; id: string };
 
 interface ChatViewState {
   schemaVersion: 2;
   draft: string;
   referencedFiles: ReferencedFile[];
   messages: ChatMessage[];
+  conversationId?: string;
 }
 
 interface ChatViewProps {
@@ -37,6 +41,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
   const [draft, setDraft] = useState(loadedConversation ? "" : (savedState?.draft ?? ""));
   const [referencedFiles, setReferencedFiles] = useState<ReferencedFile[]>(loadedConversation ? [] : (savedState?.referencedFiles ?? []));
   const [messages, setMessages] = useState<ChatMessage[]>(loadedConversation?.messages ?? savedState?.messages ?? []);
+  const [conversationId, setConversationId] = useState<string | undefined>(loadedConversation?.id ?? savedState?.conversationId);
   const lastSubmittedPromptRef = useRef("");
 
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -102,8 +107,8 @@ function ChatView({ loadedConversation }: ChatViewProps) {
 
   useEffect(() => {
     const vscode = getVsCodeApi();
-    vscode?.setState<ChatViewState>({ schemaVersion: 2, draft, referencedFiles, messages });
-  }, [draft, referencedFiles, messages]);
+    vscode?.setState<ChatViewState>({ schemaVersion: 2, draft, referencedFiles, messages, conversationId });
+  }, [draft, referencedFiles, messages, conversationId]);
 
   useEffect(() => {
     const vscode = getVsCodeApi();
@@ -117,6 +122,9 @@ function ChatView({ loadedConversation }: ChatViewProps) {
       if (message.type === "setDraft") {
         setDraft(message.text);
         requestAnimationFrame(focusInput);
+      }
+      if (message.type === "activeConversationChanged") {
+        setConversationId(message.id);
       }
     };
 
@@ -152,6 +160,7 @@ function ChatView({ loadedConversation }: ChatViewProps) {
           placeholder={apiKeyStatus === "configured" ? t("chat.askAnythingAboutYourCode") : t("chat.configureApiKey")}
           rows={1}
           referencedFiles={referencedFiles}
+          conversationId={conversationId}
           onSend={handleSend}
         />
         <InputFooter
@@ -180,6 +189,7 @@ function getSavedChatState(): ChatViewState | undefined {
     draft: typeof state.draft === "string" ? state.draft : "",
     referencedFiles: Array.isArray(state.referencedFiles) ? state.referencedFiles.filter(isReferencedFile) : [],
     messages: Array.isArray(state.messages) ? (state.messages as ChatMessage[]) : [],
+    conversationId: typeof state.conversationId === "string" && state.conversationId.trim() ? state.conversationId : undefined,
   };
 }
 

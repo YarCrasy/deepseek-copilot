@@ -117,6 +117,7 @@ export type WebviewToHandlerMessage =
       text: string;
       modelId: string;
       reasoning: string;
+      conversationId?: string;
       referencedFiles?: Array<{ path: string; content?: string; type: "file" | "directory"; selection?: { startLine: number; startCharacter: number; endLine: number; endCharacter: number } }>;
     }
   | { type: "cancelGeneration" }
@@ -163,6 +164,7 @@ export type HandlerToWebviewMessage =
       };
     }
   | { type: "clearChat" }
+  | { type: "activeConversationChanged"; id: string }
   | { type: "projectInstructionsStatus"; sources: ProjectInstructionStatusSource[]; homeAgentsAllowed: boolean }
   | { type: "pathCompletions"; requestId: number; query: string; items: PathCompletionItem[] }
   | { type: "modelChanged"; modelId: string }

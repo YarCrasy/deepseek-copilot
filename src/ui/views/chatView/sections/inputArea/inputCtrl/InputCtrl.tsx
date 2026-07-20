@@ -21,6 +21,7 @@ type Props = {
   placeholder?: string;
   rows?: number;
   referencedFiles?: ReferencedFile[];
+  conversationId?: string;
   onSend?: (text: string) => void;
 };
 
@@ -36,6 +37,7 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
       placeholder = "Type your message here...",
       rows = 1,
       referencedFiles,
+      conversationId,
       onSend,
     },
     ref,
@@ -135,13 +137,14 @@ const InputCtrl = forwardRef<HTMLTextAreaElement, Props>(
         text,
         modelId: selectedModelRef.current,
         reasoning: reasoningRef.current,
+        conversationId,
         referencedFiles: referencedFiles?.map((f) => ({
           path: f.path,
           content: f.content,
           type: f.type,
         })),
       });
-    }, [input, vscode, canSend, setInput, selectedModelRef, reasoningRef, referencedFiles, onSend]);
+    }, [input, vscode, canSend, setInput, selectedModelRef, reasoningRef, referencedFiles, conversationId, onSend]);
 
     const handleCancel = useCallback(() => {
       vscode?.postMessage({ type: "cancelGeneration" });

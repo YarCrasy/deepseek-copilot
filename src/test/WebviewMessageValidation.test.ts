@@ -8,7 +8,7 @@ suite("webview message validation", () => {
       { type: "saveConfig", config: { interfaceLanguage: "es", permissionMode: "read-only", temperature: 1, maxTokens: 384_000, toolExecutionModes: { read_file: "enabled" } } },
       { type: "resetConfig" },
       { type: "testConnection", apiKey: "secret", baseUrl: "https://api.deepseek.com", model: "deepseek-v4-flash" },
-      { type: "sendMessage", text: "hello", modelId: "deepseek-v4-flash", reasoning: "high", referencedFiles: [{ path: "README.md", content: "text", type: "file" }] },
+      { type: "sendMessage", text: "hello", modelId: "deepseek-v4-flash", reasoning: "high", conversationId: "conversation-1", referencedFiles: [{ path: "README.md", content: "text", type: "file" }] },
       { type: "cancelGeneration" },
       { type: "copyCode", code: "const x = 1;" },
       { type: "insertCode", code: "const x = 1;" },

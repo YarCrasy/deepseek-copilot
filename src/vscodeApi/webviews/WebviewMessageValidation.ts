@@ -69,10 +69,11 @@ export function isWebviewToHandlerMessage(value: unknown): value is WebviewToHan
 
 function validateSendMessage(value: Record<string, unknown>): boolean {
   if (
-    !hasOnlyKeys(value, ["type", "text", "modelId", "reasoning", "referencedFiles"]) ||
+    !hasOnlyKeys(value, ["type", "text", "modelId", "reasoning", "conversationId", "referencedFiles"]) ||
     !isNonEmptyBoundedString(value.text, MAX_CHAT_TEXT) ||
     !isNonEmptyBoundedString(value.modelId, 256) ||
-    (value.reasoning !== "off" && value.reasoning !== "high" && value.reasoning !== "max")
+    (value.reasoning !== "off" && value.reasoning !== "high" && value.reasoning !== "max") ||
+    (value.conversationId !== undefined && !isNonEmptyBoundedString(value.conversationId, 512))
   ) {
     return false;
   }

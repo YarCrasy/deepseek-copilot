@@ -39,6 +39,10 @@ export class ConversationState {
     return false;
   }
 
+  getActiveConversationId(): string | undefined {
+    return this.activeConversation?.id;
+  }
+
   getApiMessages(): ChatMessage[] {
     return toApiMessages(selectContextMessages(this.activeConversation?.messages ?? []));
   }

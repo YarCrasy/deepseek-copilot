@@ -3,6 +3,7 @@ import * as path from "node:path";
 import * as vscode from "vscode";
 import type { Conversation, ConversationSummary } from "@/adapters";
 import { createConversationTitle } from "@/core/chat/ConversationTitle";
+import { findDuplicateConversationIds } from "@/core/chat/ConversationDeduplication";
 import { isConversation } from "@/core/chat/ConversationValidation";
 import { CONVERSATION_STORAGE_KEY } from "@/shared/constants";
 import { SettingsManager } from "./SettingsManager";
@@ -104,9 +105,11 @@ export class HistoryManager {
   private async applyRetentionAndLimits(records: StoredConversation[]): Promise<StoredConversation[]> {
     const retentionDays = SettingsManager.load().historyRetentionDays;
     const threshold = retentionDays === 0 ? 0 : Date.now() - retentionDays * 86_400_000;
-    const sorted = [...records].sort((a, b) => b.conversation.updatedAt - a.conversation.updatedAt);
+    const duplicateIds = findDuplicateConversationIds(records.map((record) => record.conversation));
+    const duplicates = records.filter((record) => duplicateIds.has(record.conversation.id));
+    const sorted = records.filter((record) => !duplicateIds.has(record.conversation.id)).sort((a, b) => b.conversation.updatedAt - a.conversation.updatedAt);
     const retained: StoredConversation[] = [];
-    const removed: StoredConversation[] = [];
+    const removed: StoredConversation[] = [...duplicates];
     let totalBytes = 0;
 
     for (const record of sorted) {
