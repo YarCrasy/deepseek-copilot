@@ -5,9 +5,9 @@ import type { ToolExecutor } from "@/core/tools/ToolExecutor";
 import { executeToolCall } from "@/vscodeApi/webviews/handlers/chat/toolCalls/ToolExecution";
 import type { StoredExecution, ToolExecutionContext } from "@/vscodeApi/webviews/handlers/chat/toolCalls/Types";
 
-suite("approve for me permission mode", () => {
+suite("auto approve permission mode", () => {
   test("is a global permission mode with access to every non-disabled tool", () => {
-    assert.strictEqual(PERMISSION_MODE_ALLOWED_TOOLS["approve-for-me"], null);
+    assert.strictEqual(PERMISSION_MODE_ALLOWED_TOOLS["auto-approve"], null);
   });
 
   test("executes the model tool call directly without heuristic or user confirmation", async () => {
@@ -35,7 +35,7 @@ suite("approve for me permission mode", () => {
       toolExecutor,
       webviewView: { webview: { postMessage: (message: unknown) => {messages.push(message); return Promise.resolve(true);} } } as unknown as vscode.WebviewView,
       executedToolCalls: executions,
-      approveForMe: true,
+      autoApproveMode: true,
       getToolMode: () => "enabled",
       getCurrentRound: () => 1,
       getPendingCycle: () => null,

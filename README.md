@@ -73,7 +73,7 @@ Yar's DeepSeek Copilot can execute workspace tools when enabled. Tool access is 
 - `read-only`: read, list, and search workspace files.
 - `workspace`: read-only tools plus file creation, editing, and patches.
 - `full-access`: all tools, including terminal execution. Dangerous commands still require confirmation.
-- `approve-for-me`: all non-disabled tools; DeepSeek's tool calls execute directly without heuristic confirmation. Use only in trusted workspaces.
+- `auto-approve`: all non-disabled tools; DeepSeek's tool calls execute directly without heuristic confirmation. Use only in trusted workspaces.
 
 Tool execution is then controlled per tool:
 
@@ -81,7 +81,7 @@ Tool execution is then controlled per tool:
 - `enabled`: execute with normal safety checks.
 - `auto_approve`: execute without confirmation only when the operation is not considered dangerous.
 
-Dangerous operations, such as overwriting files or running risky terminal commands, require confirmation unless the global permission mode is `approve-for-me`. Terminal commands are not OS-sandboxed by the extension.
+Dangerous operations, such as overwriting files or running risky terminal commands, require confirmation unless the global permission mode is `auto-approve`. Terminal commands are not OS-sandboxed by the extension.
 
 Tool calls have one visible lifecycle: awaiting confirmation, running, then completed, rejected, cancelled, or error. Calls within a round execute sequentially, identical repeated calls are skipped, and the configured round limit stops loops.
 
@@ -104,7 +104,7 @@ Context is size-bounded before each API request. Large reasoning blocks, tool re
 Available slash commands:
 
 - `/status`, `/context`, `/tools`
-- `/mode chat|read-only|workspace|full-access|approve-for-me`
+- `/mode chat|read-only|workspace|full-access|auto-approve`
 - `/auto-context on|off`
 - `/review`, `/goal [text]`
 - `/summarize`, `/clear-context`

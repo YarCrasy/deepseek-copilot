@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-- Added the opt-in `approve-for-me` permission mode, which delegates approval to DeepSeek for all non-disabled tools while retaining schemas and workspace path validation.
+- Added the opt-in `auto-approve` permission mode, which delegates approval to DeepSeek for all non-disabled tools while retaining schemas and workspace path validation.
 
 ## [0.1.1] - 2026-07-17
 

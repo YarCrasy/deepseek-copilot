@@ -9,7 +9,7 @@ const PERMISSION_MODE_OPTIONS: Array<{ value: PermissionMode; label: string; des
   { value: "read-only", label: t("tools.readOnly"), description: t("tools.readOnlyDescription") },
   { value: "workspace", label: t("tools.workspace"), description: t("tools.workspaceDescription") },
   { value: "full-access", label: t("tools.fullAccess"), description: t("tools.fullAccessDescription") },
-  { value: "approve-for-me", label: t("tools.approveForMe"), description: t("tools.approveForMeDescription") },
+  { value: "auto-approve", label: t("tools.autoApprove"), description: t("tools.autoApproveModeDescription") },
 ];
 
 const TOOL_MODE_OPTIONS: Array<{ value: ToolExecutionMode; label: string }> = [

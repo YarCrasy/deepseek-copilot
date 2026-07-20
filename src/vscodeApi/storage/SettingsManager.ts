@@ -169,7 +169,8 @@ function clampInteger(value: unknown, min: number, max: number, fallback: number
 }
 
 function normalizePermissionMode(value: unknown): PermissionMode {
-  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access" || value === "approve-for-me" ? value : DEEPSEEK_DEFAULTS.permissionMode;
+  if (value === "approve-for-me") {return "auto-approve";}
+  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access" || value === "auto-approve" ? value : DEEPSEEK_DEFAULTS.permissionMode;
 }
 
 function normalizeToolExecutionModes(value: unknown): ToolExecutionModes {

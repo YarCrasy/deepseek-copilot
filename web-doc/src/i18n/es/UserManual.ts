@@ -18,8 +18,8 @@ export const userManual: PageContent = {
     {
       title: "Permisos y estados de herramientas",
       items: [
-        "chat no expone herramientas; read-only permite read_file, list_directory y search_content; workspace añade creación y edición de archivos; full-access añade la ejecución de terminal; approve-for-me expone todas las herramientas no deshabilitadas y delega su aprobación a DeepSeek.",
-        "Cada herramienta puede deshabilitarse, requerir aprobación manual o usar aprobación automática solo para operaciones seguras. El modo global Aprobar por mí considera las tool calls de DeepSeek como aprobación y omite las confirmaciones heurísticas; úsalo solo en workspaces de confianza.",
+        "chat no expone herramientas; read-only permite read_file, list_directory y search_content; workspace añade creación y edición de archivos; full-access añade la ejecución de terminal; auto-approve expone todas las herramientas no deshabilitadas y delega su aprobación a DeepSeek.",
+        "Cada herramienta puede deshabilitarse, requerir aprobación manual o usar aprobación automática solo para operaciones seguras. El modo global Aprobación automática considera las tool calls de DeepSeek como aprobación y omite las confirmaciones heurísticas; úsalo solo en workspaces de confianza.",
         "Las tool calls pasan por awaiting confirmation, running y un único estado final: completed, rejected, cancelled o error.",
         "El host de la extensión confirma las acciones de ejecutar y rechazar antes de que la webview fije el estado visible.",
         "Las tool calls de una ronda se ejecutan secuencialmente. Las llamadas idénticas repetidas se omiten y el límite configurable de rondas detiene los bucles.",
@@ -31,7 +31,7 @@ export const userManual: PageContent = {
         "Los comandos de terminal son no interactivos: no pueden responder a prompts ni disponer de una TTY.",
         "El resultado registra stdout, stderr, código de salida, señal, timeout, cancelación, directorio efectivo y shell.",
         "La salida está limitada; si se trunca, se conservan el principio y el final y se marca la parte central omitida.",
-        "Fuera de Aprobar por mí, los comandos desconocidos requieren precaución. Se revisan las cadenas de Bash, PowerShell y cmd, publicaciones, despliegues, cambios remotos, gestores de paquetes, redirecciones y operaciones destructivas.",
+        "Fuera de la Aprobación automática global, los comandos desconocidos requieren precaución. Se revisan las cadenas de Bash, PowerShell y cmd, publicaciones, despliegues, cambios remotos, gestores de paquetes, redirecciones y operaciones destructivas.",
       ],
     },
     {

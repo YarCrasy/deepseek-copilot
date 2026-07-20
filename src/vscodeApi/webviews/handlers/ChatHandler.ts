@@ -165,7 +165,7 @@ export class ChatHandler {
           exposeReasoning: providerConfig.thinkingMode,
           signal: this.abortController.signal,
           isCancelling: () => this.isCancelling,
-          approveForMe: config.permissionMode === "approve-for-me",
+          autoApproveMode: config.permissionMode === "auto-approve",
         });
         if (result) {
           if (!this.isCancelling) {
@@ -295,7 +295,7 @@ ${payload.text}`
         this.postCommandTurn(
           webviewView,
           payload.text,
-          `Unknown command: /${command.name}\n\nAvailable commands: /status, /context, /review, /goal [text], /tools, /mode chat|read-only|workspace|full-access|approve-for-me, /auto-context on|off, /clear-context, /summarize.`,
+          `Unknown command: /${command.name}\n\nAvailable commands: /status, /context, /review, /goal [text], /tools, /mode chat|read-only|workspace|full-access|auto-approve, /auto-context on|off, /clear-context, /summarize.`,
         );
         return true;
     }
@@ -332,7 +332,7 @@ ${payload.text}`
   private async handleModeCommand(args: string[], rawText: string, webviewView: vscode.WebviewView): Promise<void> {
     const mode = normalizePermissionMode(args[0]);
     if (!isPermissionMode(mode)) {
-      this.postCommandTurn(webviewView, rawText, "Usage: /mode chat|read|read-only|workspace|full|full-access|approve-for-me");
+      this.postCommandTurn(webviewView, rawText, "Usage: /mode chat|read|read-only|workspace|full|full-access|auto-approve");
       return;
     }
 
@@ -510,7 +510,7 @@ function appendToolAvailabilityContext(messages: ChatMessage[], permissionMode: 
   }
 
   const availableToolNames = tools.map((tool) => tool.function.name);
-  const delegatedTools = permissionMode === "approve-for-me"
+  const delegatedTools = permissionMode === "auto-approve"
     ? tools.filter((tool) => executionModes[tool.function.name] !== "disabled").map((tool) => tool.function.name)
     : [];
   const capabilityNotice =
@@ -521,7 +521,7 @@ function appendToolAvailabilityContext(messages: ChatMessage[], permissionMode: 
         : "Use only the tools listed below and do not imply that unavailable capabilities can be used.";
 
   const delegationNotice = delegatedTools.length > 0
-    ? `\n- Approve-for-me tools: ${delegatedTools.join(", ")}. The user explicitly delegated these approvals. Each call executes immediately, so call them only when necessary, directly aligned with the request, and with the narrowest safe arguments.`
+    ? `\n- Auto-approved tools: ${delegatedTools.join(", ")}. The user explicitly delegated these approvals. Each call executes immediately, so call them only when necessary, directly aligned with the request, and with the narrowest safe arguments.`
     : "";
   systemMessage.content = `${systemMessage.content ?? ""}\n\nRuntime permissions:\n- Permission mode: ${permissionMode}\n- Available tools: ${availableToolNames.length > 0 ? availableToolNames.join(", ") : "none"}${delegationNotice}\n- ${capabilityNotice}`;
 }
@@ -540,7 +540,7 @@ function parseSlashCommand(text: string): ParsedSlashCommand | null {
 }
 
 function isPermissionMode(value: unknown): value is PermissionMode {
-  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access" || value === "approve-for-me";
+  return value === "chat" || value === "read-only" || value === "workspace" || value === "full-access" || value === "auto-approve";
 }
 
 function normalizePermissionMode(value: string | undefined): string | undefined {

@@ -10,9 +10,9 @@
 - `enabled`: execute with normal rules.
 - `auto_approve`: allow without confirmation if danger analysis does not require it.
 
-The global `approve-for-me` permission mode makes every non-disabled tool available and treats DeepSeek's emitted tool call as approval. It executes the forced handler directly without heuristic confirmation.
+The global `auto-approve` permission mode makes every non-disabled tool available and treats DeepSeek's emitted tool call as approval. It executes the forced handler directly without heuristic confirmation.
 
-`approve-for-me` is an explicit trust decision, not a security classifier. Workspace path validation and argument schemas still apply, but terminal commands are not protected by an OS sandbox.
+Global `auto-approve` is an explicit trust decision, not a security classifier. Workspace path validation and argument schemas still apply, but terminal commands are not protected by an OS sandbox.
 
 ## Danger analysis
 
@@ -36,7 +36,7 @@ When there is risk:
 3. user approves or cancels.
 4. backend executes only if approval matches the pending tool.
 
-Do not auto-approve a destructive operation just because the tool is set to `auto_approve`. The global `approve-for-me` permission mode is the separate explicit opt-in that bypasses this confirmation.
+Do not auto-approve a destructive operation just because the tool is set to `auto_approve`. The global `auto-approve` permission mode is the separate explicit opt-in that bypasses this confirmation.
 
 ---
 
