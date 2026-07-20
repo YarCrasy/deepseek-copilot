@@ -57,6 +57,12 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
       setToolCallGroups((previous) => markToolCallAccepted(previous, data.toolCallId, data.status));
     }, []),
 
+    onStreamDone: useCallback((info) => {
+      if (info.cancelled) {
+        setToolCallGroups([]);
+      }
+    }, []),
+
     onClearChat: useCallback(() => setToolCallGroups([]), []),
   };
 

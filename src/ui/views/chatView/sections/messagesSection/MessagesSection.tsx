@@ -42,13 +42,11 @@ function MessagesSection({
     vscode,
   });
   const { dispatcher: chatDispatcher, isProcessing, listRef, messages } = chat;
+  const dispatcher = mergeMessageDispatchers(chatDispatcher, tools.dispatcher);
   const followsLatestRef = useRef(true);
   const [showJumpToLatest, setShowJumpToLatest] = useState(false);
 
-  useMessageHandler(vscode, {
-    ...chatDispatcher,
-    ...tools.dispatcher,
-  });
+  useMessageHandler(vscode, dispatcher);
 
   useEffect(() => {
     if (!followsLatestRef.current) {
@@ -132,3 +130,21 @@ function MessagesSection({
 }
 
 export default MessagesSection;
+
+function mergeMessageDispatchers(
+  chatDispatcher: Parameters<typeof useMessageHandler>[1],
+  toolDispatcher: Parameters<typeof useMessageHandler>[1],
+): Parameters<typeof useMessageHandler>[1] {
+  return {
+    ...chatDispatcher,
+    ...toolDispatcher,
+    onStreamDone: (info) => {
+      chatDispatcher.onStreamDone?.(info);
+      toolDispatcher.onStreamDone?.(info);
+    },
+    onClearChat: () => {
+      chatDispatcher.onClearChat?.();
+      toolDispatcher.onClearChat?.();
+    },
+  };
+}

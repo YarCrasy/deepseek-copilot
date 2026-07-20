@@ -81,9 +81,29 @@ export class ToolCallSession {
 
   cancel(): void {
     if (this.pendingToolCallCycle) {
+      for (const [toolCallId, toolCall] of this.pendingToolCallCycle.toolCalls) {
+        if (!this.pendingToolCallCycle.resolved.has(toolCallId)) {
+          void this.activeWebview?.webview.postMessage({
+            type: "toolCallResult",
+            toolCallId,
+            toolName: toolCall.function.name,
+            result: "Cancelled with the active generation.",
+            isError: false,
+            status: "cancelled",
+          });
+        }
+      }
       cancelPendingToolCallCycle(this.pendingToolCallCycle);
     }
     if (this.pendingDangerConfirmation) {
+      void this.activeWebview?.webview.postMessage({
+        type: "toolCallResult",
+        toolCallId: this.pendingDangerConfirmation.toolCall.id,
+        toolName: this.pendingDangerConfirmation.toolCall.function.name,
+        result: "Cancelled with the active generation.",
+        isError: false,
+        status: "cancelled",
+      });
       this.pendingDangerConfirmation.resolve({ confirmed: false, trustForSession: false });
     }
     this.pendingToolCallCycle = null;
