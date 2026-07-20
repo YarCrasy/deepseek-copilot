@@ -75,6 +75,9 @@ export class ChatHandler {
           trustForSession: message.trustForSession,
         });
         break;
+      case "toolCallLimitDecision":
+        this.toolCallSession.handleLimitDecision(message.action);
+        break;
       case "getAvailableTools":
         this.handleGetAvailableTools(webviewView);
         break;

@@ -18,6 +18,7 @@ suite("webview message validation", () => {
       { type: "loadConversation", id: "conversation-1" },
       { type: "deleteConversation", id: "conversation-1" },
       { type: "executeToolCall", toolCallId: "call-1", action: "execute", trustForSession: false },
+      { type: "toolCallLimitDecision", action: "continue" },
       { type: "getPathCompletions", requestId: 1, query: "src/" },
       { type: "getAvailableTools" },
       { type: "openFile", path: "src/index.ts", line: 1 },
@@ -41,6 +42,7 @@ suite("webview message validation", () => {
       { type: "saveConfig", config: { responseFormat: "json_object" } },
       { type: "testConnection", apiKey: "key", baseUrl: "file:///etc/passwd", model: "model" },
       { type: "executeToolCall", toolCallId: "call", action: "force" },
+      { type: "toolCallLimitDecision", action: "later" },
       { type: "openFile", path: "file", line: 0 },
       { type: "copyCode", code: "x".repeat(2 * 1024 * 1024 + 1) },
     ];

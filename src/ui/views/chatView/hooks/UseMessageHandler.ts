@@ -38,6 +38,7 @@ export type MessageDispatcher = {
   onToolCallResult?: (data: { toolCallId: string; toolName: string; result: string; isError?: boolean; rejected?: boolean; status: ToolCallStatus }) => void;
   onToolCallActionAccepted?: (data: { toolCallId: string; status: "running" | "rejected" }) => void;
   onToolCallConfirmationRequired?: (data: { toolCalls: ToolCall[]; round: number; autoExecute: boolean; dangerConfirmation?: DangerConfirmationData }) => void;
+  onToolCallLimitReached?: (data: { completedRounds: number; batchSize: number }) => void;
 };
 
 /**
@@ -59,6 +60,7 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
     onToolCallResult,
     onToolCallActionAccepted,
     onToolCallConfirmationRequired,
+    onToolCallLimitReached,
   } = dispatcher;
 
   useEffect(() => {
@@ -144,6 +146,10 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
             dangerConfirmation: message.dangerConfirmation,
           });
           break;
+
+        case "toolCallLimitReached":
+          onToolCallLimitReached?.({ completedRounds: message.completedRounds, batchSize: message.batchSize });
+          break;
       }
     };
 
@@ -167,5 +173,6 @@ export function useMessageHandler(vscode: VsCodeApi | null, dispatcher: MessageD
     onToolCallResult,
     onToolCallActionAccepted,
     onToolCallConfirmationRequired,
+    onToolCallLimitReached,
   ]);
 }

@@ -153,6 +153,7 @@ export class WebviewProvider implements vscode.WebviewViewProvider, vscode.Dispo
       case "cancelGeneration":
       case "getAvailableTools":
       case "executeToolCall":
+      case "toolCallLimitDecision":
       case "newConversation":
         this.chatHandler.handle(message, webviewView);
         break;

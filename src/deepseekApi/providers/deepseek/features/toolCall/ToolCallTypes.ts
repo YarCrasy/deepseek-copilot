@@ -21,6 +21,7 @@ export interface ToolCallCycleOptions {
   reasoningEffort?: "high" | "max";
   maxTokens?: number;
   userId?: string;
+  onLimitReached?: (completedRounds: number, batchSize: number) => Promise<"continue" | "stop"> | "continue" | "stop";
 }
 
 export interface ToolCallCycleResult {

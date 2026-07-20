@@ -12,6 +12,7 @@ interface ToolCallControllerOptions {
 
 export function useToolCallController({ messages, isProcessing, vscode }: ToolCallControllerOptions) {
   const [toolCallGroups, setToolCallGroups] = useState<ToolCallGroup[]>([]);
+  const [toolCallLimit, setToolCallLimit] = useState<{ completedRounds: number; batchSize: number } | null>(null);
 
   const dispatcher: MessageDispatcher = {
     onToolCallStarted: useCallback((data) => {
@@ -57,13 +58,19 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
       setToolCallGroups((previous) => markToolCallAccepted(previous, data.toolCallId, data.status));
     }, []),
 
+    onToolCallLimitReached: useCallback((data) => setToolCallLimit(data), []),
+
     onStreamDone: useCallback((info) => {
       if (info.cancelled) {
         setToolCallGroups([]);
       }
+      setToolCallLimit(null);
     }, []),
 
-    onClearChat: useCallback(() => setToolCallGroups([]), []),
+    onClearChat: useCallback(() => {
+      setToolCallGroups([]);
+      setToolCallLimit(null);
+    }, []),
   };
 
   const activeTimelineGroups = useMemo(() => getVisibleActiveGroups(messages, toolCallGroups), [messages, toolCallGroups]);
@@ -96,6 +103,10 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
   const handleRejectAll = useCallback(() => {
     getPendingToolCalls(toolCallGroups).forEach((toolCall) => postToolCallAction(toolCall.toolCallId, "reject"));
   }, [postToolCallAction, toolCallGroups]);
+  const handleLimitDecision = useCallback((action: "continue" | "stop") => {
+    setToolCallLimit(null);
+    vscode?.postMessage({ type: "toolCallLimitDecision", action });
+  }, [vscode]);
 
   return {
     dispatcher,
@@ -107,6 +118,8 @@ export function useToolCallController({ messages, isProcessing, vscode }: ToolCa
     handleReject,
     handleExecuteAll,
     handleRejectAll,
+    toolCallLimit,
+    handleLimitDecision,
     isProcessing,
   };
 }

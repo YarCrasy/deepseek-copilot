@@ -25,7 +25,7 @@ suite("webview internationalization", () => {
     const flatEn = flattenCatalog(en);
     const flatEs = flattenCatalog(es);
     const flatZh = flattenCatalog(zh);
-    assert.strictEqual(Object.keys(flatEn).length, 177);
+    assert.strictEqual(Object.keys(flatEn).length, 181);
     assert.deepStrictEqual(Object.keys(flatEs).sort(), Object.keys(flatEn).sort());
     assert.deepStrictEqual(Object.keys(flatZh).sort(), Object.keys(flatEs).sort());
     for (const [key, translation] of Object.entries(flatEs)) {
@@ -37,6 +37,7 @@ suite("webview internationalization", () => {
   });
 
   test("changes the selected interface language and notifies subscribers", () => {
+    setInterfaceLanguage("en");
     let notifications = 0;
     const unsubscribe = subscribeUiLocale(() => {notifications += 1;});
 

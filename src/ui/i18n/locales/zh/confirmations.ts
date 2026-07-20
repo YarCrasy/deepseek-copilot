@@ -25,6 +25,10 @@ export const confirmations = {
     sessionTrustDescription: "执行一次仅批准当前操作；会话信任会批准匹配的安全操作，直到本次 VS Code 会话结束。",
     destructiveAction: "破坏性操作",
     potentiallyDangerousAction: "潜在危险操作",
-    cautionRequired: "需要谨慎"
+    cautionRequired: "需要谨慎",
+    toolCallLimitReached: "已达到工具调用上限",
+    toolCallLimitDescription: "助手已完成 {rounds} 轮工具调用。是否继续最多 {batchSize} 轮？",
+    continueToolCalls: "继续",
+    stopToolCalls: "停止并回答"
   }
 } satisfies TranslationCatalog;

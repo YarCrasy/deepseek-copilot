@@ -6,6 +6,7 @@ import { useMessageHandler } from "../../hooks";
 import { ChatEmptyState, ChatMessages, ToolCallConfirmationModal, ToolCallTimeline } from "@webview/components/chatView";
 import { useChatMessagesController, useCodeActionHandler, useToolCallController } from "../../../../hooks/chat";
 import { t } from "@webview/i18n";
+import ToolCallLimitModal from "@webview/components/chatView/toolCallLimitModal/ToolCallLimitModal";
 
 function MessagesSection({
   messages: externalMessages,
@@ -125,6 +126,7 @@ function MessagesSection({
         onExecuteAll={tools.handleExecuteAll}
         onRejectAll={tools.handleRejectAll}
       />
+      <ToolCallLimitModal limit={tools.toolCallLimit} onDecision={tools.handleLimitDecision} />
     </>
   );
 }

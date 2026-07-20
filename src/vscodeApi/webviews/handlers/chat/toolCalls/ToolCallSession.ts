@@ -15,6 +15,7 @@ import type {
   PostFinalMessageOptions,
   StoredExecution,
   ToolCallActionPayload,
+  ToolCallLimitDecision,
   ToolCallRunOptions,
   ToolCallRunResult,
 } from "./Types";
@@ -25,6 +26,7 @@ export class ToolCallSession {
   private readonly trustedDangerKeys = new Set<string>();
   private currentRound = 0;
   private activeWebview?: vscode.WebviewView;
+  private pendingLimitDecision: ((decision: ToolCallLimitDecision) => void) | null = null;
   constructor(private readonly toolExecutor: ToolExecutor) {}
 
   async run(options: ToolCallRunOptions): Promise<ToolCallRunResult | undefined> {
@@ -66,6 +68,7 @@ export class ToolCallSession {
               stream.reasoning(reasoning);
             }
           },
+          onLimitReached: (completedRounds, batchSize) => this.requestLimitDecision(options.webviewView, completedRounds, batchSize),
         },
       });
 
@@ -75,11 +78,14 @@ export class ToolCallSession {
     } finally {
       this.pendingToolCallCycle = null;
       this.pendingDangerConfirmation = null;
+      this.pendingLimitDecision = null;
       this.activeWebview = undefined;
     }
   }
 
   cancel(): void {
+    this.pendingLimitDecision?.("stop");
+    this.pendingLimitDecision = null;
     if (this.pendingToolCallCycle) {
       for (const [toolCallId, toolCall] of this.pendingToolCallCycle.toolCalls) {
         if (!this.pendingToolCallCycle.resolved.has(toolCallId)) {
@@ -146,6 +152,26 @@ export class ToolCallSession {
         status: payload.action === "execute" ? "running" : "rejected",
       });
     }
+  }
+
+  handleLimitDecision(decision: ToolCallLimitDecision): void {
+    if (!this.pendingLimitDecision) {
+      logWarning("[ChatHandler] No pending tool call limit decision");
+      return;
+    }
+    const resolve = this.pendingLimitDecision;
+    this.pendingLimitDecision = null;
+    resolve(decision);
+  }
+
+  private requestLimitDecision(webviewView: vscode.WebviewView, completedRounds: number, batchSize: number): Promise<ToolCallLimitDecision> {
+    if (this.pendingLimitDecision) {
+      return Promise.resolve("stop");
+    }
+    webviewView.webview.postMessage({ type: "toolCallLimitReached", completedRounds, batchSize });
+    return new Promise((resolve) => {
+      this.pendingLimitDecision = resolve;
+    });
   }
 
   private createExecutionContext(options: ToolCallRunOptions, executedToolCalls: Map<string, StoredExecution>) {

@@ -129,6 +129,7 @@ export type WebviewToHandlerMessage =
   | { type: "deleteConversation"; id: string }
   | { type: "deleteConversations"; ids: string[] }
   | { type: "executeToolCall"; toolCallId: string; action: "execute" | "reject"; trustForSession?: boolean }
+  | { type: "toolCallLimitDecision"; action: "continue" | "stop" }
   | { type: "getPathCompletions"; requestId: number; query: string }
   | { type: "getAvailableTools" }
   | { type: "openFile"; path: string; line?: number };
@@ -185,6 +186,7 @@ export type HandlerToWebviewMessage =
       status: "completed" | "rejected" | "cancelled" | "error";
     }
   | { type: "toolCallActionAccepted"; toolCallId: string; status: "running" | "rejected" }
+  | { type: "toolCallLimitReached"; completedRounds: number; batchSize: number }
   | {
       type: "toolCallConfirmationRequired";
       toolCalls: ToolCall[];

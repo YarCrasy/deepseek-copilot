@@ -4,7 +4,7 @@ import { chatCompletion } from "../Chat";
 import { createToolResultMessage, validateToolCall } from "./ToolCallMessages";
 import { buildToolCallRequest } from "./ToolCallRequest";
 import { streamToolCallRound } from "./ToolCallStreaming";
-import type { RunToolCallCycleOptions, ToolCallCycleResult } from "./ToolCallTypes";
+import type { RunToolCallCycleOptions, ToolCallCycleOptions, ToolCallCycleResult } from "./ToolCallTypes";
 
 export async function runToolCallCycle(options: RunToolCallCycleOptions): Promise<ToolCallCycleResult> {
   const { initialMessages, tools, model, apiKey, baseUrl, executeToolCall, cycleOptions = {} } = options;
@@ -15,7 +15,7 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
   let toolCallsExecuted = 0;
   const executedSignatures = new Set<string>();
 
-  for (let round = 0; round < maxRounds; round++) {
+  for (let round = 0; ; round++) {
     if (cycleOptions.signal?.aborted) {
       throw createAbortError();
     }
@@ -78,25 +78,47 @@ export async function runToolCallCycle(options: RunToolCallCycleOptions): Promis
       messages.push(createToolResultMessage(toolCall.id, toolCall.function.name, result));
     }
 
-    if (round === maxRounds - 1) {
-      const finalMessage: ChatMessage = {
-        role: "assistant",
-        content: `Stopped after ${maxRounds} tool rounds to prevent an execution loop.`,
-        reasoning_content: null,
-      };
-      return {
-        finalMessage,
-        rounds: round + 1,
-        toolCallsExecuted,
-        response: {
-          ...response,
-          choices: [{ index: 0, message: finalMessage, finish_reason: "stop" }],
-        },
-      };
+    const completedRounds = round + 1;
+    if (completedRounds % maxRounds === 0) {
+      const decision = await requestToolRoundLimitDecision(cycleOptions.onLimitReached, completedRounds, maxRounds);
+      if (decision === "stop") {
+        const finalResponse = await streamToolCallRound({
+          messages: withToolFreeFinalInstruction(messages),
+          tools: [],
+          model,
+          apiKey,
+          baseUrl,
+          cycleOptions,
+          emitStreamEvents: true,
+        });
+        return {
+          finalMessage: finalResponse.choices[0].message,
+          rounds: completedRounds,
+          toolCallsExecuted,
+          response: finalResponse,
+        };
+      }
     }
   }
+}
 
-  throw new Error(`Tool call cycle exceeded maximum rounds (${maxRounds})`);
+export async function requestToolRoundLimitDecision(
+  onLimitReached: ToolCallCycleOptions["onLimitReached"],
+  completedRounds: number,
+  batchSize: number,
+): Promise<"continue" | "stop"> {
+  return onLimitReached ? onLimitReached(completedRounds, batchSize) : "stop";
+}
+
+function withToolFreeFinalInstruction(messages: ChatMessage[]): ChatMessage[] {
+  return messages.map((message, index) =>
+    index === 0 && message.role === "system"
+      ? {
+          ...message,
+          content: `${message.content ?? ""}\n\nThe user chose to stop tool execution after reaching the tool-call round limit. Do not request or imply any further tool use. Provide the best final response now using the conversation and tool results already available, and clearly mention anything that remains incomplete.`,
+        }
+      : message,
+  );
 }
 
 function createToolSignature(toolCall: { function: { name: string; arguments: string } }): string {

@@ -25,6 +25,10 @@ export const confirmations = {
     sessionTrustDescription: "Ejecutar una vez solo aprueba esta operación. Confiar durante la sesión aprueba operaciones seguras equivalentes hasta que termine esta sesión de VS Code.",
     destructiveAction: "Acción destructiva",
     potentiallyDangerousAction: "Acción potencialmente peligrosa",
-    cautionRequired: "Se requiere precaución"
+    cautionRequired: "Se requiere precaución",
+    toolCallLimitReached: "Se alcanzó el límite de llamadas a herramientas",
+    toolCallLimitDescription: "El asistente ha completado {rounds} rondas de herramientas. ¿Continuar con hasta {batchSize} rondas más?",
+    continueToolCalls: "Continuar",
+    stopToolCalls: "Detener y responder"
   }
 } satisfies TranslationCatalog;

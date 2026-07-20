@@ -47,6 +47,8 @@ export function isWebviewToHandlerMessage(value: unknown): value is WebviewToHan
         (value.action === "execute" || value.action === "reject") &&
         isOptionalBoolean(value.trustForSession)
       );
+    case "toolCallLimitDecision":
+      return hasOnlyKeys(value, ["type", "action"]) && (value.action === "continue" || value.action === "stop");
     case "getPathCompletions":
       return (
         hasOnlyKeys(value, ["type", "requestId", "query"]) &&
