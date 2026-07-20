@@ -1,4 +1,4 @@
-export type ToolExecutionMode = "disabled" | "enabled" | "auto_approve";
+export type ToolExecutionMode = "disabled" | "enabled" | "auto_approve" | "approve_for_me";
 export type ToolExecutionModes = Record<string, ToolExecutionMode>;
 export type PermissionMode = "chat" | "read-only" | "workspace" | "full-access";
 export type InterfaceLanguage = "auto" | "en" | "es" | "zh";

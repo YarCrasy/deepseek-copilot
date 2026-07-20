@@ -178,7 +178,7 @@ function normalizeToolExecutionModes(value: unknown): ToolExecutionModes {
 }
 
 function isToolExecutionMode(value: unknown): value is ToolExecutionMode {
-  return value === "disabled" || value === "enabled" || value === "auto_approve";
+  return value === "disabled" || value === "enabled" || value === "auto_approve" || value === "approve_for_me";
 }
 
 function normalizeBoolean(value: unknown, fallback: boolean): boolean {

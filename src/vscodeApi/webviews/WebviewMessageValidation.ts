@@ -163,7 +163,7 @@ function isToolExecutionModes(value: unknown): boolean {
     return false;
   }
   return Object.entries(value).every(
-    ([name, mode]) => /^[a-zA-Z0-9_-]{1,128}$/.test(name) && (mode === "disabled" || mode === "enabled" || mode === "auto_approve"),
+    ([name, mode]) => /^[a-zA-Z0-9_-]{1,128}$/.test(name) && (mode === "disabled" || mode === "enabled" || mode === "auto_approve" || mode === "approve_for_me"),
   );
 }
 

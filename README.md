@@ -79,8 +79,9 @@ Tool execution is then controlled per tool:
 - `disabled`: never execute the tool.
 - `enabled`: execute with normal safety checks.
 - `auto_approve`: execute without confirmation only when the operation is not considered dangerous.
+- `approve_for_me`: treat DeepSeek's tool call as the approval and execute it directly, bypassing heuristic confirmations. Use this only in trusted workspaces; terminal commands are not OS-sandboxed by the extension.
 
-Dangerous operations, such as overwriting files or running risky terminal commands, require confirmation before execution.
+Dangerous operations, such as overwriting files or running risky terminal commands, require confirmation unless that tool explicitly uses `approve_for_me`.
 
 Tool calls have one visible lifecycle: awaiting confirmation, running, then completed, rejected, cancelled, or error. Calls within a round execute sequentially, identical repeated calls are skipped, and the configured round limit stops loops.
 

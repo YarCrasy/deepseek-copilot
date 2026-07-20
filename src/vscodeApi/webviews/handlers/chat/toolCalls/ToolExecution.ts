@@ -22,6 +22,12 @@ export async function executeToolCall(toolCall: ToolCall, ctx: ToolExecutionCont
     return executeManualToolCall(toolCall, ctx);
   }
 
+  if (mode === "approve_for_me") {
+    const result = await ctx.toolExecutor.executeForced(toolCall, { signal: ctx.signal });
+    postToolCallResult(ctx, result);
+    return result.result;
+  }
+
   const result = await ctx.toolExecutor.execute(toolCall, { signal: ctx.signal });
   return handleExecutionResult({
     toolCall,

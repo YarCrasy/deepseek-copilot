@@ -154,7 +154,7 @@ export class ChatHandler {
         reasoningEffort: providerConfig.reasoningEffort ?? "high",
       };
       const tools = getToolsForPermissionMode(config.permissionMode, allTools).filter((tool) => toolExecutionModes[tool.function.name] !== "disabled");
-      appendToolAvailabilityContext(messages, config.permissionMode, tools);
+      appendToolAvailabilityContext(messages, config.permissionMode, tools, toolExecutionModes);
       if (tools.length > 0) {
         const result = await this.toolCallSession.run({
           messages,
@@ -502,13 +502,14 @@ function getToolsForPermissionMode(permissionMode: PermissionMode, tools: ToolDe
   return tools.filter((tool) => allowedToolNames.includes(tool.function.name));
 }
 
-function appendToolAvailabilityContext(messages: ChatMessage[], permissionMode: PermissionMode, tools: ToolDefinition[]): void {
+function appendToolAvailabilityContext(messages: ChatMessage[], permissionMode: PermissionMode, tools: ToolDefinition[], executionModes: ToolExecutionModes): void {
   const systemMessage = messages.find((message) => message.role === "system");
   if (!systemMessage) {
     return;
   }
 
   const availableToolNames = tools.map((tool) => tool.function.name);
+  const delegatedTools = tools.filter((tool) => executionModes[tool.function.name] === "approve_for_me").map((tool) => tool.function.name);
   const capabilityNotice =
     permissionMode === "read-only"
       ? "This mode cannot create or modify files and cannot execute terminal commands. If the request requires those capabilities, explain the limitation immediately. Do not inspect the workspace first unless that inspection directly helps answer the request."
@@ -516,7 +517,10 @@ function appendToolAvailabilityContext(messages: ChatMessage[], permissionMode: 
         ? "No workspace tools are available. If the request requires workspace access or changes, explain the limitation immediately."
         : "Use only the tools listed below and do not imply that unavailable capabilities can be used.";
 
-  systemMessage.content = `${systemMessage.content ?? ""}\n\nRuntime permissions:\n- Permission mode: ${permissionMode}\n- Available tools: ${availableToolNames.length > 0 ? availableToolNames.join(", ") : "none"}\n- ${capabilityNotice}`;
+  const delegationNotice = delegatedTools.length > 0
+    ? `\n- Approve-for-me tools: ${delegatedTools.join(", ")}. The user explicitly delegated these approvals. Each call executes immediately, so call them only when necessary, directly aligned with the request, and with the narrowest safe arguments.`
+    : "";
+  systemMessage.content = `${systemMessage.content ?? ""}\n\nRuntime permissions:\n- Permission mode: ${permissionMode}\n- Available tools: ${availableToolNames.length > 0 ? availableToolNames.join(", ") : "none"}${delegationNotice}\n- ${capabilityNotice}`;
 }
 
 function parseSlashCommand(text: string): ParsedSlashCommand | null {

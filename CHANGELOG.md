@@ -1,5 +1,9 @@
 # Change Log
 
+## [Unreleased]
+
+- Added the opt-in `approve_for_me` tool mode, which delegates approval to DeepSeek and bypasses heuristic confirmation while retaining schemas and workspace path validation.
+
 ## [0.1.1] - 2026-07-17
 
 - Replaced text markers with a native chronological timeline for reasoning, content, and tool groups.

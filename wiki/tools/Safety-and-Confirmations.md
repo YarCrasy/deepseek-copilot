@@ -9,6 +9,9 @@
 - `disabled`: do not execute.
 - `enabled`: execute with normal rules.
 - `auto_approve`: allow without confirmation if danger analysis does not require it.
+- `approve_for_me`: DeepSeek's emitted tool call is the approval. Execute the forced handler directly without heuristic confirmation.
+
+`approve_for_me` is an explicit trust decision, not a security classifier. Workspace path validation and argument schemas still apply, but terminal commands are not protected by an OS sandbox.
 
 ## Danger analysis
 
@@ -32,7 +35,7 @@ When there is risk:
 3. user approves or cancels.
 4. backend executes only if approval matches the pending tool.
 
-Do not auto-approve a destructive operation just because the tool is set to `auto_approve`.
+Do not auto-approve a destructive operation just because the tool is set to `auto_approve`. `approve_for_me` is the separate explicit opt-in that bypasses this confirmation.
 
 ---
 

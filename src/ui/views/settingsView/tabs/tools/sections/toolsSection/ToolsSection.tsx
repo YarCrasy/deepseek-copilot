@@ -15,6 +15,7 @@ const TOOL_MODE_OPTIONS: Array<{ value: ToolExecutionMode; label: string }> = [
   { value: "disabled", label: t("tools.disabled") },
   { value: "enabled", label: t("tools.enabled") },
   { value: "auto_approve", label: t("tools.autoApprove") },
+  { value: "approve_for_me", label: t("tools.approveForMe") },
 ];
 
 function ToolsSection({ config, tools, updateConfig, saveOnBlur }: ToolsSectionProps) {
@@ -76,6 +77,7 @@ function ToolsSection({ config, tools, updateConfig, saveOnBlur }: ToolsSectionP
                   {tool.name}
                 </span>
                 {!isAllowed ? <small className="toolBlockedReason">{t("tools.blockedByModePermissionMode", { mode: selectedPermission.label })}</small> : null}
+                {isAllowed && mode === "approve_for_me" ? <small className="toolApprovalWarning">{t("tools.approveForMeDescription")}</small> : null}
               </span>
 
               <select

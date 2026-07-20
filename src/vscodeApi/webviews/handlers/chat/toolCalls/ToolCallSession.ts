@@ -329,7 +329,10 @@ function getErrorMessage(err: unknown): string {
 }
 
 function hasAutoApprovedTools(options: ToolCallRunOptions, tools: ToolDefinition[]): boolean {
-  return tools.some((tool) => getToolMode(options, tool.function.name) === "auto_approve");
+  return tools.some((tool) => {
+    const mode = getToolMode(options, tool.function.name);
+    return mode === "auto_approve" || mode === "approve_for_me";
+  });
 }
 
 function getRunnableTools(options: ToolCallRunOptions): ToolDefinition[] {

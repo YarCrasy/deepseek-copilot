@@ -19,7 +19,7 @@ export const userManual: PageContent = {
       title: "Permissions and tool states",
       items: [
         "chat exposes no workspace tools; read-only exposes read_file, list_directory, and search_content; workspace also allows file creation and edits; full-access additionally exposes terminal execution.",
-        "Each tool can be disabled, require manual approval, or use auto approval. Dangerous operations always request an additional confirmation.",
+        "Each tool can be disabled, require manual approval, use safe-only auto approval, or use Approve for me. Approve for me treats DeepSeek's tool call as approval and bypasses heuristic confirmations, so use it only in trusted workspaces.",
         "Tool calls move through awaiting confirmation, running, and one terminal state: completed, rejected, cancelled, or error.",
         "The extension host acknowledges execute and reject actions before the webview commits the visible state.",
         "Tool calls in a round run sequentially. Identical repeated calls are skipped, and the configurable round limit stops execution loops.",
@@ -31,7 +31,7 @@ export const userManual: PageContent = {
         "Terminal commands are non-interactive: they cannot answer prompts or provide a TTY.",
         "The result records stdout, stderr, exit code, signal, timeout, cancellation, effective working directory, and shell.",
         "Output is bounded; when truncated, the beginning and end are retained and the omitted middle is marked.",
-        "Unknown commands require caution. Chained Bash, PowerShell, and cmd segments, publishing, deployment, remote changes, package managers, redirects, and destructive operations are reviewed before execution.",
+        "Outside Approve for me, unknown commands require caution. Chained Bash, PowerShell, and cmd segments, publishing, deployment, remote changes, package managers, redirects, and destructive operations are reviewed before execution.",
       ],
     },
     {
