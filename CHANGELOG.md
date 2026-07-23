@@ -1,8 +1,14 @@
 # Change Log
 
-## [Unreleased]
+## [0.1.2] - 2026-07-23
 
 - Added the opt-in `auto-approve` permission mode, which delegates approval to DeepSeek for all non-disabled tools while retaining schemas and workspace path validation.
+- Reorganized settings into a clearer General section and improved the English, Spanish, and Chinese interface translations.
+- Added an explicit confirmation before continuing when a conversation reaches the tool-call round limit.
+- Fixed pending tool confirmations remaining visible after cancellation.
+- Fixed active conversation identity being lost when history was updated.
+- Aligned the maximum output-token setting with DeepSeek's 384K-token limit.
+- Added an in-repository technical wiki covering architecture, tools, storage, the DeepSeek API, testing, and maintenance.
 
 ## [0.1.1] - 2026-07-17
 
